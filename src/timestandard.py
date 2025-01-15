@@ -10,7 +10,9 @@ class TimeStandard():
     Class containing all time standards information. Can only be accessed
     through Database object methods when running main. 
     """
-    time_standards_path = os.getcwd()[:-3] + r"/data/timeStandards"
+    src_path = os.path.dirname(os.path.realpath(__file__))
+    swimdatabase_path = os.path.dirname(src_path)
+    time_standards_path = swimdatabase_path + r"/data/timeStandards"
     standards = ["B", "BB", "A", "AGC", "AA", "FW", "AAA", "AAAA", 
                  "Sect", "Fut", "Jnat", "Nat", "OT"]
     standard_to_full_name = {"B": "B", "BB": "BB", "A": "A", "AA": "AA",

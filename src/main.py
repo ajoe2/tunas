@@ -5,7 +5,9 @@ import sys
 import dataprocessor as dp
 from interface import Interface
 
-meet_results_path = os.getcwd()[:-3] + r"data/meetData"
+src_path = os.path.dirname(os.path.realpath(__file__))
+swimdatabase_path = os.path.dirname(src_path)
+meet_results_path = swimdatabase_path + r"/data/meetData"
 
 def main():
     """

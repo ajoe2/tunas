@@ -1,5 +1,5 @@
 
-from os import listdir
+import os
 from datetime import date
 
 from database import *
@@ -55,13 +55,12 @@ def get_files(file_path: str, extension=".cl2") -> list[str]:
     extension -- desired file types
     """
     paths = []
-    for file_or_dir in listdir(file_path):
+    for file_or_dir in os.listdir(file_path):
         item_path = file_path + "/" + file_or_dir
-        if file_or_dir[-4:] == extension: 
-            paths.append(item_path)
-        elif "." not in file_or_dir: 
-            # Search contents if directory
+        if os.path.isdir(item_path):
             paths = paths + get_files(item_path, extension)
+        elif file_or_dir[-4:] == extension: 
+            paths.append(item_path)
     return paths
 
 def resolve_duplicates(database: Database):
