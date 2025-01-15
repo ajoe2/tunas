@@ -21,14 +21,15 @@ The easiest way of downloading pandas is using pip:
 ```
 
 ### Installation and Usage
-1. cd to the desired directory
-2. Download the pandas Python library and described above
-3. Clone the repo 
+1. Open Terminal
+2. cd to the desired directory
+3. Download the pandas Python library and described above
+4. Clone the repo 
 ```sh
     git clone https://github.com/ajoe2/SwimDatabase.git
 ```
-4. cd to the src directory
-5. Run the python interpreter on main.py
+5. cd to the src directory
+6. Run the python interpreter on main.py
 ```sh
     python3 main.py
 ```
