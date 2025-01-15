@@ -6,7 +6,7 @@ swimdatabase is an application for analyzing USA Swimming meet results and apply
  - Getting current time standards
  - Generating relays
 ### Built with
-![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+[![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)](https://www.python.org/)
 
 ## Getting started
 ### Prerequisites
