@@ -2,7 +2,7 @@
 
 Swim Database is a Python based application for analyzing USA Swimming meet results and applying them to various uses. It is useful for
  - Individual time search
- - Finding Club information
+ - Finding club information
  - Getting current time standards
  - Generating relays
 
@@ -10,9 +10,11 @@ Swim Database is a Python based application for analyzing USA Swimming meet resu
  To get a local copy up and running, follow these steps.
 
  ### Prerequisites
-This project is written for MacOS and relies on the pandas Python package. Follow the instructions [here](https://www.python.org/downloads/) to download Python.
+This project is meant to be run on MacOS and most likely won't work on other operating systems.
 
-Once Python has been downloaded, follow the instructions for installing pandas described [here](https://pandas.pydata.org/docs/getting_started/install.html).
+All the code is written using python; follow the instructions [here](https://www.python.org/downloads/) to download Python.
+
+Once Python has been downloaded, follow [these](https://pandas.pydata.org/docs/getting_started/install.html) instructions for installing pandas.
 
 The easiest way of downloading pandas is using pip:
 
@@ -22,8 +24,8 @@ The easiest way of downloading pandas is using pip:
 
 ### Installation and Usage
 1. Open Terminal
-2. cd to the desired directory
-3. Download the pandas Python library as described above
+2. Download Python and pandas as outlined above
+3. cd to where you want to store the project files
 4. Clone the repo 
 ```sh
     git clone https://github.com/ajoe2/SwimDatabase.git
