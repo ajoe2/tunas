@@ -1,9 +1,9 @@
 ## Swim Database
 
-Python based application for analyzing USA Swimming meet results and applying them to various uses. Used for
+Swim Database is a Python based application for analyzing USA Swimming meet results and applying them to various uses. It is useful for
  - Individual time search
- - Club information
- - Current time standards information
+ - Finding Club information
+ - Getting current time standards
  - Generating relays
 
  ## Getting Started
