@@ -24,7 +24,7 @@ Note: the easiest way of downloading pandas is using pip:
 ### Installation and Usage
 1. Open Terminal
 2. Install Python and pandas
-3. cd to where you want to store the project files. For example, if you want the project stored on Desktop, run
+3. cd to where you want to store the project files. For example,
 ```sh
     cd Desktop
 ```
@@ -32,7 +32,7 @@ Note: the easiest way of downloading pandas is using pip:
 ```sh
     git clone https://github.com/ajoe2/swimdatabase.git
 ```
-5. cd to the src directory
+5. cd to src
 ```sh
     cd src
 ```
