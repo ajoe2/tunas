@@ -1,5 +1,4 @@
 # swimdatabase
-## About the project
 swimdatabase is an application for analyzing USA Swimming meet results and applying them to various uses. It is useful for
  - Individual time search
  - Finding club information
