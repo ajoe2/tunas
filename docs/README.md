@@ -23,7 +23,7 @@ The easiest way of downloading pandas is using pip:
 ### Installation and Usage
 1. Open Terminal
 2. cd to the desired directory
-3. Download the pandas Python library and described above
+3. Download the pandas Python library as described above
 4. Clone the repo 
 ```sh
     git clone https://github.com/ajoe2/SwimDatabase.git
