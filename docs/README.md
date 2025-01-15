@@ -12,7 +12,7 @@ Swim Database is a Python based application for analyzing USA Swimming meet resu
  ### Prerequisites
 This project is meant to be run on MacOS and most likely won't work on other operating systems.
 
-All the code is written using python; follow the instructions [here](https://www.python.org/downloads/) to download Python.
+All the code is written using Python; follow the instructions [here](https://www.python.org/downloads/) to download Python.
 
 Once Python has been downloaded, follow [these](https://pandas.pydata.org/docs/getting_started/install.html) instructions for installing pandas.
 
