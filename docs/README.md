@@ -1,6 +1,6 @@
-## Swim Database
+## swimdatabase
 
-Swim Database is a Python based application for analyzing USA Swimming meet results and applying them to various uses. It is useful for
+swimdatabase is a Python based application for analyzing USA Swimming meet results and applying them to various uses. It is useful for
  - Individual time search
  - Finding club information
  - Getting current time standards
@@ -28,7 +28,7 @@ The easiest way of downloading pandas is using pip:
 3. cd to where you want to store the project files
 4. Clone the repo 
 ```sh
-    git clone https://github.com/ajoe2/SwimDatabase.git
+    git clone https://github.com/ajoe2/swimdatabase.git
 ```
 5. cd to the src directory
 6. Run the python interpreter on main.py
