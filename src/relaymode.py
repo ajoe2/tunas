@@ -178,9 +178,9 @@ class RelayMode():
 
     def update_date(self):
         try:
-            q_year = int(input("Year of relay (ex. '2024'): "))
-            q_month = int(input("Month of relay (ex. '04'): "))
-            q_day = int(input("Day of relay (ex. 21): "))
+            q_year = int(input("Year of relay (ex. '2025'): "))
+            q_month = int(input("Month of relay (ex. '01'): "))
+            q_day = int(input("Day of relay (ex. 01): "))
             relay_date = date(q_year, q_month, q_day)
         except ValueError:
             print("Invalid input. Please try again.")
