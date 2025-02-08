@@ -13,7 +13,6 @@ def main():
     """
     Run SwimDatabase application or test mode if -t flag is present.
     """
-    os.system("clear")
     print(Interface.LOGO)
     args = sys.argv[1:]
     if args != [] and args[0] == "-t":
