@@ -55,6 +55,18 @@ Quit (q/Q)
 
 Select mode > 4
 
+1) Settings
+2) 4 x 50 Free
+3) 4 x 50 Medley
+4) 4 x 100 Free
+5) 4 x 100 Medley
+6) 4 x 200 Free
+7) Exclude swimmer
+8) Include swimmer
+Back (b/B)
+
+Selection > 1
+
 Query settings:
  --> Club:        PCSCSC
  --> Age Group:   10&u
