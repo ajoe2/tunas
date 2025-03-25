@@ -38,6 +38,23 @@ Note: `pandas` can be downloaded via `pip`:
 
 ### Example output
 ```
+#############################################################
+##########              Swim Database              ##########
+#############################################################
+Version: 1.0.0
+
+Files processed:   *************************************|100%
+Finished processing files!
+-------------------------------------------------------------
+
+1) Swimmer information
+2) Time standards
+3) Club information
+4) Relay mode
+Quit (q/Q)
+
+Select mode > 4
+
 Query settings:
  --> Club:        PCSCSC
  --> Age Group:   10&u
