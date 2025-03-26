@@ -62,6 +62,9 @@ class RelayMode():
         self.club = club
     
     def set_age_group(self, age_group: str):
+        """
+        Set self.age_group to age_group
+        """
         self.age_group = age_group
     
     def set_course(self, course: str):
