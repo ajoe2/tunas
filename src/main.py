@@ -1,6 +1,5 @@
 
 import os
-import sys
 
 import dataprocessor as dp
 from interface import Interface
