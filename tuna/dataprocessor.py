@@ -35,7 +35,7 @@ def load_data(database: Database, file_path: str, extension=".cl2"):
     files_read = 0
     max_stars = 37
     for path in file_paths:
-        # print("DEBUG:", file_path)
+        # print("DEBUG:", path)
         fp.read_file(path)
         files_read += 1
         stars = int(files_read / total_files * max_stars) * "*"
@@ -177,14 +177,14 @@ class Cl2Processor():
         event_date_month  = line[80:82].strip() # Swim month
         event_date_day = line[82:84].strip() # Swim day
         event_date_year = line[84:88].strip() # Swim year
-        # seed_time = Util.create_time(line[88:96])
-        # seed_course = Util.standardize_course(line[96].strip())
-        prelim_time = Util.create_time(line[97:105])
-        prelim_course = Util.standardize_course(line[105].strip())
-        swim_off_time = Util.create_time(line[106:114])
-        swim_off_course = Util.standardize_course(line[114].strip())
-        finals_time = Util.create_time(line[115:123])
-        finals_course = Util.standardize_course(line[123].strip())
+        # seed_time = line[88:96]
+        # seed_course = standardize_course(line[96].strip())
+        prelim_time = line[97:105].strip()
+        prelim_course = standardize_course(line[105].strip())
+        swim_off_time = line[106:114].strip()
+        swim_off_course = standardize_course(line[114].strip())
+        finals_time = line[115:123].strip()
+        finals_course = standardize_course(line[123].strip())
         # prelim_heat = line[124:126].strip()
         # prelim_lane = line[126:128].strip()
         # finals_heat = line[128:130].strip()
@@ -194,12 +194,32 @@ class Cl2Processor():
         # points_scored = line[138:142].strip()
 
         #Ignore corrupted entries
+        invalid_results = ["DQ", "NS", "DNF", "SCR"]
         if (not swimmer_id
             or not b_month or not b_year or not b_day
             or not event_stroke in ['1', '2', '3', '4', '5', '6', '7']
             or not event_date_day or not event_date_month 
             or not event_date_year):
             return
+        try:
+            # Convert prelims time to internal time object
+            if prelim_time != "" and prelim_time not in invalid_results:
+                prelim_time = create_time_from_str(prelim_time)
+            else:
+                prelim_time = None
+            # Convert swim off time to internal time object
+            if swim_off_time != "" and swim_off_time not in invalid_results:
+                swim_off_time = create_time_from_str(swim_off_time)
+            else:
+                swim_off_time = None
+            # Convert finals time to internal time object
+            if finals_time != "" and finals_time not in invalid_results:
+                finals_time = create_time_from_str(finals_time)
+            else:
+                finals_time = None
+        except:
+            return
+        
         event_stroke = int(event_stroke)
         last_name, first_name = full_name.split(",")
         last_name = last_name.strip()

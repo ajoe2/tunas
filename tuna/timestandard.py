@@ -73,7 +73,8 @@ class TimeStandard():
             age_group = age_groups[sheet_index - 1]
             df = pd.read_excel(file_path, sheet_name=sheet_index).fillna('0')
             df = df.set_index("Event").rename_axis(None).astype(str)
-            df = df.map(lambda x: Time(time_str=x))
+            df = df.map(lambda x: x[:-1] if x[-1] == '*' else x)
+            df = df.map(lambda x: create_time_from_str(x) if x != '0' else Time())
             dfs[age_group] = df
         return dfs
 

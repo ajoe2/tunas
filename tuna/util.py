@@ -2,46 +2,63 @@
 
 class Time():
     """
-    Represent time as (minute, second, hundreths) tuple. 
+    Custom time object for swim meet results.
     """
-    def __init__(self, minute=0, second=0, hundreth=0, time_str=None):
+    def __init__(self, minute=0, second=0, hundredth=0):
         """
-        Create time oject.
+        Create a time oject. There are two ways to create a time object:
+        1) Input minute, second, and hundredth
+        2) Input a time_str. Must be in m:ss.hh or m:ss:hh* format.
 
         Keyword arguments:
         minute -- the minutes component (default 0)
         second -- the seconds component (default 0)
-        hundreth -- the hundreths component (default 0)
-        time_str -- alternate way of initializing Time object. Must be in
-                    format m:ss.hh or m:ss:hh*.
+        hundredth -- the hundredths component (default 0)
+        time_str -- time string
         """
-        if time_str and time_str != '0':
-            if time_str[-1] == '*':
-                time_str = time_str[:-1]
-            seperated = time_str.split(":")
-            if len(seperated) == 2:
-                minute = int(seperated[0])
-            second, hundreth = seperated[-1].split(".")
-            second, hundreth = int(second), int(hundreth)
-        self.minute = minute
-        self.second = second
-        self.hundreth = hundreth
+        self.set_minute(minute)
+        self.set_second(second)
+        self.set_hundredth(hundredth)
     
     def __str__(self):
         """
-        Return string representation of the time object.
+        Return string representation of time object. Return empty
+        string if time is equal to 0.
+
+        >>> t = Time(1, 15, 23)
+        >>> print(t)
+        1:15.23
+        >>> t2 = Time(0, 32, 10)
+        >>> print(t2)
+        32.10
+        >>> t3 = Time(0, 0, 0)
+        >>> str(t3) == ""
+        True
         """
-        if (self.get_hundreth() == 0 
+        if (self.get_hundredth() == 0 
             and self.get_minute() == 0 
             and self.get_second() == 0):
-            return "  -  "
+            return ""
         m = str(self.get_minute())
         s = str(self.get_second()).zfill(2)
-        h = str(self.get_hundreth()).zfill(2)
+        h = str(self.get_hundredth()).zfill(2)
         if m == '0':
             return f"{s}.{h}"
         else:
             return f"{m}:{s}.{h}"
+        
+    def __repr__(self):
+        """
+        Return representation of time object.
+
+        >>> t = Time(1, 15, 23)
+        >>> t
+        Time(1, 15, 23)
+        >>> t2 = Time(0, 32, 10)
+        >>> t2
+        Time(0, 32, 10)
+        """
+        return f"Time({self.minute}, {self.second}, {self.hundredth})"
     
     def __gt__(self, other_time):
         """
@@ -60,10 +77,10 @@ class Time():
             return True
         if self.get_second() < other_time.get_second():
             return False
-        # Compare hundreths
-        if self.get_hundreth() > other_time.get_hundreth():
+        # Compare hundredths
+        if self.get_hundredth() > other_time.get_hundredth():
             return True
-        if self.get_hundreth() < other_time.get_hundreth():
+        if self.get_hundredth() < other_time.get_hundredth():
             return False
         # Self must equal other_time so return false
         return False
@@ -86,7 +103,7 @@ class Time():
         """
         return self.get_minute() == other_time.get_minute() \
            and self.get_second() == other_time.get_second() \
-           and self.get_hundreth() == other_time.get_hundreth()
+           and self.get_hundredth() == other_time.get_hundredth()
     
     def __ge__(self, other_time):
         return self > other_time or self == other_time
@@ -101,16 +118,16 @@ class Time():
         Keyword arguments:
         other_time -- Time object that is being added to self.
         """
-        hundreth = self.hundreth + other_time.get_hundreth()
+        hundredth = self.hundredth + other_time.get_hundredth()
         second = self.second + other_time.get_second()
         minute = self.minute + other_time.get_minute()
-        if hundreth >= 100:
-            hundreth = hundreth % 100
+        if hundredth >= 100:
+            hundredth = hundredth % 100
             second += 1
         if second >= 60:
             second = second % 60
             minute += 1
-        return Time(minute, second, hundreth)
+        return Time(minute, second, hundredth)
 
     def __sub__(self, other_time):
         """
@@ -121,22 +138,37 @@ class Time():
         """
         if other_time > self:
             return
-        hundreth = self.get_hundreth()
+        hundredth = self.get_hundredth()
         second = self.get_second()
         minute = self.get_minute
-        t_hundreth = other_time.get_hundreth()
+        t_hundredth = other_time.get_hundredth()
         t_second = other_time.get_second()
         t_minute = other_time.get_minute()
-        if hundreth < t_hundreth:
+        if hundredth < t_hundredth:
             second = second - 1
-            hundreth = hundreth + 100
-        hundreth = hundreth - t_hundreth
+            hundredth = hundredth + 100
+        hundredth = hundredth - t_hundredth
         if second < t_second:
             minute = minute - 1
             second = second + 60
         second = second - t_second
         minute = minute - t_minute
-        return Time(minute, second, hundreth)
+        return Time(minute, second, hundredth)
+    
+    def set_minute(self, m):
+        assert type(m) == int, f"Minute should be an integer: {m}"
+        assert 0 <= m and m < 60, f"Invalid minute: {m}"
+        self.minute = m
+
+    def set_second(self, s):
+        assert type(s) == int, f"Seconds should be an integer: {s}"
+        assert 0 <= s and s < 60, f"Invalid seconds: {s}"
+        self.second = s
+
+    def set_hundredth(self, h):
+        assert type(h) == int, f"Hundredths should be an integer: {h}"
+        assert 0 <= h and h < 100, f"Invalid hundredths: {h}"
+        self.hundredth = h
     
     def get_minute(self):
         """
@@ -150,11 +182,58 @@ class Time():
         """
         return self.second
     
-    def get_hundreth(self):
+    def get_hundredth(self):
         """
-        Return self.hundreth attribute of time instance.
+        Return self.hundredth attribute of time instance.
         """
-        return self.hundreth
+        return self.hundredth
+    
+
+def create_time_from_str(time_str: str) -> Time:
+    """
+    Return time object corresponding to time_str. Input string
+    should be in mm:ss.hh format.
+
+    Keyword arguments:
+    time_str -- time string.
+    """
+    minute_str, second_str, hundredth_str = "0", "0", "0"
+    minute, second, hundredth = 0, 0, 0
+
+    # Parse string
+    first_split = time_str.split(":")
+    if (len(first_split) == 2):
+        minute_str = first_split[0]
+    next_split = first_split[-1].split(".")
+    if len(next_split) != 2:
+        raise Exception(f"Invalid input: '{time_str}'. " + \
+                        f"Should be in 'mm:ss.hh' format.")
+    second_str = next_split[0]
+    hundredth_str = next_split[1]
+    try:
+        minute = int(minute_str)
+        second = int(second_str)
+        hundredth = int(hundredth_str)
+    except:
+        raise Exception(f"Invalid input: '{time_str}'. " + \
+                        f"Time is not a valid time.")
+    
+    return Time(minute, second, hundredth)
+
+def standardize_course(course: str | int) -> str:
+    """
+    Standardize course to string format.
+
+    Keyword arguments:
+    course -- course specified in D0 line 
+    """
+    if course == 'S' or course == 1:
+        return 'S'
+    if course == 'Y' or course == 2:
+        return  'Y'
+    if course == 'L' or course == 3:
+        return 'L'
+    return course
 
 
 class Util():
@@ -197,39 +276,4 @@ class Util():
     sex_code = ['F', 'M']
     gender_to_str = {'F': 'Female',
                      'M': 'Male'}
-    
-    
-    def standardize_course(course: str | int) -> str:
-        """
-        Standardize course to string format.
 
-        Keyword arguments:
-        course -- course specified in D0 line 
-        """
-        if course == 'S' or course == 1:
-            return 'S'
-        if course == 'Y' or course == 2:
-            return  'Y'
-        if course == 'L' or course == 3:
-            return 'L'
-        return course
-    
-    def create_time(time_str: str) -> Time:
-        """
-        Convert time_str to Time object.
-
-        Keyword arguments:
-        time_str -- time string specified in D0 line
-        """
-        invalid_results = ["DQ", "NS", "DNF", "SCR"]
-        if not time_str.strip() or time_str.strip() in invalid_results:
-            return
-        minutes = time_str[0:2]
-        if not minutes.strip():
-            minutes = 0
-        else:
-            minutes = int(minutes)
-        seconds = int(time_str[3:5])
-        hundreths = int(time_str[6:8])
-        return Time(minutes, seconds, hundreths)
-    
