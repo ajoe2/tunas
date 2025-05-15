@@ -1,4 +1,7 @@
-
+"""
+Helper methods and constants for scripts. Includes a custom time class, 
+functions for processing input, and meet result constants.
+"""
 
 class Time():
     """
@@ -20,7 +23,7 @@ class Time():
         self.set_second(second)
         self.set_hundredth(hundredth)
     
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Return string representation of time object. Return empty
         string if time is equal to 0.
@@ -47,7 +50,7 @@ class Time():
         else:
             return f"{m}:{s}.{h}"
         
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Return representation of time object.
 
@@ -60,7 +63,7 @@ class Time():
         """
         return f"Time({self.minute}, {self.second}, {self.hundredth})"
     
-    def __gt__(self, other_time):
+    def __gt__(self, other_time) -> bool:
         """
         Return true if self is a longer time than other_time.
 
@@ -85,7 +88,7 @@ class Time():
         # Self must equal other_time so return false
         return False
     
-    def __lt__(self, other_time):
+    def __lt__(self, other_time) -> bool:
         """
         Return true if self is a shorter time than other_time.
 
@@ -94,7 +97,7 @@ class Time():
         """
         return other_time > self
     
-    def __eq__(self, other_time):
+    def __eq__(self, other_time) -> bool:
         """
         Return true if self is equal to other_time.
 
@@ -105,10 +108,24 @@ class Time():
            and self.get_second() == other_time.get_second() \
            and self.get_hundredth() == other_time.get_hundredth()
     
-    def __ge__(self, other_time):
+    def __ge__(self, other_time) -> bool:
+        """
+        Return true if self is a greater than or equal time to 
+        other_time.
+
+        Keyword arguments:
+        other_time -- Time object that is being compared against
+        """
         return self > other_time or self == other_time
 
-    def __le__(self, other_time):
+    def __le__(self, other_time) -> bool:
+        """
+        Return true if self is a less than or equal time to 
+        other_time.
+
+        Keyword arguments:
+        other_time -- Time object that is being compared against
+        """
         return other_time >= self
 
     def __add__(self, other_time):
@@ -131,7 +148,7 @@ class Time():
 
     def __sub__(self, other_time):
         """
-        Return the difference of self and other_time.
+        Return self minus other_time.
 
         Keyword arguments:
         other_time -- Time object that is being subtracted from self.
@@ -155,36 +172,45 @@ class Time():
         minute = minute - t_minute
         return Time(minute, second, hundredth)
     
-    def set_minute(self, m):
+    def set_minute(self, m: int):
+        """
+        Verify and set self.minute attribute
+        """
         assert type(m) == int, f"Minute should be an integer: {m}"
         assert 0 <= m and m < 60, f"Invalid minute: {m}"
         self.minute = m
 
-    def set_second(self, s):
+    def set_second(self, s: int):
+        """
+        Verify and set self.second attribute
+        """
         assert type(s) == int, f"Seconds should be an integer: {s}"
         assert 0 <= s and s < 60, f"Invalid seconds: {s}"
         self.second = s
 
-    def set_hundredth(self, h):
+    def set_hundredth(self, h: int):
+        """
+        Verify and set self.hundredth attribute
+        """
         assert type(h) == int, f"Hundredths should be an integer: {h}"
         assert 0 <= h and h < 100, f"Invalid hundredths: {h}"
         self.hundredth = h
     
-    def get_minute(self):
+    def get_minute(self) -> int:
         """
-        Return self.minute attribute of time instance.
+        Return self.minute attribute.
         """
         return self.minute
 
-    def get_second(self):
+    def get_second(self) -> int:
         """
-        Return self.second attribute of time instance.
+        Return self.second attribute.
         """
         return self.second
     
-    def get_hundredth(self):
+    def get_hundredth(self) -> int:
         """
-        Return self.hundredth attribute of time instance.
+        Return self.hundredth attribute.
         """
         return self.hundredth
     
