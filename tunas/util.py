@@ -20,40 +20,40 @@ class Stroke(Enum):
     MEDLEY_RELAY = 7
 
     def __str__(self):
-        match self.name:
-            case "FREESTYLE":
+        match self:
+            case Stroke.FREESTYLE:
                 return "Free"
-            case "BACKSTROKE":
+            case Stroke.BACKSTROKE:
                 return "Back"
-            case "BREASTSTROKE":
+            case Stroke.BREASTSTROKE:
                 return "Breast"
-            case "BUTTERFLY":
+            case Stroke.BUTTERFLY:
                 return "Fly"
-            case "INDIVIDUAL_MEDLEY":
+            case Stroke.INDIVIDUAL_MEDLEY:
                 return "IM"
-            case "FREESTYLE_RELAY":
+            case Stroke.FREESTYLE_RELAY:
                 return "Free Relay"
-            case "MEDLEY_RELAY":
+            case Stroke.MEDLEY_RELAY:
                 return "Medley Relay"
     
     def short(self) -> str:
         """
         Short string representation of stroke.
         """
-        match self.name:
-            case "FREESTYLE":
+        match self:
+            case Stroke.FREESTYLE:
                 return "FR"
-            case "BACKSTROKE":
+            case Stroke.BACKSTROKE:
                 return "BK"
-            case "BREASTSTROKE":
+            case Stroke.BREASTSTROKE:
                 return "BR"
-            case "BUTTERFLY":
+            case Stroke.BUTTERFLY:
                 return "FL"
-            case "INDIVIDUAL_MEDLEY":
+            case Stroke.INDIVIDUAL_MEDLEY:
                 return "IM"
-            case "FREESTYLE_RELAY":
+            case Stroke.FREESTYLE_RELAY:
                 return "FR-R"
-            case "MEDLEY_RELAY":
+            case Stroke.MEDLEY_RELAY:
                 return "IM-R"
 
 
@@ -88,12 +88,12 @@ class Course(Enum):
         """
         Short string representation of course.
         """
-        match self.name:
-            case "SCM":
+        match self:
+            case Course.SCM:
                 return 'S'
-            case "SCY":
+            case Course.SCY:
                 return 'Y'
-            case "LCM":
+            case Course.LCM:
                 return 'L'
 
 
@@ -123,10 +123,10 @@ class AgeGroup(Enum):
     AG_SENIOR = (13, 100)
 
     def __str__(self):
-        match self.name:
-            case "AG_10_u":
+        match self:
+            case AgeGroup.AG_10_u:
                 return "10&u"
-            case "AG_SENIOR":
+            case AgeGroup.AG_SENIOR:
                 return "senior"
             case _:
                 return f"{self.get_min_age()}-{self.get_max_age()}"
