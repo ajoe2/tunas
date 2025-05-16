@@ -146,7 +146,6 @@ class Event():
         self.stroke = stroke
         self.dist = dist
         self.course = course
-        self.swimmer = swimmer
         self.meet_results = []
 
     def __str__(self) -> str:
