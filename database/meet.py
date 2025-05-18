@@ -1,10 +1,12 @@
 """
 Define the Meet and MeetResult classes. Define associated classes 
-IndividualMeetResult, RelayMeetResult, RelaySplit which all inherit 
+IndividualMeetResult, RelayMeetResult, RelaySplit which inherit 
 from MeetResult.
 """
 
+from __future__ import annotations # Enable future annotations
 from datetime import date
+
 from util import Organization, LSC, Session, Event, Sex, Time, Course
 from util import EventTimeClass
 
@@ -13,8 +15,55 @@ class Meet():
     """
     TODO
     """
-    def __init__(self):
-        pass
+    def __init__(self, organization: Organization, name: str):
+        self.set_organization(organization)
+        self.set_name(name)
+        self.set_meet_results([])
+
+    def set_organization(self, organization: Organization):
+        assert type(organization) == Organization
+        self.organization = organization
+
+    def set_name(self, name: str):
+        assert type(name) == str and len(name) > 0
+        self.name = name
+
+    def set_meet_results(self, meet_results: list[MeetResult]):
+        assert type(meet_results) == list
+        new_results = []
+        for mr in meet_results:
+            assert type(mr) == MeetResult
+            new_results.append(mr)
+        self.meet_results = new_results
+
+    def set_address_one(self, address_one: str):
+        if address_one != None:
+            assert type(address_one) == str
+        self.address_one = address_one
+
+    def set_address_two(self, address_two: str):
+        if address_two != None:
+            assert type(address_two) == str
+        self.address_two = address_two
+
+    def get_organization(self) -> Organization:
+        return self.organization
+    
+    def get_name(self) -> str:
+        return self.name
+
+    def get_meet_results(self) -> list[MeetResult]:
+        return self.meet_results
+    
+    def get_address_one(self) -> str:
+        return self.address_one
+    
+    def get_address_two(self) -> str:
+        return self.address_two
+    
+    def add_meet_result(self, meet_result: MeetResult):
+        assert type(meet_result) == MeetResult
+        self.meet_results.append(meet_result)
 
 
 class MeetResult():
@@ -79,8 +128,7 @@ class MeetResult():
         event numbers as strings and leave processing to higher layers
         of code.
         """
-        assert type(event_number) == str
-        assert ' ' not in event_number
+        assert type(event_number) == str and ' ' not in event_number
         self.event_number = event_number
 
     def set_event_min_time_class(self, event_min_time_class: EventTimeClass):
