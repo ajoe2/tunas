@@ -1,23 +1,14 @@
 """
-Define the Meet and MeetResult classes. Define associated classes
+Defines the Meet and MeetResult classes. Defines associated classes
 IndividualMeetResult, RelayMeetResult, RelayLeg which inherit
 from MeetResult.
 """
 
 from __future__ import annotations  # Enable future annotations
-from datetime import date
+import datetime
 
-from util import (
-    Organization,
-    LSC,
-    Session,
-    Event,
-    Sex,
-    Time,
-    Course,
-    EventTimeClass,
-    State,
-)
+import util.sdif as sdif
+import util.time as time
 
 
 class Meet:
@@ -30,15 +21,15 @@ class Meet:
 
     def __init__(
         self,
-        organization: Organization,
+        organization: sdif.Organization,
         name: str,
     ) -> None:
         self.set_organization(organization)
         self.set_name(name)
         self.set_meet_results([])
 
-    def set_organization(self, organization: Organization) -> None:
-        assert type(organization) == Organization
+    def set_organization(self, organization: sdif.Organization) -> None:
+        assert type(organization) == sdif.Organization
         self.organization = organization
 
     def set_name(self, name: str) -> None:
@@ -67,15 +58,15 @@ class Meet:
         assert type(city) == str
         self.city = city
 
-    def set_state(self, state: State) -> None:
-        assert type(state) == State
+    def set_state(self, state: sdif.State) -> None:
+        assert type(state) == sdif.State
         self.state = state
 
-    def set_postal_code(self, postal_code:str) -> None:
+    def set_postal_code(self, postal_code: str) -> None:
         assert type(postal_code) == str
         self.postal_code = postal_code
 
-    def get_organization(self) -> Organization:
+    def get_organization(self) -> sdif.Organization:
         return self.organization
 
     def get_name(self) -> str:
@@ -89,13 +80,13 @@ class Meet:
 
     def get_address_two(self) -> str:
         return self.address_two
-    
+
     def get_city(self) -> str:
         return self.city
-    
-    def get_state(self) -> State:
+
+    def get_state(self) -> sdif.State:
         return self.state
-    
+
     def get_postal_code(self) -> str:
         return self.postal_code
 
@@ -112,25 +103,25 @@ class MeetResult:
     def __init__(
         self,
         meet: Meet,
-        organization: Organization,
+        organization: sdif.Organization,
         team_code: str,
-        lsc: LSC,
-        session: Session,
-        date_of_swim: date,
-        event: Event,
+        lsc: sdif.LSC,
+        session: sdif.Session,
+        date_of_swim: datetime.date,
+        event: sdif.Event,
         event_min_age: int,
         event_max_age: int,
         event_number: str,
-        event_sex: Sex,
+        event_sex: sdif.Sex,
         heat: int,
         lane: int,
-        final_time: Time,
+        final_time: time.Time,
         rank: int | None = None,
         points: float | None = None,
-        seed_time: Time | None = None,
-        seed_course: Course | None = None,
-        event_min_time_class: EventTimeClass | None = None,
-        event_max_time_class: EventTimeClass | None = None,
+        seed_time: time.Time | None = None,
+        seed_course: sdif.Course | None = None,
+        event_min_time_class: sdif.EventTimeClass | None = None,
+        event_max_time_class: sdif.EventTimeClass | None = None,
     ) -> None:
         # Mandatory fields
         self.set_meet(meet)
@@ -160,8 +151,8 @@ class MeetResult:
         assert type(meet) == Meet
         self.meet = meet
 
-    def set_organization(self, organization: Organization) -> None:
-        assert type(organization) == Organization
+    def set_organization(self, organization: sdif.Organization) -> None:
+        assert type(organization) == sdif.Organization
         self.organization = organization
 
     def set_team_code(self, team_code: str) -> None:
@@ -171,21 +162,21 @@ class MeetResult:
             assert len(team_code) <= 4 and len(team_code) > 0
         self.team_code = team_code
 
-    def set_lsc(self, lsc: LSC) -> None:
+    def set_lsc(self, lsc: sdif.LSC) -> None:
         if lsc != None:
-            assert type(lsc) == LSC
+            assert type(lsc) == sdif.LSC
         self.lsc = lsc
 
-    def set_session(self, session: Session) -> None:
-        assert type(session) == Session
+    def set_session(self, session: sdif.Session) -> None:
+        assert type(session) == sdif.Session
         self.session = session
 
-    def set_date_of_swim(self, date_of_swim: date) -> None:
-        assert type(date_of_swim) == date
+    def set_date_of_swim(self, date_of_swim: datetime.date) -> None:
+        assert type(date_of_swim) == datetime.date
         self.date_of_swim = date_of_swim
 
-    def set_event(self, event: Event) -> None:
-        assert type(event) == Event
+    def set_event(self, event: sdif.Event) -> None:
+        assert type(event) == sdif.Event
         self.event = event
 
     def set_event_min_age(self, min_age: int) -> None:
@@ -215,8 +206,8 @@ class MeetResult:
         assert type(event_number) == str and " " not in event_number
         self.event_number = event_number
 
-    def set_event_sex(self, event_sex: Sex) -> None:
-        assert type(event_sex) == Sex
+    def set_event_sex(self, event_sex: sdif.Sex) -> None:
+        assert type(event_sex) == sdif.Sex
         self.event_sex = event_sex
 
     def set_heat(self, heat: int) -> None:
@@ -229,8 +220,8 @@ class MeetResult:
         assert lane >= 0 and lane <= 99
         self.lane = lane
 
-    def set_final_time(self, final_time: Time) -> None:
-        assert type(final_time) == Time
+    def set_final_time(self, final_time: time.Time) -> None:
+        assert type(final_time) == time.Time
         self.final_time = final_time
 
     def set_rank(self, rank: int | None) -> None:
@@ -245,51 +236,51 @@ class MeetResult:
             assert points >= 0
         self.points = points
 
-    def set_seed_time(self, seed_time: Time | None) -> None:
+    def set_seed_time(self, seed_time: time.Time | None) -> None:
         if seed_time != None:
-            assert type(seed_time) == Time
+            assert type(seed_time) == time.Time
         self.seed_time = seed_time
 
-    def set_seed_course(self, seed_course: Course | None) -> None:
+    def set_seed_course(self, seed_course: sdif.Course | None) -> None:
         if seed_course != None:
-            assert type(seed_course) == Course
+            assert type(seed_course) == sdif.Course
         self.seed_course = seed_course
 
     def set_event_min_time_class(
-        self, event_min_time_class: EventTimeClass | None
+        self, event_min_time_class: sdif.EventTimeClass | None
     ) -> None:
         if event_min_time_class != None:
-            assert type(event_min_time_class) == EventTimeClass
-            assert event_min_time_class != EventTimeClass.NO_UPPER_LIMIT
+            assert type(event_min_time_class) == sdif.EventTimeClass
+            assert event_min_time_class != sdif.EventTimeClass.NO_UPPER_LIMIT
         self.event_min_time_class = event_min_time_class
 
     def set_event_max_time_class(
-        self, event_max_time_class: EventTimeClass | None
+        self, event_max_time_class: sdif.EventTimeClass | None
     ) -> None:
         if event_max_time_class != None:
-            assert type(event_max_time_class) == EventTimeClass
-            assert event_max_time_class != EventTimeClass.NO_LOWER_LIMIT
+            assert type(event_max_time_class) == sdif.EventTimeClass
+            assert event_max_time_class != sdif.EventTimeClass.NO_LOWER_LIMIT
         self.event_max_time_class = event_max_time_class
 
     def get_meet(self) -> Meet:
         return self.meet
 
-    def get_organization(self) -> Organization:
+    def get_organization(self) -> sdif.Organization:
         return self.organization
 
     def get_team_code(self) -> str:
         return self.team_code
 
-    def get_lsc(self) -> LSC:
+    def get_lsc(self) -> sdif.LSC:
         return self.lsc
 
-    def get_session(self) -> Session:
+    def get_session(self) -> sdif.Session:
         return self.session
 
-    def get_date_of_swim(self) -> date:
+    def get_date_of_swim(self) -> datetime.date:
         return self.date_of_swim
 
-    def get_event(self) -> Event:
+    def get_event(self) -> sdif.Event:
         return self.event
 
     def get_event_min_age(self) -> int:
@@ -301,7 +292,7 @@ class MeetResult:
     def get_event_number(self) -> str:
         return self.event_number
 
-    def get_event_sex(self) -> Sex:
+    def get_event_sex(self) -> sdif.Sex:
         return self.event_sex
 
     def get_heat(self) -> int:
@@ -310,7 +301,7 @@ class MeetResult:
     def get_lane(self) -> int:
         return self.lane
 
-    def get_final_time(self) -> Time:
+    def get_final_time(self) -> time.Time:
         return self.final_time
 
     def get_rank(self) -> int | None:
@@ -319,14 +310,14 @@ class MeetResult:
     def get_points(self) -> float | None:
         return self.points
 
-    def get_seed_time(self) -> Time | None:
+    def get_seed_time(self) -> time.Time | None:
         return self.seed_time
 
-    def get_seed_course(self) -> Course | None:
+    def get_seed_course(self) -> sdif.Course | None:
         return self.seed_course
 
-    def get_event_min_time_class(self) -> EventTimeClass | None:
+    def get_event_min_time_class(self) -> sdif.EventTimeClass | None:
         return self.event_min_time_class
 
-    def get_event_max_time_class(self) -> EventTimeClass | None:
+    def get_event_max_time_class(self) -> sdif.EventTimeClass | None:
         return self.event_max_time_class
