@@ -11,7 +11,7 @@ import util.sdif as sdif
 import util.time as time
 
 
-class Meet:
+class Meet():
     """
     Defines basic meet attributes and associated helper methods (getter/setter).
     Used to manage meet result entries.

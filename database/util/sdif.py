@@ -1,14 +1,14 @@
 """
-Constants defined in the USA Swimming Interchange Format (SDIF).
+Constants defined in the USA Swimming Standard Interchange Format (SDIF).
 Most enums correspond to code tables defined in the SDIF spec.
 """
 
 import enum
 
+
 class Organization(enum.Enum):
     """
-    All organizations defined under the USA Swimming Interchange
-    Format (ORG Code 001).
+    All organizations defined under the USA Swimming Standard Interchange Format (ORG Code 001).
     """
 
     USA_SWIMMING = 1
@@ -24,8 +24,7 @@ class Organization(enum.Enum):
 
 class LSC(enum.Enum):
     """
-    List of all LSCs. Follows convention used in USA Swimming
-    Interchange Format (LSC Code 002).
+    All LSCs defined under the USA Swimming Standard Interchange Format (LSC Code 002).
     """
 
     ADIRONDACK = "AD"
@@ -89,10 +88,196 @@ class LSC(enum.Enum):
     WYOMING = "WY"
 
 
+class Country(enum.Enum):
+    """
+    All countries defined under the USA Swimming Standard Interchange Format (COUNTRY Code 004)
+    """
+
+    AFGHANISTAN = "AFG"
+    DUTCH_WEST_INDIES = "AHO"
+    ALBANIA = "ALB"
+    ALGERIA = "ALG"
+    ANDORRA = "AND"
+    ANGOLA = "ANG"
+    ANTIGUA = "ANT"
+    ARGENTINA = "ARG"
+    ARMENIA = "ARM"
+    ARUBA = "ARU"
+    AMERICAN_SAMOA = "ASA"
+    AUSTRALIA = "AUS"
+    AUSTRIA = "AUT"
+    AZERBAIJAN = "AZE"
+    BAHAMAS = "BAH"
+    BANGLADESH = "BAN"
+    BARBADOS = "BAR"
+    BELGIUM = "BEL"
+    BENIN = "BEN"
+    BERMUDA = "BER"
+    BHUTAN = "BHU"
+    BELIZE = "BIZ"
+    BELARUS = "BLS"
+    BOLIVIA = "BOL"
+    BOTSWANA = "BOT"
+    BRAZIL = "BRA"
+    BAHRAIN = "BRN"
+    BRUNEI = "BRU"
+    BULGARIA = "BUL"
+    BURKINA_FASO = "BUR"
+    CENTRAL_AFRICAN_REPUBLIC = "CAF"
+    CANADA = "CAN"
+    CAYMAN_ISLANDS = "CAY"
+    CONGO = "CGO"
+    CHAD = "CHA"
+    CHILE = "CHI"
+    CHINA = "CHN"
+    IVORY_COAST = "CIV"
+    CAMEROON = "CMR"
+    COOK_ISLANDS = "COK"
+    COLUMBIA = "COL"
+    COSTA_RICA = "CRC"
+    CROATIA = "CRO"
+    CUBA = "CUB"
+    CYPRUS = "CYP"
+    DENMARK = "DEN"
+    DJIBOUTI = "DJI"
+    DOMINICAN_REPUBLIC = "COM"
+    ECUADOR = "ECU"
+    EGYPT = "EGY"
+    EL_SALVADOR = "ESA"
+    SPAIN = "ESP"
+    ESTONIA = "EST"
+    ETHIOPIA = "ETH"
+    FIJI = "FIJ"
+    FINLAND = "FIN"
+    FRANCE = "FRA"
+    GABON = "GAB"
+    GAMBIA = "GAM"
+    GREAT_BRITAIN = "GBR"
+    GERMANY = "GER"
+    GEORGIA = "GEO"
+    EQUATORIAL_GUINEA = "GEO"
+    GHANA = "GHA"
+    GREECE = "GRE"
+    GRENADA = "GRN"
+    GUATEMALA = "GUA"
+    GUINEA = "GUI"
+    GUAM = "GUM"
+    GUYANA = "GUY"
+    HAITI = "HAI"
+    HONG_KONG = "HKG"
+    HONDURAS = "HON"
+    HUNGARY = "HUN"
+    INDONESIA = "INA"
+    INDIA = "IND"
+    IRELAND = "IRL"
+    IRAN = "IRI"
+    IRAQ = "IRQ"
+    ICELAND = "ISL"
+    ISRAEL = "ISR"
+    VIRGIN_ISLANDS = "ISV"
+    ITALY = "ITA"
+    BRITISH_VIRGIN_ISLANDS = "IVB"
+    JAMAICA = "JAM"
+    JORDAN = "JOR"
+    JAPAN = "JPN"
+    KENYA = "KEN"
+    KRYGHYZSTAN = "KGZ"
+    SOUTH_KOREA = "KOR"
+    SAUDI_ARABIA = "KSA"
+    KUWAIT = "KUW"
+    KAZAKHSTAN = "KZK"
+    LAOS = "LAO"
+    LATVIA = "LAT"
+    LIBYA = "LBA"
+    LIBERIA = "LBR"
+    LESOTHO = "LES"
+    LEBANON = "LIB"
+    LIECHTENSTEIN = "LIE"
+    LITHUANIA = "LIT"
+    LUXEMBOURG = "LUX"
+    MADAGASCAR = "MAD"
+    MALAYSIA = "MAS"
+    MOROCCO = "MAR"
+    MALAWI = "MAW"
+    MALDIVES = "MDV"
+    MEXICO = "MEX"
+    MONGOLIA = "MGL"
+    MOLDOVA = "MLD"
+    MALI = "MLI"
+    MALTA = "MLT"
+    MONACO = "MON"
+    MOZAMBIQUE = "MOZ"
+    MAURITIUS = "MRI"
+    MAURITANIA = "MTN"
+    MYANMAR = "MYA"
+    NAMIBIA = "NAM"
+    NICARAGUA = "NCA"
+    NETHERLANDS = "NED"
+    NEPAL = "NEP"
+    NIGER = "NIG"
+    NIGERIA = "NGR"
+    NORWAY = "NOR"
+    NEW_ZEALAND = "NZL"
+    OMAN = "OMA"
+    PAKISTAN = "PAK"
+    PANAMA = "PAN"
+    PARAGUAY = "PAR"
+    PERU = "PER"
+    PHILIPPINES = "PHI"
+    PAPAU_NEW_GUINEA = "PNG"
+    POLAND = "POL"
+    PORTUGAL = "POR"
+    NORTH_KOREA = "PRK"
+    PUERTO_RICO = "PUR"
+    QATAR = "QAT"
+    ROMANIA = "ROM"
+    SOUTH_AFRICA = "RSA"
+    RUSSIA = "RUS"
+    RWANDA = "RWA"
+    WESTERN_SAMOA = "SAM"
+    SENEGAL = "SEN"
+    SEYCHELLES = "SEY"
+    SINGAPORE = "SIN"
+    SIERRA_LEONE = "SLE"
+    SLOVENIA = "SLO"
+    SAN_MARINO = "SMR"
+    SOLOMON_ISLANDS = "SOL"
+    SOMALIA = "SOM"
+    SRI_LANKA = "SRI"
+    SUDAN = "SUD"
+    SWITZERLAND = "SUI"
+    SURINAM = "SUR"
+    SWEDEN = "SWE"
+    SWAZILAND = "SWZ"
+    TANZANIA = "TAN"
+    CZECHOSLOVAKIA = "TCH"
+    TONGA = "TGA"
+    THAILAND = "THA"
+    TADJIKISTAN = "TJK"
+    TOGO = "TOG"
+    TAIWAN = "TPE"
+    TRINIDAD_TOBAGO = "TRI"
+    TUNISIA = "TUN"
+    TURKEY = "TUR"
+    UNITED_ARAB_EMIRATES = "UAE"
+    UGANDA = "UGA"
+    UKRAINE = "UKR"
+    URUGUAY = "URU"
+    UNITED_STATES = "USA"
+    VANUATU = "VAN"
+    VENEZUELA = "VEN"
+    VIETNAM = "VIE"
+    SAINT_VINCENT = "VIN"
+    YEMEN = "YEM"
+    YUGOSLAVIA = "YUG"
+    ZAIRE = "ZAI"
+    ZAMBIA = "ZAM"
+    ZIMBABWE = "ZIM"
+
+
 class Stroke(enum.Enum):
     """
-    Valid strokes. Follows convention used in USA Swimming
-    Interchange Format (STROKE Code 012).
+    All strokes defined under the USA Swimming Standard Interchange Format (STROKE Code 012).
     """
 
     FREESTYLE = 1
@@ -143,7 +328,7 @@ class Stroke(enum.Enum):
 
 class Session(enum.Enum):
     """
-    Swim meet sessions. Follows convention used in USA Swimming
+    Swim meet sessions. Follows convention used in USA Swimming Standard
     Interchange Format (PRELIMS/FINALS Code 019).
     """
 
@@ -157,7 +342,7 @@ class Session(enum.Enum):
 
 class Course(enum.Enum):
     """
-    Event course. The USA Swimming Interchange Format represents
+    Event course. The USA Swimming Standard Interchange Format represents
     courses in two ways (COURSE Code 013). Here, we use the integer
     representation as the default and the character representation
     as the shortened string.
@@ -185,7 +370,7 @@ class Course(enum.Enum):
 
 class Sex(enum.Enum):
     """
-    Swimmer sex. Follows convention used in USA Swimming
+    Swimmer sex. Follows convention used in USA Swimming Standard
     Interchange Format (SEX Code 010 and EVENT SEX Code 011).
     """
 
@@ -321,7 +506,7 @@ class Event(enum.Enum):
 
 class EventTimeClass(enum.Enum):
     """
-    Event time class. Follows convention used in the USA Swimming
+    Event time class. Follows convention used in the USA Swimming Standard
     Interchange Format (EVENT TIME CLASS Code 014)
     """
 
@@ -385,7 +570,7 @@ class State(enum.Enum):
     PUERTO_RICO = "PR"
     RHODE_ISLAND = "RI"
     SOUTH_CAROLINA = "SC"
-    SOUTH_DAKOTA  = "SD"
+    SOUTH_DAKOTA = "SD"
     TENNESSEE = "TN"
     TEXAS = "TX"
     UTAH = "UT"
