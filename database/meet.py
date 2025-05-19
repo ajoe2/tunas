@@ -74,6 +74,23 @@ class Meet():
         assert type(meet_type) == sdif.MeetType
         self.meet_type = meet_type
 
+    def set_start_date(self, start_date: datetime.date) -> None:
+        assert type(start_date) == datetime.date
+        self.start_date = start_date
+
+    def set_end_date(self, end_date: datetime.date) -> None:
+        assert type(end_date) == datetime.date
+        self.end_date = end_date
+
+    def set_altitude(self, altitude: int) -> None:
+        assert type(altitude) == int
+        assert altitude >= 0
+        self.altitude = altitude
+
+    def set_course(self, course: sdif.Course) -> None:
+        assert type(course) == sdif.Course
+        self.course = course
+
     def get_organization(self) -> sdif.Organization:
         return self.organization
 
@@ -103,6 +120,18 @@ class Meet():
     
     def get_meet_type(self) -> sdif.MeetType:
         return self.meet_type
+    
+    def get_start_date(self) -> datetime.date:
+        return self.start_date
+    
+    def get_end_date(self) -> datetime.date:
+        return self.end_date
+    
+    def get_altitude(self) -> int:
+        return self.altitude
+    
+    def get_course(self) -> sdif.Course:
+        return self.course
 
     def add_meet_result(self, meet_result: MeetResult):
         assert type(meet_result) == MeetResult

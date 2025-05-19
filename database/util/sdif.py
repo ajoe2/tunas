@@ -1,6 +1,6 @@
 """
 Constants defined in the USA Swimming Standard Interchange Format (SDIF).
-Most enums correspond to code tables defined in the SDIF spec.
+Most classes correspond to code tables defined in the SDIF specifications.
 """
 
 import enum
