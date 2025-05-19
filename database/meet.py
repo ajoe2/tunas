@@ -7,12 +7,24 @@ from MeetResult.
 from __future__ import annotations  # Enable future annotations
 from datetime import date
 
-from util import Organization, LSC, Session, Event, Sex, Time, Course
-from util import EventTimeClass
+from util import (
+    Organization,
+    LSC,
+    Session,
+    Event,
+    Sex,
+    Time,
+    Course,
+    EventTimeClass,
+    State,
+)
 
 
 class Meet:
     """
+    Defines basic meet attributes and associated helper methods (getter/setter).
+    Used to manage meet result entries.
+
     TODO
     """
 
@@ -51,6 +63,18 @@ class Meet:
             assert type(address_two) == str
         self.address_two = address_two
 
+    def set_city(self, city: str) -> None:
+        assert type(city) == str
+        self.city = city
+
+    def set_state(self, state: State) -> None:
+        assert type(state) == State
+        self.state = state
+
+    def set_postal_code(self, postal_code:str) -> None:
+        assert type(postal_code) == str
+        self.postal_code = postal_code
+
     def get_organization(self) -> Organization:
         return self.organization
 
@@ -65,6 +89,15 @@ class Meet:
 
     def get_address_two(self) -> str:
         return self.address_two
+    
+    def get_city(self) -> str:
+        return self.city
+    
+    def get_state(self) -> State:
+        return self.state
+    
+    def get_postal_code(self) -> str:
+        return self.postal_code
 
     def add_meet_result(self, meet_result: MeetResult):
         assert type(meet_result) == MeetResult
@@ -73,7 +106,7 @@ class Meet:
 
 class MeetResult:
     """
-    Define basic attributes and associated helper methods (get/set).
+    Defines basic meet result attributes and associated helper methods (getter/setter).
     """
 
     def __init__(
