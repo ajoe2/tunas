@@ -90,7 +90,9 @@ class LSC(enum.Enum):
 
 class Country(enum.Enum):
     """
-    All countries defined under the USA Swimming Standard Interchange Format (COUNTRY Code 004)
+    All countries defined under the USA Swimming Standard Interchange Format (COUNTRY 
+    Code 004). Includes citizenship distinctions Dual and Foreign which are defined 
+    in (CITIZEN Code 009)
     """
 
     AFGHANISTAN = "AFG"
@@ -273,6 +275,8 @@ class Country(enum.Enum):
     ZAIRE = "ZAI"
     ZAMBIA = "ZAM"
     ZIMBABWE = "ZIM"
+    DUAL = "2AL"
+    FOREIGN = "FGN"
 
 
 class MeetType(enum.Enum):
