@@ -11,22 +11,46 @@ import util.sdif as sdif
 import util.time as time
 
 
-class Meet():
+class Meet:
     """
     Defines basic meet attributes and associated helper methods (getter/setter).
     Used to manage meet result entries.
-
-    TODO
     """
 
     def __init__(
         self,
         organization: sdif.Organization,
         name: str,
+        meet_type: sdif.MeetType,
+        city: str,
+        state: sdif.State,
+        address_one: str,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        address_two: str | None = None,
+        postal_code: str | None = None,
+        country: sdif.Country | None = None,
+        course: sdif.Course | None = None,
+        altitude: int | None = None,
+        meet_results: list[MeetResult] = []
     ) -> None:
+        # Mandatory fields
         self.set_organization(organization)
         self.set_name(name)
-        self.set_meet_results([])
+        self.set_meet_type(meet_type)
+        self.set_city(city)
+        self.set_state(state)
+        self.set_address_one(address_one)
+        self.set_start_date(start_date)
+        self.set_end_date(end_date)
+
+        # Optional fields
+        self.set_address_two(address_two)
+        self.set_postal_code(postal_code)
+        self.set_country(country)
+        self.set_course(course)
+        self.set_altitude(altitude)
+        self.set_meet_results(meet_results)
 
     def set_organization(self, organization: sdif.Organization) -> None:
         assert type(organization) == sdif.Organization
@@ -36,23 +60,9 @@ class Meet():
         assert type(name) == str and len(name) > 0
         self.name = name
 
-    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
-        assert type(meet_results) == list
-        new_results = []
-        for mr in meet_results:
-            assert type(mr) == MeetResult
-            new_results.append(mr)
-        self.meet_results = new_results
-
-    def set_address_one(self, address_one: str) -> None:
-        if address_one != None:
-            assert type(address_one) == str
-        self.address_one = address_one
-
-    def set_address_two(self, address_two: str) -> None:
-        if address_two != None:
-            assert type(address_two) == str
-        self.address_two = address_two
+    def set_meet_type(self, meet_type: sdif.MeetType) -> None:
+        assert type(meet_type) == sdif.MeetType
+        self.meet_type = meet_type
 
     def set_city(self, city: str) -> None:
         assert type(city) == str
@@ -62,17 +72,9 @@ class Meet():
         assert type(state) == sdif.State
         self.state = state
 
-    def set_postal_code(self, postal_code: str) -> None:
-        assert type(postal_code) == str
-        self.postal_code = postal_code
-
-    def set_country(self, country: sdif.Country) -> None:
-        assert type(country) == sdif.Country
-        self.country = country
-
-    def set_meet_type(self, meet_type: sdif.MeetType) -> None:
-        assert type(meet_type) == sdif.MeetType
-        self.meet_type = meet_type
+    def set_address_one(self, address_one: str) -> None:
+        assert type(address_one) == str
+        self.address_one = address_one
 
     def set_start_date(self, start_date: datetime.date) -> None:
         assert type(start_date) == datetime.date
@@ -82,14 +84,35 @@ class Meet():
         assert type(end_date) == datetime.date
         self.end_date = end_date
 
-    def set_altitude(self, altitude: int) -> None:
+    def set_address_two(self, address_two: str | None) -> None:
+        if address_two != None:
+            assert type(address_two) == str
+        self.address_two = address_two
+
+    def set_postal_code(self, postal_code: str | None) -> None:
+        assert type(postal_code) == str
+        self.postal_code = postal_code
+
+    def set_country(self, country: sdif.Country | None) -> None:
+        assert type(country) == sdif.Country
+        self.country = country
+
+    def set_course(self, course: sdif.Course | None) -> None:
+        assert type(course) == sdif.Course
+        self.course = course
+
+    def set_altitude(self, altitude: int | None) -> None:
         assert type(altitude) == int
         assert altitude >= 0
         self.altitude = altitude
 
-    def set_course(self, course: sdif.Course) -> None:
-        assert type(course) == sdif.Course
-        self.course = course
+    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+        assert type(meet_results) == list
+        new_results = []
+        for mr in meet_results:
+            assert type(mr) == MeetResult
+            new_results.append(mr)
+        self.meet_results = new_results
 
     def get_organization(self) -> sdif.Organization:
         return self.organization
@@ -97,14 +120,8 @@ class Meet():
     def get_name(self) -> str:
         return self.name
 
-    def get_meet_results(self) -> list[MeetResult]:
-        return self.meet_results
-
-    def get_address_one(self) -> str:
-        return self.address_one
-
-    def get_address_two(self) -> str:
-        return self.address_two
+    def get_meet_type(self) -> sdif.MeetType:
+        return self.meet_type
 
     def get_city(self) -> str:
         return self.city
@@ -112,26 +129,32 @@ class Meet():
     def get_state(self) -> sdif.State:
         return self.state
 
-    def get_postal_code(self) -> str:
-        return self.postal_code
-    
-    def get_country(self) -> sdif.Country:
-        return self.country
-    
-    def get_meet_type(self) -> sdif.MeetType:
-        return self.meet_type
-    
+    def get_address_one(self) -> str:
+        return self.address_one
+
     def get_start_date(self) -> datetime.date:
         return self.start_date
-    
+
     def get_end_date(self) -> datetime.date:
         return self.end_date
-    
-    def get_altitude(self) -> int:
-        return self.altitude
-    
-    def get_course(self) -> sdif.Course:
+
+    def get_address_two(self) -> str | None:
+        return self.address_two
+
+    def get_postal_code(self) -> str | None:
+        return self.postal_code
+
+    def get_country(self) -> sdif.Country | None:
+        return self.country
+
+    def get_course(self) -> sdif.Course | None:
         return self.course
+
+    def get_altitude(self) -> int | None:
+        return self.altitude
+
+    def get_meet_results(self) -> list[MeetResult]:
+        return self.meet_results
 
     def add_meet_result(self, meet_result: MeetResult):
         assert type(meet_result) == MeetResult
