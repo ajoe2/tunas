@@ -66,6 +66,14 @@ class Meet():
         assert type(postal_code) == str
         self.postal_code = postal_code
 
+    def set_country(self, country: sdif.Country) -> None:
+        assert type(country) == sdif.Country
+        self.country = country
+
+    def set_meet_type(self, meet_type: sdif.MeetType) -> None:
+        assert type(meet_type) == sdif.MeetType
+        self.meet_type = meet_type
+
     def get_organization(self) -> sdif.Organization:
         return self.organization
 
@@ -89,6 +97,12 @@ class Meet():
 
     def get_postal_code(self) -> str:
         return self.postal_code
+    
+    def get_country(self) -> sdif.Country:
+        return self.country
+    
+    def get_meet_type(self) -> sdif.MeetType:
+        return self.meet_type
 
     def add_meet_result(self, meet_result: MeetResult):
         assert type(meet_result) == MeetResult

@@ -275,6 +275,40 @@ class Country(enum.Enum):
     ZIMBABWE = "ZIM"
 
 
+class MeetType(enum.Enum):
+    """
+    All meet types defined under the USA Swimming Standard Interchange Format (MEET Code 005).
+    """
+
+    INVITATIONAL = "1"
+    REGIONAL = "2"
+    LSC_CHAMPIONSHIP = "3"
+    ZONE = "4"
+    ZONE_CHAMPIONSHIP = "5"
+    NATIONAL_CHAMPIONSHIP = "6"
+    JUNIORS = "7"
+    SENIORS = "8"
+    DUAL = "9"
+    TIME_TRIALS = "0"
+    INTERNATIONAL = "A"
+    OPEN = "B"
+    LEAGUE = "C"
+
+
+class Sex(enum.Enum):
+    """
+    Swimmer sex. Follows convention used in USA Swimming Standard
+    Interchange Format (SEX Code 010 and EVENT SEX Code 011).
+    """
+
+    MALE = "M"
+    FEMALE = "F"
+    MIXED = "X"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 class Stroke(enum.Enum):
     """
     All strokes defined under the USA Swimming Standard Interchange Format (STROKE Code 012).
@@ -326,6 +360,25 @@ class Stroke(enum.Enum):
                 return "IM-R"
 
 
+class EventTimeClass(enum.Enum):
+    """
+    Event time class. Follows convention used in the USA Swimming Standard
+    Interchange Format (EVENT TIME CLASS Code 014)
+    """
+
+    NO_LOWER_LIMIT = "U"
+    NO_UPPER_LIMIT = "O"
+    NOVICE = "1"
+    B_STANDARD = "2"
+    BB_STANDARD = "P"
+    A_STANDARD = "3"
+    AA_STANDARD = "4"
+    AAA_STANDARD = "5"
+    AAAA_STANDARD = "6"
+    JUNIOR_STANDARD = "J"
+    SENIOR_STANDARD = "S"
+
+
 class Session(enum.Enum):
     """
     Swim meet sessions. Follows convention used in USA Swimming Standard
@@ -366,20 +419,6 @@ class Course(enum.Enum):
                 return "Y"
             case Course.LCM:
                 return "L"
-
-
-class Sex(enum.Enum):
-    """
-    Swimmer sex. Follows convention used in USA Swimming Standard
-    Interchange Format (SEX Code 010 and EVENT SEX Code 011).
-    """
-
-    MALE = "M"
-    FEMALE = "F"
-    MIXED = "X"
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class AgeGroup(enum.Enum):
@@ -502,25 +541,6 @@ class Event(enum.Enum):
         Return course of event.
         """
         return self.value[2]
-
-
-class EventTimeClass(enum.Enum):
-    """
-    Event time class. Follows convention used in the USA Swimming Standard
-    Interchange Format (EVENT TIME CLASS Code 014)
-    """
-
-    NO_LOWER_LIMIT = "U"
-    NO_UPPER_LIMIT = "O"
-    NOVICE = "1"
-    B_STANDARD = "2"
-    BB_STANDARD = "P"
-    A_STANDARD = "3"
-    AA_STANDARD = "4"
-    AAA_STANDARD = "5"
-    AAAA_STANDARD = "6"
-    JUNIOR_STANDARD = "J"
-    SENIOR_STANDARD = "S"
 
 
 class State(enum.Enum):
