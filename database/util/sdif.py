@@ -364,39 +364,6 @@ class Stroke(enum.Enum):
                 return "IM-R"
 
 
-class EventTimeClass(enum.Enum):
-    """
-    Event time class. Follows convention used in the USA Swimming Standard
-    Interchange Format (EVENT TIME CLASS Code 014)
-    """
-
-    NO_LOWER_LIMIT = "U"
-    NO_UPPER_LIMIT = "O"
-    NOVICE = "1"
-    B_STANDARD = "2"
-    BB_STANDARD = "P"
-    A_STANDARD = "3"
-    AA_STANDARD = "4"
-    AAA_STANDARD = "5"
-    AAAA_STANDARD = "6"
-    JUNIOR_STANDARD = "J"
-    SENIOR_STANDARD = "S"
-
-
-class Session(enum.Enum):
-    """
-    Swim meet sessions. Follows convention used in USA Swimming Standard
-    Interchange Format (PRELIMS/FINALS Code 019).
-    """
-
-    PRELIMS = "P"
-    FINALS = "F"
-    SWIM_OFFS = "S"
-
-    def __str__(self) -> str:
-        return self.value
-
-
 class Course(enum.Enum):
     """
     Event course. The USA Swimming Standard Interchange Format represents
@@ -423,6 +390,48 @@ class Course(enum.Enum):
                 return "Y"
             case Course.LCM:
                 return "L"
+
+
+class EventTimeClass(enum.Enum):
+    """
+    Event time class. Follows convention used in the USA Swimming Standard
+    Interchange Format (EVENT TIME CLASS Code 014)
+    """
+
+    NO_LOWER_LIMIT = "U"
+    NO_UPPER_LIMIT = "O"
+    NOVICE = "1"
+    B_STANDARD = "2"
+    BB_STANDARD = "P"
+    A_STANDARD = "3"
+    AA_STANDARD = "4"
+    AAA_STANDARD = "5"
+    AAAA_STANDARD = "6"
+    JUNIOR_STANDARD = "J"
+    SENIOR_STANDARD = "S"
+
+
+class Attachment(enum.Enum):
+    """
+    All attachment types defined in the USA Swimming Standard Interchange Format 
+    (ATTACH Code 016)
+    """
+    ATTACHED = 'A'
+    UNATTACHED = 'U'
+
+
+class Session(enum.Enum):
+    """
+    Swim meet sessions. Follows convention used in USA Swimming Standard
+    Interchange Format (PRELIMS/FINALS Code 019).
+    """
+
+    PRELIMS = "P"
+    FINALS = "F"
+    SWIM_OFFS = "S"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class AgeGroup(enum.Enum):
