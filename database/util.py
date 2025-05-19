@@ -1,5 +1,5 @@
 """
-Helper methods and constants. Includes a custom time class, 
+Helper methods and constants. Includes a custom time class,
 functions for processing input, and meet result constants.
 """
 
@@ -11,6 +11,7 @@ class Organization(Enum):
     All organizations defined under the USA Swimming Interchange
     Format (ORG Code 001).
     """
+
     USA_SWIMMING = 1
     MASTERS = 2
     NCAA = 3
@@ -27,6 +28,7 @@ class LSC(Enum):
     List of all LSCs. Follows convention used in USA Swimming
     Interchange Format (LSC Code 002).
     """
+
     ADIRONDACK = "AD"
     ALASKA = "AK"
     ALLEGHENY_MOUNTAIN = "AM"
@@ -91,8 +93,9 @@ class LSC(Enum):
 class Stroke(Enum):
     """
     Valid strokes. Follows convention used in USA Swimming
-    Interchange Format (STROKE Code 012). 
+    Interchange Format (STROKE Code 012).
     """
+
     FREESTYLE = 1
     BACKSTROKE = 2
     BREASTSTROKE = 3
@@ -117,7 +120,7 @@ class Stroke(Enum):
                 return "Free Relay"
             case Stroke.MEDLEY_RELAY:
                 return "Medley Relay"
-    
+
     def short(self) -> str:
         """
         Short string representation of stroke.
@@ -142,11 +145,12 @@ class Stroke(Enum):
 class Session(Enum):
     """
     Swim meet sessions. Follows convention used in USA Swimming
-    Interchange Format (PRELIMS/FINALS Code 019). 
+    Interchange Format (PRELIMS/FINALS Code 019).
     """
-    PRELIMS = 'P'
-    FINALS = 'F'
-    SWIM_OFFS = 'S'
+
+    PRELIMS = "P"
+    FINALS = "F"
+    SWIM_OFFS = "S"
 
     def __str__(self):
         return self.value
@@ -156,9 +160,10 @@ class Course(Enum):
     """
     Event course. The USA Swimming Interchange Format represents
     courses in two ways (COURSE Code 013). Here, we use the integer
-    representation as the default and the character representation 
+    representation as the default and the character representation
     as the shortened string.
     """
+
     SCM = 1
     SCY = 2
     LCM = 3
@@ -172,31 +177,33 @@ class Course(Enum):
         """
         match self:
             case Course.SCM:
-                return 'S'
+                return "S"
             case Course.SCY:
-                return 'Y'
+                return "Y"
             case Course.LCM:
-                return 'L'
+                return "L"
 
 
 class Sex(Enum):
     """
     Swimmer sex. Follows convention used in USA Swimming
-    Interchange Format (SEX Code 010 and EVENT SEX Code 011). 
+    Interchange Format (SEX Code 010 and EVENT SEX Code 011).
     """
-    MALE = 'M'
-    FEMALE = 'F'
-    MIXED = 'X'
+
+    MALE = "M"
+    FEMALE = "F"
+    MIXED = "X"
 
     def __str__(self):
         return self.value
-    
+
 
 class AgeGroup(Enum):
     """
     Swimmer age group. Each age group is represented by a min and
     max age.
     """
+
     AG_10_u = (0, 10)
     AG_11_12 = (11, 12)
     AG_13_14 = (13, 14)
@@ -212,19 +219,20 @@ class AgeGroup(Enum):
                 return "senior"
             case _:
                 return f"{self.get_min_age()}-{self.get_max_age()}"
-    
+
     def get_min_age(self) -> int:
         return self.value[0]
-    
+
     def get_max_age(self) -> int:
         return self.value[1]
-            
+
 
 class Event(Enum):
     """
     Swim event. Each event is represented by a distance, stroke,
     and course.
     """
+
     FREE_25_SCY = (25, Stroke.FREESTYLE, Course.SCY)
     FREE_50_SCY = (50, Stroke.FREESTYLE, Course.SCY)
     FREE_100_SCY = (100, Stroke.FREESTYLE, Course.SCY)
@@ -298,42 +306,50 @@ class Event(Enum):
         Return distance of event.
         """
         return self.value[0]
-    
+
     def get_stroke(self) -> Stroke:
         """
         Return stroke of event.
         """
         return self.value[1]
-    
+
     def get_course(self) -> Course:
         """
         Return course of event.
         """
         return self.value[2]
 
+
 class EventTimeClass(Enum):
     """
-    Event time class. Follows convention used in the USA Swimming 
+    Event time class. Follows convention used in the USA Swimming
     Interchange Format (EVENT TIME CLASS Code 014)
     """
-    NO_LOWER_LIMIT = 'U'
-    NO_UPPER_LIMIT = 'O'
-    NOVICE = '1'
-    B_STANDARD = '2'
-    BB_STANDARD = 'P'
-    A_STANDARD = '3'
-    AA_STANDARD = '4'
-    AAA_STANDARD = '5'
-    AAAA_STANDARD = '6'
-    JUNIOR_STANDARD = 'J'
-    SENIOR_STANDARD = 'S'
+
+    NO_LOWER_LIMIT = "U"
+    NO_UPPER_LIMIT = "O"
+    NOVICE = "1"
+    B_STANDARD = "2"
+    BB_STANDARD = "P"
+    A_STANDARD = "3"
+    AA_STANDARD = "4"
+    AAA_STANDARD = "5"
+    AAAA_STANDARD = "6"
+    JUNIOR_STANDARD = "J"
+    SENIOR_STANDARD = "S"
 
 
-class Time():
+class Time:
     """
     Custom time representation for swim meet results.
     """
-    def __init__(self, minute=0, second=0, hundredth=0):
+
+    def __init__(
+        self,
+        minute=0,
+        second=0,
+        hundredth=0,
+    ):
         """
         Create a time oject. There are two ways to create a time object:
         1) Input minute, second, and hundredth
@@ -348,7 +364,7 @@ class Time():
         self.set_minute(minute)
         self.set_second(second)
         self.set_hundredth(hundredth)
-    
+
     def __str__(self) -> str:
         """
         Return string representation of time object. Return empty
@@ -364,18 +380,20 @@ class Time():
         >>> str(t3) == ""
         True
         """
-        if (self.get_hundredth() == 0 
-            and self.get_minute() == 0 
-            and self.get_second() == 0):
+        if (
+            self.get_hundredth() == 0
+            and self.get_minute() == 0
+            and self.get_second() == 0
+        ):
             return ""
         m = str(self.get_minute())
         s = str(self.get_second()).zfill(2)
         h = str(self.get_hundredth()).zfill(2)
-        if m == '0':
+        if m == "0":
             return f"{s}.{h}"
         else:
             return f"{m}:{s}.{h}"
-        
+
     def __repr__(self) -> str:
         """
         Return representation of time object.
@@ -388,7 +406,7 @@ class Time():
         Time(0, 32, 10)
         """
         return f"Time({self.minute}, {self.second}, {self.hundredth})"
-    
+
     def __gt__(self, other_time) -> bool:
         """
         Return true if self is a longer time than other_time.
@@ -413,7 +431,7 @@ class Time():
             return False
         # Self must equal other_time so return false
         return False
-    
+
     def __lt__(self, other_time) -> bool:
         """
         Return true if self is a shorter time than other_time.
@@ -422,7 +440,7 @@ class Time():
         other_time -- Time object that is being compared against
         """
         return other_time > self
-    
+
     def __eq__(self, other_time) -> bool:
         """
         Return true if self is equal to other_time.
@@ -430,13 +448,15 @@ class Time():
         Keyword arguments:
         other_time -- Time object that is being compared against
         """
-        return self.get_minute() == other_time.get_minute() \
-           and self.get_second() == other_time.get_second() \
-           and self.get_hundredth() == other_time.get_hundredth()
-    
+        return (
+            self.get_minute() == other_time.get_minute()
+            and self.get_second() == other_time.get_second()
+            and self.get_hundredth() == other_time.get_hundredth()
+        )
+
     def __ge__(self, other_time) -> bool:
         """
-        Return true if self is a greater than or equal time to 
+        Return true if self is a greater than or equal time to
         other_time.
 
         Keyword arguments:
@@ -446,7 +466,7 @@ class Time():
 
     def __le__(self, other_time) -> bool:
         """
-        Return true if self is a less than or equal time to 
+        Return true if self is a less than or equal time to
         other_time.
 
         Keyword arguments:
@@ -483,7 +503,7 @@ class Time():
             return
         hundredth = self.get_hundredth()
         second = self.get_second()
-        minute = self.get_minute
+        minute = self.get_minute()
         t_hundredth = other_time.get_hundredth()
         t_second = other_time.get_second()
         t_minute = other_time.get_minute()
@@ -497,7 +517,7 @@ class Time():
         second = second - t_second
         minute = minute - t_minute
         return Time(minute, second, hundredth)
-    
+
     def set_minute(self, m: int):
         """
         Verify and set self.minute attribute
@@ -521,7 +541,7 @@ class Time():
         assert type(h) == int, f"Hundredths should be an integer: {h}"
         assert 0 <= h and h < 100, f"Invalid hundredths: {h}"
         self.hundredth = h
-    
+
     def get_minute(self) -> int:
         """
         Return self.minute attribute.
@@ -533,13 +553,13 @@ class Time():
         Return self.second attribute.
         """
         return self.second
-    
+
     def get_hundredth(self) -> int:
         """
         Return self.hundredth attribute.
         """
         return self.hundredth
-    
+
 
 def create_time_from_str(time_str: str) -> Time:
     """
@@ -554,12 +574,13 @@ def create_time_from_str(time_str: str) -> Time:
 
     # Parse string
     first_split = time_str.split(":")
-    if (len(first_split) == 2):
+    if len(first_split) == 2:
         minute_str = first_split[0]
     next_split = first_split[-1].split(".")
     if len(next_split) != 2:
-        raise Exception(f"Invalid input: '{time_str}'. " + \
-                        f"Should be in 'mm:ss.hh' format.")
+        raise Exception(
+            f"Invalid input: '{time_str}'. " + f"Should be in 'mm:ss.hh' format."
+        )
     second_str = next_split[0]
     hundredth_str = next_split[1]
     try:
@@ -567,8 +588,6 @@ def create_time_from_str(time_str: str) -> Time:
         second = int(second_str)
         hundredth = int(hundredth_str)
     except:
-        raise Exception(f"Invalid input: '{time_str}'. " + \
-                        f"Time is not a valid time.")
-    
-    return Time(minute, second, hundredth)
+        raise Exception(f"Invalid input: '{time_str}'. " + f"Time is not a valid time.")
 
+    return Time(minute, second, hundredth)
