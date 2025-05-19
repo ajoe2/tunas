@@ -3,6 +3,7 @@ Helper methods and constants. Includes a custom time class,
 functions for processing input, and meet result constants.
 """
 
+from __future__ import annotations
 from enum import Enum
 
 
@@ -104,7 +105,7 @@ class Stroke(Enum):
     FREESTYLE_RELAY = 6
     MEDLEY_RELAY = 7
 
-    def __str__(self):
+    def __str__(self) -> str:
         match self:
             case Stroke.FREESTYLE:
                 return "Free"
@@ -152,7 +153,7 @@ class Session(Enum):
     FINALS = "F"
     SWIM_OFFS = "S"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -168,7 +169,7 @@ class Course(Enum):
     SCY = 2
     LCM = 3
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def short(self) -> str:
@@ -194,7 +195,7 @@ class Sex(Enum):
     FEMALE = "F"
     MIXED = "X"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -211,7 +212,7 @@ class AgeGroup(Enum):
     AG_17_18 = (17, 18)
     AG_SENIOR = (13, 1000)
 
-    def __str__(self):
+    def __str__(self) -> str:
         match self:
             case AgeGroup.AG_10_u:
                 return "10&u"
@@ -297,7 +298,7 @@ class Event(Enum):
     IM_200_LCM = (200, Stroke.INDIVIDUAL_MEDLEY, Course.LCM)
     IM_400_LCM = (400, Stroke.INDIVIDUAL_MEDLEY, Course.LCM)
 
-    def __str__(self):
+    def __str__(self) -> str:
         event_basic = f"{self.get_distance()} {self.get_stroke()}"
         return f"{event_basic: <10} {self.get_course()}"
 
@@ -349,7 +350,7 @@ class Time:
         minute=0,
         second=0,
         hundredth=0,
-    ):
+    ) -> None:
         """
         Create a time oject. There are two ways to create a time object:
         1) Input minute, second, and hundredth
@@ -407,7 +408,7 @@ class Time:
         """
         return f"Time({self.minute}, {self.second}, {self.hundredth})"
 
-    def __gt__(self, other_time) -> bool:
+    def __gt__(self, other_time: Time) -> bool:
         """
         Return true if self is a longer time than other_time.
 
@@ -432,7 +433,7 @@ class Time:
         # Self must equal other_time so return false
         return False
 
-    def __lt__(self, other_time) -> bool:
+    def __lt__(self, other_time: Time) -> bool:
         """
         Return true if self is a shorter time than other_time.
 
@@ -441,7 +442,7 @@ class Time:
         """
         return other_time > self
 
-    def __eq__(self, other_time) -> bool:
+    def __eq__(self, other_time: Time) -> bool:
         """
         Return true if self is equal to other_time.
 
@@ -454,7 +455,7 @@ class Time:
             and self.get_hundredth() == other_time.get_hundredth()
         )
 
-    def __ge__(self, other_time) -> bool:
+    def __ge__(self, other_time: Time) -> bool:
         """
         Return true if self is a greater than or equal time to
         other_time.
@@ -464,7 +465,7 @@ class Time:
         """
         return self > other_time or self == other_time
 
-    def __le__(self, other_time) -> bool:
+    def __le__(self, other_time: Time) -> bool:
         """
         Return true if self is a less than or equal time to
         other_time.
@@ -474,7 +475,7 @@ class Time:
         """
         return other_time >= self
 
-    def __add__(self, other_time):
+    def __add__(self, other_time: Time) -> Time:
         """
         Return the sum of self and other_time.
 
@@ -492,7 +493,7 @@ class Time:
             minute += 1
         return Time(minute, second, hundredth)
 
-    def __sub__(self, other_time):
+    def __sub__(self, other_time: Time) -> Time:
         """
         Return self minus other_time.
 
@@ -500,7 +501,7 @@ class Time:
         other_time -- Time object that is being subtracted from self.
         """
         if other_time > self:
-            return
+            raise Exception("Cannot subtract larger valued time")
         hundredth = self.get_hundredth()
         second = self.get_second()
         minute = self.get_minute()
@@ -518,7 +519,7 @@ class Time:
         minute = minute - t_minute
         return Time(minute, second, hundredth)
 
-    def set_minute(self, m: int):
+    def set_minute(self, m: int) -> None:
         """
         Verify and set self.minute attribute
         """
@@ -526,7 +527,7 @@ class Time:
         assert 0 <= m and m < 60, f"Invalid minute: {m}"
         self.minute = m
 
-    def set_second(self, s: int):
+    def set_second(self, s: int) -> None:
         """
         Verify and set self.second attribute
         """
@@ -534,7 +535,7 @@ class Time:
         assert 0 <= s and s < 60, f"Invalid seconds: {s}"
         self.second = s
 
-    def set_hundredth(self, h: int):
+    def set_hundredth(self, h: int) -> None:
         """
         Verify and set self.hundredth attribute
         """
