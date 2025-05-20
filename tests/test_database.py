@@ -3,6 +3,8 @@ Tests for database package
 """
 
 import database
+import database.swim as swim
+import database.util.sdif as sdif
 
 
 def test_database_basic():
@@ -11,3 +13,13 @@ def test_database_basic():
     assert d.get_meet_results() == []
     assert d.get_meets() == []
     assert d.get_swimmers() == []
+
+
+def test_swimmer_basic():
+    c = swim.Club()
+    s = swim.Swimmer("John", "Doe", sdif.Sex.FEMALE, "GM2SP90AS920", c)
+    assert s.get_first_name() == "John"
+    assert s.get_last_name() == "Doe"
+    assert s.get_sex() == sdif.Sex.FEMALE
+    assert s.get_usa_id_short() == "GM2SP90AS920"
+    assert s.get_club() == c

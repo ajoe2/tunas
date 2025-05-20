@@ -67,12 +67,12 @@ class Swimmer:
         assert type(sex) == sdif.Sex
         self.sex = sex
 
-    def set_usa_id_short(self, usa_id_short: str):
+    def set_usa_id_short(self, usa_id_short: str) -> None:
         assert type(usa_id_short) == str
         assert len(usa_id_short) == 12
         self.usa_id_short = usa_id_short
 
-    def set_club(self, club: Club):
+    def set_club(self, club: Club) -> None:
         """
         Sets swimmer's club to the most recent associated club seen in the data.
         """
@@ -135,7 +135,7 @@ class Swimmer:
 
     def get_usa_id_short(self) -> str:
         return self.usa_id_short
-    
+
     def get_club(self) -> Club:
         return self.club
 
@@ -144,7 +144,7 @@ class Swimmer:
 
     def get_preferred_first_name(self) -> str | None:
         return self.preferred_first_name
-    
+
     def get_birthday(self) -> datetime.date | None:
         return self.birthday
 
@@ -153,7 +153,7 @@ class Swimmer:
 
     def get_citizenship(self) -> sdif.Country | None:
         return self.citizenship
-    
+
     def get_meets(self) -> list[Meet]:
         return self.meets
 
