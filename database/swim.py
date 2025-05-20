@@ -1,13 +1,28 @@
 """
-Defines Meet/MeetResult classes and associated classes IndividualMeetResult,
-RelayMeetResult, RelayLeg which inherit from MeetResult.
+Data structures for representing swimming objects (club, swimmer, meet, etc.).
 """
 
 from __future__ import annotations
 import datetime
 
-from .util import sdif, time
+from .util import sdif, stime
 
+class Club:
+    """
+    Represents a swim club.
+    """
+
+    def __init__(self) -> None:
+        pass
+
+
+class Swimmer:
+    """
+    Represents a swimmer.
+    """
+
+    def __init__(self) -> None:
+        pass
 
 class Meet:
     """
@@ -180,10 +195,10 @@ class MeetResult:
         event_sex: sdif.Sex,
         heat: int,
         lane: int,
-        final_time: time.Time,
+        final_time: stime.Time,
         rank: int | None = None,
         points: float | None = None,
-        seed_time: time.Time | None = None,
+        seed_time: stime.Time | None = None,
         seed_course: sdif.Course | None = None,
         event_min_time_class: sdif.EventTimeClass | None = None,
         event_max_time_class: sdif.EventTimeClass | None = None,
@@ -282,8 +297,8 @@ class MeetResult:
         assert lane >= 0 and lane <= 99
         self.lane = lane
 
-    def set_final_time(self, final_time: time.Time) -> None:
-        assert type(final_time) == time.Time
+    def set_final_time(self, final_time: stime.Time) -> None:
+        assert type(final_time) == stime.Time
         self.final_time = final_time
 
     def set_rank(self, rank: int | None) -> None:
@@ -298,9 +313,9 @@ class MeetResult:
             assert points >= 0
         self.points = points
 
-    def set_seed_time(self, seed_time: time.Time | None) -> None:
+    def set_seed_time(self, seed_time: stime.Time | None) -> None:
         if seed_time != None:
-            assert type(seed_time) == time.Time
+            assert type(seed_time) == stime.Time
         self.seed_time = seed_time
 
     def set_seed_course(self, seed_course: sdif.Course | None) -> None:
@@ -363,7 +378,7 @@ class MeetResult:
     def get_lane(self) -> int:
         return self.lane
 
-    def get_final_time(self) -> time.Time:
+    def get_final_time(self) -> stime.Time:
         return self.final_time
 
     def get_rank(self) -> int | None:
@@ -372,7 +387,7 @@ class MeetResult:
     def get_points(self) -> float | None:
         return self.points
 
-    def get_seed_time(self) -> time.Time | None:
+    def get_seed_time(self) -> stime.Time | None:
         return self.seed_time
 
     def get_seed_course(self) -> sdif.Course | None:
@@ -407,14 +422,14 @@ class IndividualMeetResult(MeetResult):
         event_sex: sdif.Sex,
         heat: int,
         lane: int,
-        final_time: time.Time,
+        final_time: stime.Time,
         swimmer_first_name: str,
         swimmer_last_name: str,
         swimmer_sex: sdif.Sex,
         swimmer_attach_status: sdif.AttachStatus,
         rank: int | None = None,
         points: float | None = None,
-        seed_time: time.Time | None = None,
+        seed_time: stime.Time | None = None,
         seed_course: sdif.Course | None = None,
         event_min_time_class: sdif.EventTimeClass | None = None,
         event_max_time_class: sdif.EventTimeClass | None = None,
@@ -424,7 +439,7 @@ class IndividualMeetResult(MeetResult):
         swimmer_usa_id_short: str | None = None,
         swimmer_usa_id_long: str | None = None,
         swimmer_citizenship: sdif.Country | None = None,
-        splits: dict[int, time.Time] = dict(),
+        splits: dict[int, stime.Time] = dict(),
     ) -> None:
         super().__init__(
             meet,
@@ -531,11 +546,11 @@ class IndividualMeetResult(MeetResult):
             assert type(swimmer_citizenship) == sdif.Country
         self.swimmer_citizenship = swimmer_citizenship
 
-    def set_splits(self, splits: dict[int, time.Time]) -> None:
+    def set_splits(self, splits: dict[int, stime.Time]) -> None:
         assert type(splits) == dict
         for dist in splits:
             assert type(dist) == int
-            assert type(splits[dist]) == time.Time
+            assert type(splits[dist]) == stime.Time
         self.splits = splits
 
     def get_swimmer_first_name(self) -> str:
@@ -568,5 +583,5 @@ class IndividualMeetResult(MeetResult):
     def get_swimmer_citizenship(self) -> sdif.Country | None:
         return self.swimmer_citizenship
 
-    def get_splits(self) -> dict[int, time.Time]:
+    def get_splits(self) -> dict[int, stime.Time]:
         return self.splits
