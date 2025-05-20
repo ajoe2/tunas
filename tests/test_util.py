@@ -1,7 +1,9 @@
+"""
+Tests for database.util package.
+"""
+
 from database import util
 from database.util import stime, sdif
-
-### Time class ###
 
 
 def test_create_time_from_string_basic1():

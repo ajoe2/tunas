@@ -7,6 +7,7 @@ import datetime
 
 from .util import sdif, stime
 
+
 class Club:
     """
     Represents a swim club.
@@ -21,8 +22,58 @@ class Swimmer:
     Represents a swimmer.
     """
 
-    def __init__(self) -> None:
-        pass
+    def __init__(
+        self,
+        first_name: str,
+        last_name: str,
+        sex: sdif.Sex,
+        usa_id_short: str,
+        middle_initial: str | None = None,
+        preferred_first_name: str| None = None,
+        birthday: datetime.date | None = None,
+        usa_id_long: str | None = None,
+        citizenship: sdif.Country | None = None
+    ) -> None:
+        # Mandatory fields
+        self.set_first_name(first_name)
+        self.set_last_name(last_name)
+        self.set_sex(sex)
+        self.set_usa_id_short(usa_id_short)
+
+        # Optional fields
+
+
+    def set_first_name(self, first_name: str) -> None:
+        assert type(first_name) == str
+        assert first_name != ""
+        self.first_name = first_name
+
+    def set_last_name(self, last_name: str) -> None:
+        assert type(last_name) == str
+        assert last_name != ""
+        self.last_name = last_name
+
+    def set_sex(self, sex: sdif.Sex) -> None:
+        assert type(sex) == sdif.Sex
+        self.sex = sex
+
+    def set_usa_id_short(self, usa_id_short: str):
+        assert type(usa_id_short) == str
+        assert len(usa_id_short) == 12
+        self.usa_id_short = usa_id_short
+
+    def get_first_name(self) -> str:
+        return self.first_name
+
+    def get_last_name(self) -> str:
+        return self.last_name
+
+    def get_sex(self) -> sdif.Sex:
+        return self.sex
+
+    def get_usa_id_short(self) -> str:
+        return self.usa_id_short
+
 
 class Meet:
     """
@@ -426,6 +477,7 @@ class IndividualMeetResult(MeetResult):
         swimmer_first_name: str,
         swimmer_last_name: str,
         swimmer_sex: sdif.Sex,
+        swimmer_usa_id_short: str,
         swimmer_attach_status: sdif.AttachStatus,
         rank: int | None = None,
         points: float | None = None,
@@ -436,7 +488,6 @@ class IndividualMeetResult(MeetResult):
         swimmer_middle_initial: str | None = None,
         swimmer_age_class: str | None = None,
         swimmer_birthday: datetime.date | None = None,
-        swimmer_usa_id_short: str | None = None,
         swimmer_usa_id_long: str | None = None,
         swimmer_citizenship: sdif.Country | None = None,
         splits: dict[int, stime.Time] = dict(),
@@ -492,6 +543,11 @@ class IndividualMeetResult(MeetResult):
         assert type(swimmer_sex) == sdif.Sex
         self.swimmer_sex = swimmer_sex
 
+    def set_swimmer_usa_id_short(self, swimmer_usa_id_short: str):
+        assert type(swimmer_usa_id_short) == str
+        assert len(swimmer_usa_id_short) == 12
+        self.swimmer_usa_id_short = swimmer_usa_id_short
+
     def set_swimmer_attach_status(
         self, swimmer_attach_status: sdif.AttachStatus
     ) -> None:
@@ -529,12 +585,6 @@ class IndividualMeetResult(MeetResult):
             assert type(swimmer_birthday) == datetime.date
         self.swimmer_birthday = swimmer_birthday
 
-    def set_swimmer_usa_id_short(self, swimmer_usa_id_short: str | None) -> None:
-        if swimmer_usa_id_short != None:
-            assert type(swimmer_usa_id_short) == str
-            assert len(swimmer_usa_id_short) == 12
-        self.swimmer_usa_id_short = swimmer_usa_id_short
-
     def set_swimmer_usa_id_long(self, swimmer_usa_id_long: str | None) -> None:
         if swimmer_usa_id_long != None:
             assert type(swimmer_usa_id_long) == str
@@ -562,6 +612,9 @@ class IndividualMeetResult(MeetResult):
     def get_swimmer_sex(self) -> sdif.Sex:
         return self.swimmer_sex
 
+    def get_swimmer_usa_id_short(self) -> str:
+        return self.swimmer_usa_id_short
+
     def get_swimmer_attach_status(self) -> sdif.AttachStatus:
         return self.swimmer_attach_status
 
@@ -573,9 +626,6 @@ class IndividualMeetResult(MeetResult):
 
     def get_swimmer_birthday(self) -> datetime.date | None:
         return self.swimmer_birthday
-
-    def get_swimmer_usa_id_short(self) -> str | None:
-        return self.swimmer_usa_id_short
 
     def get_swimmer_usa_id_long(self) -> str | None:
         return self.swimmer_usa_id_long
