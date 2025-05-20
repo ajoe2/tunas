@@ -6,8 +6,7 @@ RelayMeetResult, RelayLeg which inherit from MeetResult.
 from __future__ import annotations
 import datetime
 
-import util.sdif as sdif
-import util.time as time
+from util import sdif, time
 
 
 class Meet:
@@ -31,7 +30,7 @@ class Meet:
         country: sdif.Country | None = None,
         course: sdif.Course | None = None,
         altitude: int | None = None,
-        meet_results: list[MeetResult] = [],
+        meet_results: list[MeetResult] = list(),
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
