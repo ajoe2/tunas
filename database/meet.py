@@ -1,17 +1,17 @@
 """
-Defines Meet/MeetResult classes and associated classes IndividualMeetResult, 
+Defines Meet/MeetResult classes and associated classes IndividualMeetResult,
 RelayMeetResult, RelayLeg which inherit from MeetResult.
 """
 
 from __future__ import annotations
 import datetime
 
-from util import sdif, time
+from .util import sdif, time
 
 
 class Meet:
     """
-    Represents a swim meet. Has access to all meet result records for the associated 
+    Represents a swim meet. Has access to all meet result records for the associated
     swim meet.
     """
 
@@ -254,7 +254,7 @@ class MeetResult:
 
     def set_event_max_age(self, max_age: int) -> None:
         """
-        Set the event maximum age. If no maximum age exists, max_age should be set to 
+        Set the event maximum age. If no maximum age exists, max_age should be set to
         1000. See SDIF AGE Code 025 for more details on the encoding scheme.
         """
         assert type(max_age) == int
@@ -262,7 +262,7 @@ class MeetResult:
 
     def set_event_number(self, event_number: str) -> None:
         """
-        Event numbers can contain nonnumeric values. Thus, event numbers are stored as 
+        Event numbers can contain nonnumeric values. Thus, event numbers are stored as
         strings, and processing is left to higher layers of code.
         """
         assert type(event_number) == str and " " not in event_number
@@ -387,8 +387,8 @@ class MeetResult:
 
 class IndividualMeetResult(MeetResult):
     """
-    Represents one individual meet result. Inherits from MeetResult, which provides 
-    event information. Provides new methods for swimmer information such as first/last 
+    Represents one individual meet result. Inherits from MeetResult, which provides
+    event information. Provides new methods for swimmer information such as first/last
     name and splits.
     """
 
@@ -507,7 +507,7 @@ class IndividualMeetResult(MeetResult):
     def set_swimmer_birthday(self, swimmer_birthday: datetime.date | None) -> None:
         """
         Prior to Jan 2025, all records contained swimmer's birthdays. However, now
-        they are excluded. If birthday is None, it can be estimated by looking at the 
+        they are excluded. If birthday is None, it can be estimated by looking at the
         history of recorded age classes and the associated dates.
         """
         if swimmer_birthday != None:

@@ -2,9 +2,7 @@
 Backend datastructures and constants used to build frontend tunas functionality.
 """
 
-from util import sdif, time
-import club
-import meet
+from . import util, swimmer, meet
 
 
 class Database:
