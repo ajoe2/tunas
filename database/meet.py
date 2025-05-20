@@ -411,12 +411,23 @@ class IndividualMeetResult(MeetResult):
         heat: int,
         lane: int,
         final_time: time.Time,
+        swimmer_first_name: str,
+        swimmer_last_name: str,
+        swimmer_sex: sdif.Sex,
+        swimmer_attach_status: sdif.AttachStatus,
         rank: int | None = None,
         points: float | None = None,
         seed_time: time.Time | None = None,
         seed_course: sdif.Course | None = None,
         event_min_time_class: sdif.EventTimeClass | None = None,
         event_max_time_class: sdif.EventTimeClass | None = None,
+        swimmer_middle_initial: str | None = None,
+        swimmer_age_class: str | None = None,
+        swimmer_birthday: datetime.date | None = None,
+        swimmer_usa_id_short: str | None = None,
+        swimmer_usa_id_long: str | None = None,
+        swimmer_citizenship: sdif.Country | None = None,
+        splits: dict[int, time.Time] = dict(),
     ) -> None:
         super().__init__(
             meet,
@@ -441,5 +452,124 @@ class IndividualMeetResult(MeetResult):
             event_max_time_class,
         )
         # New mandatory attributes (TODO)
+        self.set_swimmer_first_name(swimmer_first_name)
+        self.set_swimmer_last_name(swimmer_last_name)
+        self.set_swimmer_sex(swimmer_sex)
+        self.set_swimmer_attach_status(swimmer_attach_status)
 
         # New optional attributes (TODO)
+        self.set_swimmer_middle_initial(swimmer_middle_initial)
+        self.set_swimmer_age_class(swimmer_age_class)
+        self.set_swimmer_birthday(swimmer_birthday)
+        self.set_swimmer_usa_id_short(swimmer_usa_id_short)
+        self.set_swimmer_usa_id_long(swimmer_usa_id_long)
+        self.set_swimmer_citizenship(swimmer_citizenship)
+        self.set_splits(splits)
+
+    def set_swimmer_first_name(self, swimmer_first_name: str) -> None:
+        assert type(swimmer_first_name) == str
+        assert swimmer_first_name != ""
+        self.swimmer_first_name = swimmer_first_name
+
+    def set_swimmer_last_name(self, swimmer_last_name: str) -> None:
+        assert type(swimmer_last_name) == str
+        assert swimmer_last_name != ""
+        self.swimmer_last_name = swimmer_last_name
+
+    def set_swimmer_sex(self, swimmer_sex: sdif.Sex) -> None:
+        assert type(swimmer_sex) == sdif.Sex
+        self.swimmer_sex = swimmer_sex
+
+    def set_swimmer_attach_status(
+        self, swimmer_attach_status: sdif.AttachStatus
+    ) -> None:
+        assert type(swimmer_attach_status) == sdif.AttachStatus
+        self.swimmer_attach_status = swimmer_attach_status
+
+    def set_swimmer_middle_initial(self, swimmer_middle_initial: str | None) -> None:
+        if swimmer_middle_initial != None:
+            assert type(swimmer_middle_initial) == str
+            assert len(swimmer_middle_initial) == 1
+            assert swimmer_middle_initial.isupper()
+
+        self.swimmer_middle_initial = swimmer_middle_initial
+
+    def set_swimmer_age_class(self, swimmer_age_class: str | None) -> None:
+        """
+        Set the swimmer's age class. Age class should be a string consisting of an age
+        (ex. 19) or a classification (ex. Jr).
+        """
+        if swimmer_age_class != None:
+            try:
+                age = int(swimmer_age_class)
+                assert age >= 0 and age < 100
+            except:
+                assert age in ["Fr", "So", "Jr", "Sr"]
+        self.swimmer_age_class = swimmer_age_class
+
+    def set_swimmer_birthday(self, swimmer_birthday: datetime.date | None) -> None:
+        """
+        Prior to Jan 2025, all records contained swimmer's birthdays. However, now
+        they are excluded, and this is represented with None. Birthdays can be
+        estimated by looking at the age class.
+        """
+        if swimmer_birthday != None:
+            assert type(swimmer_birthday) == datetime.date
+        self.swimmer_birthday = swimmer_birthday
+
+    def set_swimmer_usa_id_short(self, swimmer_usa_id_short: str | None) -> None:
+        if swimmer_usa_id_short != None:
+            assert type(swimmer_usa_id_short) == str
+            assert len(swimmer_usa_id_short) == 12
+        self.swimmer_usa_id_short = swimmer_usa_id_short
+
+    def set_swimmer_usa_id_long(self, swimmer_usa_id_long: str | None) -> None:
+        if swimmer_usa_id_long != None:
+            assert type(swimmer_usa_id_long) == str
+            assert len(swimmer_usa_id_long) == 14
+        self.swimmer_usa_id_long = swimmer_usa_id_long
+
+    def set_swimmer_citizenship(self, swimmer_citizenship: sdif.Country | None) -> None:
+        if swimmer_citizenship != None:
+            assert type(swimmer_citizenship) == sdif.Country
+        self.swimmer_citizenship = swimmer_citizenship
+
+    def set_splits(self, splits: dict[int, time.Time]) -> None:
+        assert type(splits) == dict
+        for dist in splits:
+            assert type(dist) == int
+            assert type(splits[dist]) == time.Time
+        self.splits = splits
+
+    def get_swimmer_first_name(self) -> str:
+        return self.swimmer_first_name
+
+    def get_swimmer_last_name(self) -> str:
+        return self.swimmer_last_name
+
+    def get_swimmer_sex(self) -> sdif.Sex:
+        return self.swimmer_sex
+
+    def get_swimmer_attach_status(self) -> sdif.AttachStatus:
+        return self.swimmer_attach_status
+
+    def get_swimmer_middle_initial(self) -> str | None:
+        return self.swimmer_middle_initial
+
+    def get_swimmer_age_class(self) -> str | None:
+        return self.swimmer_age_class
+
+    def get_swimmer_birthday(self) -> datetime.date | None:
+        return self.swimmer_birthday
+
+    def get_swimmer_usa_id_short(self) -> str | None:
+        return self.swimmer_usa_id_short
+
+    def get_swimmer_usa_id_long(self) -> str | None:
+        return self.swimmer_usa_id_long
+
+    def get_swimmer_citizenship(self) -> sdif.Country | None:
+        return self.swimmer_citizenship
+
+    def get_splits(self) -> dict[int, time.Time]:
+        return self.splits

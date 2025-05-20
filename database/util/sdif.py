@@ -90,8 +90,8 @@ class LSC(enum.Enum):
 
 class Country(enum.Enum):
     """
-    All countries defined under the USA Swimming Standard Interchange Format (COUNTRY 
-    Code 004). Includes citizenship distinctions Dual and Foreign which are defined 
+    All countries defined under the USA Swimming Standard Interchange Format (COUNTRY
+    Code 004). Includes citizenship distinctions Dual and Foreign which are defined
     in (CITIZEN Code 009)
     """
 
@@ -411,13 +411,14 @@ class EventTimeClass(enum.Enum):
     SENIOR_STANDARD = "S"
 
 
-class Attachment(enum.Enum):
+class AttachStatus(enum.Enum):
     """
-    All attachment types defined in the USA Swimming Standard Interchange Format 
+    All attachment statuses defined in the USA Swimming Standard Interchange Format
     (ATTACH Code 016)
     """
-    ATTACHED = 'A'
-    UNATTACHED = 'U'
+
+    ATTACHED = "A"
+    UNATTACHED = "U"
 
 
 class Session(enum.Enum):
