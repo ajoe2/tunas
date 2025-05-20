@@ -1,10 +1,9 @@
 """
-Defines the Meet and MeetResult classes. Defines associated classes
-IndividualMeetResult, RelayMeetResult, RelayLeg which inherit
-from MeetResult.
+Defines Meet/MeetResult classes and associated classes IndividualMeetResult, 
+RelayMeetResult, RelayLeg which inherit from MeetResult.
 """
 
-from __future__ import annotations  # Enable future annotations
+from __future__ import annotations
 import datetime
 
 import util.sdif as sdif
@@ -13,8 +12,8 @@ import util.time as time
 
 class Meet:
     """
-    Defines basic meet attributes and associated helper methods (getter/setter).
-    Used to manage meet result entries.
+    Represents a swim meet. Has access to all meet result records for the associated 
+    swim meet.
     """
 
     def __init__(
@@ -163,7 +162,8 @@ class Meet:
 
 class MeetResult:
     """
-    Defines basic meet result attributes and associated helper methods (getter/setter).
+    Base class for swim meet results. Defines basic information such as event time
+    and heat/lane assignments.
     """
 
     def __init__(
@@ -247,27 +247,24 @@ class MeetResult:
 
     def set_event_min_age(self, min_age: int) -> None:
         """
-        Set the event minimum age. If no minimum age exists, min_age
-        should be set to 0. See SDIF AGE Code 025 for more details on
-        the encoding scheme.
+        Set the event minimum age. If no minimum age exists, min_age should be set to 0.
+        See SDIF AGE Code 025 for more details on the encoding scheme.
         """
         assert type(min_age) == int
         self.event_min_age = min_age
 
     def set_event_max_age(self, max_age: int) -> None:
         """
-        Set the event maximum age. If no maximum age exists, max_age
-        should be set to 1000. See SDIF AGE Code 025 for more details on
-        the encoding scheme.
+        Set the event maximum age. If no maximum age exists, max_age should be set to 
+        1000. See SDIF AGE Code 025 for more details on the encoding scheme.
         """
         assert type(max_age) == int
         self.event_max_age = max_age
 
     def set_event_number(self, event_number: str) -> None:
         """
-        Event numbers can contain nonnumeric values. Thus, event
-        numbers are stored as strings, and processing is left to
-        higher layers of code.
+        Event numbers can contain nonnumeric values. Thus, event numbers are stored as 
+        strings, and processing is left to higher layers of code.
         """
         assert type(event_number) == str and " " not in event_number
         self.event_number = event_number
@@ -391,8 +388,9 @@ class MeetResult:
 
 class IndividualMeetResult(MeetResult):
     """
-    Defines attributes for an individual meet result (i.e., nonrelay). New
-    attributes include swimmer information and individual splits.
+    Represents one individual meet result. Inherits from MeetResult, which provides 
+    event information. Provides new methods for swimmer information such as first/last 
+    name and splits.
     """
 
     def __init__(
@@ -510,8 +508,8 @@ class IndividualMeetResult(MeetResult):
     def set_swimmer_birthday(self, swimmer_birthday: datetime.date | None) -> None:
         """
         Prior to Jan 2025, all records contained swimmer's birthdays. However, now
-        they are excluded, and this is represented with None. Birthdays can be
-        estimated by looking at the age class.
+        they are excluded. If birthday is None, it can be estimated by looking at the 
+        history of recorded age classes and the associated dates.
         """
         if swimmer_birthday != None:
             assert type(swimmer_birthday) == datetime.date
