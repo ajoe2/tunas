@@ -28,20 +28,30 @@ class Swimmer:
         last_name: str,
         sex: sdif.Sex,
         usa_id_short: str,
+        club: Club,
         middle_initial: str | None = None,
-        preferred_first_name: str| None = None,
+        preferred_first_name: str | None = None,
         birthday: datetime.date | None = None,
         usa_id_long: str | None = None,
-        citizenship: sdif.Country | None = None
+        citizenship: sdif.Country | None = None,
+        meets: list[Meet] = list(),
+        meet_results: list[MeetResult] = list(),
     ) -> None:
         # Mandatory fields
         self.set_first_name(first_name)
         self.set_last_name(last_name)
         self.set_sex(sex)
         self.set_usa_id_short(usa_id_short)
+        self.set_club(club)
 
         # Optional fields
-
+        self.set_middle_initial(middle_initial)
+        self.set_preferred_first_name(preferred_first_name)
+        self.set_birthday(birthday)
+        self.set_usa_id_long(usa_id_long)
+        self.set_citizenship(citizenship)
+        self.set_meets(meets)
+        self.set_meet_results(meet_results)
 
     def set_first_name(self, first_name: str) -> None:
         assert type(first_name) == str
@@ -62,6 +72,58 @@ class Swimmer:
         assert len(usa_id_short) == 12
         self.usa_id_short = usa_id_short
 
+    def set_club(self, club: Club):
+        """
+        Sets swimmer's club to the most recent associated club seen in the data.
+        """
+        assert type(club) == Club
+        self.club = club
+
+    def set_middle_initial(self, middle_initial: str | None) -> None:
+        if middle_initial != None:
+            assert type(middle_initial) == str
+            assert len(middle_initial) == 1
+        self.middle_initial = middle_initial
+
+    def set_preferred_first_name(self, preferred_first_name: str | None) -> None:
+        if preferred_first_name != None:
+            assert type(preferred_first_name) == str
+            assert len(preferred_first_name) > 0
+        self.preferred_first_name = preferred_first_name
+
+    def set_birthday(self, birthday: datetime.date | None) -> None:
+        """
+        Prior to Jan 2025, all records contained swimmer's birthdays. However, now
+        they are excluded. If birthday is None, it can be estimated by looking at the
+        history of recorded age classes and the associated dates.
+        """
+        if birthday != None:
+            assert type(birthday) == datetime.date
+        self.birthday = birthday
+
+    def set_usa_id_long(self, usa_id_long: str | None) -> None:
+        if usa_id_long != None:
+            assert type(usa_id_long) == str
+            assert len(usa_id_long) == 14
+        self.usa_id_long = usa_id_long
+
+    def set_citizenship(self, citizenship: sdif.Country | None) -> None:
+        if citizenship != None:
+            assert type(citizenship) == sdif.Country
+        self.citizenship = citizenship
+
+    def set_meets(self, meets: list[Meet]) -> None:
+        assert type(meets) == list
+        for m in meets:
+            assert type(m) == Meet
+        self.meets = meets
+
+    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+        assert type(meet_results) == list
+        for mr in meet_results:
+            assert isinstance(mr, MeetResult)
+        self.meet_results = meet_results
+
     def get_first_name(self) -> str:
         return self.first_name
 
@@ -73,6 +135,38 @@ class Swimmer:
 
     def get_usa_id_short(self) -> str:
         return self.usa_id_short
+    
+    def get_club(self) -> Club:
+        return self.club
+
+    def get_middle_initial(self) -> str | None:
+        return self.middle_initial
+
+    def get_preferred_first_name(self) -> str | None:
+        return self.preferred_first_name
+    
+    def get_birthday(self) -> datetime.date | None:
+        return self.birthday
+
+    def get_usa_id_long(self) -> str | None:
+        return self.usa_id_long
+
+    def get_citizenship(self) -> sdif.Country | None:
+        return self.citizenship
+    
+    def get_meets(self) -> list[Meet]:
+        return self.meets
+
+    def get_meet_results(self) -> list[MeetResult]:
+        return self.meet_results
+
+    def add_meet(self, meet: Meet) -> None:
+        assert type(meet) == Meet
+        self.meets.append(meet)
+
+    def add_meet_result(self, meet_result: MeetResult) -> None:
+        assert isinstance(meet_result, MeetResult)
+        self.meet_results.append(meet_result)
 
 
 class Meet:
