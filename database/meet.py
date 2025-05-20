@@ -32,7 +32,7 @@ class Meet:
         country: sdif.Country | None = None,
         course: sdif.Course | None = None,
         altitude: int | None = None,
-        meet_results: list[MeetResult] = []
+        meet_results: list[MeetResult] = [],
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
@@ -44,7 +44,7 @@ class Meet:
         self.set_start_date(start_date)
         self.set_end_date(end_date)
 
-        # Optional fields
+        # Optional fields (may not be present in the data)
         self.set_address_two(address_two)
         self.set_postal_code(postal_code)
         self.set_country(country)
@@ -387,3 +387,59 @@ class MeetResult:
 
     def get_event_max_time_class(self) -> sdif.EventTimeClass | None:
         return self.event_max_time_class
+
+
+class IndividualMeetResult(MeetResult):
+    """
+    Defines attributes for an individual meet result (i.e., nonrelay). New
+    attributes include swimmer information and individual splits.
+    """
+
+    def __init__(
+        self,
+        meet: Meet,
+        organization: sdif.Organization,
+        team_code: str,
+        lsc: sdif.LSC,
+        session: sdif.Session,
+        date_of_swim: datetime.date,
+        event: sdif.Event,
+        event_min_age: int,
+        event_max_age: int,
+        event_number: str,
+        event_sex: sdif.Sex,
+        heat: int,
+        lane: int,
+        final_time: time.Time,
+        rank: int | None = None,
+        points: float | None = None,
+        seed_time: time.Time | None = None,
+        seed_course: sdif.Course | None = None,
+        event_min_time_class: sdif.EventTimeClass | None = None,
+        event_max_time_class: sdif.EventTimeClass | None = None,
+    ) -> None:
+        super().__init__(
+            meet,
+            organization,
+            team_code,
+            lsc,
+            session,
+            date_of_swim,
+            event,
+            event_min_age,
+            event_max_age,
+            event_number,
+            event_sex,
+            heat,
+            lane,
+            final_time,
+            rank,
+            points,
+            seed_time,
+            seed_course,
+            event_min_time_class,
+            event_max_time_class,
+        )
+        # New mandatory attributes (TODO)
+
+        # New optional attributes (TODO)
