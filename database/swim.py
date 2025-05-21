@@ -21,6 +21,7 @@ class Club:
         full_name: str,
         abbreviated_name: str | None = None,
         address_one: str | None = None,
+        address_two: str | None = None,
         city: str | None = None,
         state: sdif.State | None = None,
         postal_code: str | None = None,
@@ -30,10 +31,26 @@ class Club:
         meets: list[Meet] = [],
         meet_results: list[MeetResult] = [],
     ) -> None:
+        # Mandatory fields
         self.set_organization(organization)
         self.set_team_code(team_code)
         self.set_lsc(lsc)
         self.set_full_name(full_name)
+
+        # Optional fields
+        self.set_abbreviated_name(abbreviated_name)
+        self.set_address_one(address_one)
+        self.set_address_two(address_two)
+        self.set_city(city)
+        self.set_state(state)
+        self.set_postal_code(postal_code)
+        self.set_country(country)
+        self.set_region(region)
+
+        # Internal
+        self.set_swimmers(swimmers)
+        self.set_meets(meets)
+        self.set_meet_results(meet_results)
 
     def set_organization(self, organization: sdif.Organization) -> None:
         assert type(organization) == sdif.Organization
@@ -56,6 +73,69 @@ class Club:
         assert len(full_name) > 0
         self.full_name = full_name
 
+    def set_abbreviated_name(self, abbreviated_name: str | None) -> None:
+        if abbreviated_name != None:
+            assert type(abbreviated_name) == str
+            assert len(abbreviated_name) > 0
+        self.abbreviated_name = abbreviated_name
+
+    def set_address_one(self, address_one: str | None) -> None:
+        if address_one != None:
+            assert type(address_one) == str
+            assert len(address_one) > 0
+        self.address_one = address_one
+
+    def set_address_two(self, address_two: str | None) -> None:
+        if address_two != None:
+            assert type(address_two) == str
+            assert len(address_two) > 0
+        self.address_two = address_two
+
+    def set_city(self, city: str | None) -> None:
+        if city != None:
+            assert type(city) == str
+            assert len(city) > 0
+        self.city = city
+
+    def set_state(self, state: sdif.State | None) -> None:
+        if state != None:
+            assert type(state) == sdif.State
+        self.state = state
+
+    def set_postal_code(self, postal_code: str | None) -> None:
+        if postal_code != None:
+            assert type(postal_code) == str
+            assert len(postal_code) > 0
+        self.postal_code = postal_code
+
+    def set_country(self, country: sdif.Country | None) -> None:
+        if country != None:
+            assert type(country) == sdif.Country
+        self.country = country
+
+    def set_region(self, region: sdif.Region | None) -> None:
+        if region != None:
+            assert type(region) == sdif.Region
+        self.region = region
+
+    def set_swimmers(self, swimmers: list[Swimmer]) -> None:
+        assert type(swimmers) == list
+        for s in swimmers:
+            assert type(s) == Swimmer
+        self.swimmers = swimmers
+
+    def set_meets(self, meets: list[Meet]) -> None:
+        assert type(meets) == list
+        for m in meets:
+            assert type(m) == Meet
+        self.meets = meets
+
+    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+        assert type(meet_results) == list
+        for mr in meet_results:
+            assert isinstance(mr, MeetResult)
+        self.meet_results = meet_results
+
     def get_organization(self) -> sdif.Organization:
         return self.organization
 
@@ -67,6 +147,51 @@ class Club:
 
     def get_full_name(self) -> str:
         return self.full_name
+
+    def get_abbreviated_name(self) -> str | None:
+        return self.abbreviated_name
+
+    def get_address_one(self) -> str | None:
+        return self.address_one
+
+    def get_address_two(self) -> str | None:
+        return self.address_two
+
+    def get_city(self) -> str | None:
+        return self.city
+    
+    def get_state(self) -> sdif.State | None:
+        return self.state
+    
+    def get_postal_code(self) -> str | None:
+        return self.postal_code
+    
+    def get_country(self) -> sdif.Country | None:
+        return self.country
+    
+    def get_region(self) -> sdif.Region | None:
+        return self.region
+    
+    def get_swimmers(self) -> list[Swimmer]:
+        return self.swimmers
+    
+    def get_meets(self) -> list[Meet]:
+        return self.meets
+
+    def get_meet_results(self) -> list[MeetResult]:
+        return self.meet_results
+
+    def add_swimmer(self, swimmer: Swimmer) -> None:
+        assert type(swimmer) == Swimmer
+        self.swimmers.append(swimmer)
+
+    def add_meet(self, meet: Meet) -> None:
+        assert type(meet) == Meet
+        self.meets.append(meet)
+
+    def add_meet_result(self, meet_result: MeetResult) -> None:
+        assert isinstance(meet_result, MeetResult)
+        self.meet_results.append(meet_result)
 
 
 class Swimmer:
@@ -102,6 +227,8 @@ class Swimmer:
         self.set_birthday(birthday)
         self.set_usa_id_long(usa_id_long)
         self.set_citizenship(citizenship)
+
+        # Internal
         self.set_meets(meets)
         self.set_meet_results(meet_results)
 
@@ -260,6 +387,8 @@ class Meet:
         self.set_country(country)
         self.set_course(course)
         self.set_altitude(altitude)
+
+        # Internal
         self.set_meet_results(meet_results)
 
     def set_organization(self, organization: sdif.Organization) -> None:
