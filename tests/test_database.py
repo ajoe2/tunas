@@ -16,7 +16,7 @@ def test_database_basic():
 
 
 def test_swimmer_basic():
-    c = swim.Club()
+    c = swim.Club(sdif.Organization.USA_SWIMMING, "SCSC", sdif.LSC.PACIFIC, "Santa Clara Swim Club")
     s = swim.Swimmer("John", "Doe", sdif.Sex.FEMALE, "GM2SP90AS920", c)
     assert s.get_first_name() == "John"
     assert s.get_last_name() == "Doe"

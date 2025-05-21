@@ -13,7 +13,23 @@ class Club:
     Represents a swim club.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        organization: sdif.Organization,
+        team_code: str,
+        lsc: sdif.LSC,
+        full_name: str,
+        abbreviated_name: str | None = None,
+        address_one: str | None = None,
+        city: str | None = None,
+        state: sdif.State | None = None,
+        postal_code: str | None = None,
+        country: sdif.Country | None = None,
+        region: sdif.Region | None = None,
+        swimmers: list[Swimmer] = [],
+        meets: list[Meet] = [],
+        meet_results: list[MeetResult] = []
+    ) -> None:
         pass
 
 

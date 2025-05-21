@@ -298,6 +298,25 @@ class MeetType(enum.Enum):
     OPEN = "B"
     LEAGUE = "C"
 
+class Region(enum.Enum):
+    """
+    All regions defined under the USA Swimming Standard Interchange Format (REGION Code 007)
+    """
+    REGION_1 = '1'
+    REGION_2 = '2'
+    REGION_3 = '3'
+    REGION_4 = '4'
+    REGION_5 = '5'
+    REGION_6 = '6'
+    REGION_7 = '7'
+    REGION_8 = '8'
+    REGION_9 = '9'
+    REGION_10 = 'A'
+    REGION_11 = 'B'
+    REGION_12 = 'C'
+    REGION_13 = 'D'
+    REGION_14 = 'E'
+
 
 class Sex(enum.Enum):
     """
