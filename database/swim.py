@@ -28,9 +28,45 @@ class Club:
         region: sdif.Region | None = None,
         swimmers: list[Swimmer] = [],
         meets: list[Meet] = [],
-        meet_results: list[MeetResult] = []
+        meet_results: list[MeetResult] = [],
     ) -> None:
-        pass
+        self.set_organization(organization)
+        self.set_team_code(team_code)
+        self.set_lsc(lsc)
+        self.set_full_name(full_name)
+
+    def set_organization(self, organization: sdif.Organization) -> None:
+        assert type(organization) == sdif.Organization
+        self.organization = organization
+
+    def set_team_code(self, team_code: str) -> None:
+        if team_code != None:
+            assert type(team_code) == str
+            assert team_code.isupper()
+            assert len(team_code) <= 4 and len(team_code) > 0
+        self.team_code = team_code
+
+    def set_lsc(self, lsc: sdif.LSC) -> None:
+        if lsc != None:
+            assert type(lsc) == sdif.LSC
+        self.lsc = lsc
+
+    def set_full_name(self, full_name: str) -> None:
+        assert type(full_name) == str
+        assert len(full_name) > 0
+        self.full_name = full_name
+
+    def get_organization(self) -> sdif.Organization:
+        return self.organization
+
+    def get_team_code(self) -> str:
+        return self.team_code
+
+    def get_lsc(self) -> sdif.LSC:
+        return self.lsc
+
+    def get_full_name(self) -> str:
+        return self.full_name
 
 
 class Swimmer:

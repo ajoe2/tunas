@@ -59,7 +59,7 @@ class Database:
         assert type(club) == swim.Club
         self.clubs.append(club)
 
-    def add_swimmer(self, swimmer: swim.Swimmer)-> None:
+    def add_swimmer(self, swimmer: swim.Swimmer) -> None:
         assert type(swimmer) == swim.Swimmer
         self.swimmers.append(swimmer)
 
