@@ -2,10 +2,10 @@
 Tests for database package
 """
 
-import database
-import database.swim as swim
-import database.sdif as sdif
 import datetime
+
+import database
+from database import swim, sdif
 
 
 def test_database_basic():
