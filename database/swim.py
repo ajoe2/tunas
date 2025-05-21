@@ -5,7 +5,7 @@ Data structures for representing swimming objects (club, swimmer, meet, etc.).
 from __future__ import annotations
 import datetime
 
-from .util import sdif, stime
+from . import stime, sdif
 
 
 class Club:
@@ -159,22 +159,22 @@ class Club:
 
     def get_city(self) -> str | None:
         return self.city
-    
+
     def get_state(self) -> sdif.State | None:
         return self.state
-    
+
     def get_postal_code(self) -> str | None:
         return self.postal_code
-    
+
     def get_country(self) -> sdif.Country | None:
         return self.country
-    
+
     def get_region(self) -> sdif.Region | None:
         return self.region
-    
+
     def get_swimmers(self) -> list[Swimmer]:
         return self.swimmers
-    
+
     def get_meets(self) -> list[Meet]:
         return self.meets
 

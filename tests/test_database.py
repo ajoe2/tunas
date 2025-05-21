@@ -4,7 +4,7 @@ Tests for database package
 
 import database
 import database.swim as swim
-import database.util.sdif as sdif
+import database.sdif as sdif
 import datetime
 
 
