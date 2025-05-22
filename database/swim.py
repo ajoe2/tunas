@@ -429,20 +429,24 @@ class Meet:
         self.address_two = address_two
 
     def set_postal_code(self, postal_code: str | None) -> None:
-        assert type(postal_code) == str
-        self.postal_code = postal_code
+        if postal_code != None:
+            assert type(postal_code) == str
+            self.postal_code = postal_code
 
     def set_country(self, country: sdif.Country | None) -> None:
-        assert type(country) == sdif.Country
+        if country != None:
+            assert type(country) == sdif.Country
         self.country = country
 
     def set_course(self, course: sdif.Course | None) -> None:
-        assert type(course) == sdif.Course
+        if course != None:
+            assert type(course) == sdif.Course
         self.course = course
 
     def set_altitude(self, altitude: int | None) -> None:
-        assert type(altitude) == int
-        assert altitude >= 0
+        if altitude != None:
+            assert type(altitude) == int
+            assert altitude >= 0
         self.altitude = altitude
 
     def set_meet_results(self, meet_results: list[MeetResult]) -> None:
