@@ -62,17 +62,10 @@ def test_database_basic():
     meet = swim.Meet(
         sdif.Organization.USA_SWIMMING,
         "Swim Meet Classic",
-        sdif.MeetType.ZONE,
         "Rome",
-        sdif.State.CALIFORNIA,
         "999 Cool Road",
         datetime.date(2025, 1, 14),
         datetime.date(2025, 1, 15),
-        None,
-        None,
-        sdif.Country.ARGENTINA,
-        sdif.Course.LCM,
-        None,
     )
 
     # Create Meet Result

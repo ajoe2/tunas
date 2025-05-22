@@ -2,7 +2,7 @@
 Backend data structures for tunas application.
 """
 
-from . import stime, swim
+from . import stime, swim, sdif
 
 
 def create_time_from_str(time_str: str) -> stime.Time:

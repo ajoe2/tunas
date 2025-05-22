@@ -358,17 +358,17 @@ class Meet:
         self,
         organization: sdif.Organization,
         name: str,
-        meet_type: sdif.MeetType,
         city: str,
-        state: sdif.State,
         address_one: str,
         start_date: datetime.date,
         end_date: datetime.date,
+        state: sdif.State | None = None,
         address_two: str | None = None,
         postal_code: str | None = None,
         country: sdif.Country | None = None,
         course: sdif.Course | None = None,
         altitude: int | None = None,
+        meet_type: sdif.MeetType | None = None,
         meet_results: list[MeetResult] = list(),
     ) -> None:
         # Mandatory fields
@@ -399,16 +399,18 @@ class Meet:
         assert type(name) == str and len(name) > 0
         self.name = name
 
-    def set_meet_type(self, meet_type: sdif.MeetType) -> None:
-        assert type(meet_type) == sdif.MeetType
+    def set_meet_type(self, meet_type: sdif.MeetType | None) -> None:
+        if meet_type != None:
+            assert type(meet_type) == sdif.MeetType
         self.meet_type = meet_type
 
     def set_city(self, city: str) -> None:
         assert type(city) == str
         self.city = city
 
-    def set_state(self, state: sdif.State) -> None:
-        assert type(state) == sdif.State
+    def set_state(self, state: sdif.State | None) -> None:
+        if state != None:
+            assert type(state) == sdif.State
         self.state = state
 
     def set_address_one(self, address_one: str) -> None:
@@ -463,13 +465,13 @@ class Meet:
     def get_name(self) -> str:
         return self.name
 
-    def get_meet_type(self) -> sdif.MeetType:
+    def get_meet_type(self) -> sdif.MeetType | None:
         return self.meet_type
 
     def get_city(self) -> str:
         return self.city
 
-    def get_state(self) -> sdif.State:
+    def get_state(self) -> sdif.State | None:
         return self.state
 
     def get_address_one(self) -> str:

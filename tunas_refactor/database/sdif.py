@@ -11,15 +11,15 @@ class Organization(enum.Enum):
     All organizations defined under the USA Swimming Standard Interchange Format (ORG Code 001).
     """
 
-    USA_SWIMMING = 1
-    MASTERS = 2
-    NCAA = 3
-    NCAA_DIV_I = 4
-    NCAA_DIV_II = 5
-    NCAA_DIV_III = 6
-    YMCA = 7
-    FINA = 8
-    HIGH_SCHOOL = 9
+    USA_SWIMMING = "1"
+    MASTERS = "2"
+    NCAA = "3"
+    NCAA_DIV_I = "4"
+    NCAA_DIV_II = "5"
+    NCAA_DIV_III = "6"
+    YMCA = "7"
+    FINA = "8"
+    HIGH_SCHOOL = "9"
 
 
 class LSC(enum.Enum):
@@ -339,13 +339,13 @@ class Stroke(enum.Enum):
     All strokes defined under the USA Swimming Standard Interchange Format (STROKE Code 012).
     """
 
-    FREESTYLE = 1
-    BACKSTROKE = 2
-    BREASTSTROKE = 3
-    BUTTERFLY = 4
-    INDIVIDUAL_MEDLEY = 5
-    FREESTYLE_RELAY = 6
-    MEDLEY_RELAY = 7
+    FREESTYLE = "1"
+    BACKSTROKE = "2"
+    BREASTSTROKE = "3"
+    BUTTERFLY = "4"
+    INDIVIDUAL_MEDLEY = "5"
+    FREESTYLE_RELAY = "6"
+    MEDLEY_RELAY = "7"
 
     def __str__(self) -> str:
         match self:
@@ -393,9 +393,9 @@ class Course(enum.Enum):
     as the shortened string.
     """
 
-    SCM = 1
-    SCY = 2
-    LCM = 3
+    SCM = "1"
+    SCY = "2"
+    LCM = "3"
 
     def __str__(self) -> str:
         return self.name
