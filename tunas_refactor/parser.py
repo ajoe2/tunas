@@ -249,7 +249,7 @@ class Cl2Processor:
                 region,
             )
             self.db.add_club(club)
-        else: # Update any attributes that are empty
+        else:  # Update any attributes that are empty
             if club.get_lsc() == None:
                 club.set_lsc(lsc)
             if club.get_abbreviated_name() == None:
