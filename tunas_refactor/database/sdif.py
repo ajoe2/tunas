@@ -87,6 +87,9 @@ class LSC(enum.Enum):
     WEST_VIRGINIA = "WV"
     WYOMING = "WY"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class Country(enum.Enum):
     """

@@ -17,7 +17,7 @@ class Club:
         self,
         organization: sdif.Organization,
         team_code: str,
-        lsc: sdif.LSC,
+        lsc: sdif.LSC | None,
         full_name: str,
         abbreviated_name: str | None = None,
         address_one: str | None = None,
@@ -60,10 +60,10 @@ class Club:
         if team_code != None:
             assert type(team_code) == str
             assert team_code.isupper()
-            assert len(team_code) <= 4 and len(team_code) > 0
+            assert len(team_code) <= 6 and len(team_code) > 0
         self.team_code = team_code
 
-    def set_lsc(self, lsc: sdif.LSC) -> None:
+    def set_lsc(self, lsc: sdif.LSC | None) -> None:
         if lsc != None:
             assert type(lsc) == sdif.LSC
         self.lsc = lsc
@@ -142,7 +142,7 @@ class Club:
     def get_team_code(self) -> str:
         return self.team_code
 
-    def get_lsc(self) -> sdif.LSC:
+    def get_lsc(self) -> sdif.LSC | None:
         return self.lsc
 
     def get_full_name(self) -> str:

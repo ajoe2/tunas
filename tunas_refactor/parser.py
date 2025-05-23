@@ -51,7 +51,7 @@ class Cl2Processor:
                     case "B2":
                         pass
                     case "C1":
-                        pass
+                        self.process_c1(line)
                     case "C2":
                         pass
                     case "D0":
@@ -74,7 +74,6 @@ class Cl2Processor:
     def process_b1(self, line: str) -> None:
         # Parse line
         org_code_str = line[2].strip()
-        # Unused: line[3:11].strip()
         name_str = line[11:41].strip()
         address_one_str = line[41:63].strip()
         address_two_str = line[63:85].strip()
@@ -86,9 +85,7 @@ class Cl2Processor:
         start_date_str = line[121:129].strip()
         end_date_str = line[129:137].strip()
         altitude_str = line[137:141].strip()
-        # Unused: line[141:149].strip()
         course_code_str = line[149].strip()
-        # Unused: line[150:160].strip()
 
         # Convert mandatory line components to internal type
         organization = sdif.Organization(org_code_str)
@@ -157,6 +154,123 @@ class Cl2Processor:
         )
         self.current_meet = new_meet
         self.db.add_meet(new_meet)
+
+    def process_c1(self, line: str) -> None:
+        org_code_str = line[2].strip()
+        lsc_code_str = line[11:13].strip()
+        team_code_str = line[13:17].strip()
+        full_name_str = line[17:47].strip()
+        abbreviated_name_str = line[47:63].strip()
+        address_one_str = line[63:85].strip()
+        address_two_str = line[85:107].strip()
+        city_str = line[107:127].strip()
+        state_str = line[127:129].strip()
+        postal_code_str = line[129:139].strip()
+        country_code_str = line[139:142].strip()
+        region_str = line[142].strip()
+
+        # Check for unattached swimmers
+        if (
+            lsc_code_str == "UN"
+            or "unattached" in full_name_str.lower()
+            or (
+                "UN" in team_code_str.upper()
+                and (
+                    "unat" in full_name_str.lower() or "unnat" in full_name_str.lower()
+                )
+            )
+        ):
+            self.current_club = None
+            return
+
+        # Convert mandatory line components to internal type
+        organization = sdif.Organization(org_code_str)
+        team_code = team_code_str
+        full_name = full_name_str
+        try:
+            lsc = sdif.LSC(lsc_code_str)
+        except ValueError:
+            lsc = None
+
+        # Convert optional line components to internal type
+        if abbreviated_name_str != "":
+            abbreviated_name = abbreviated_name_str
+        else:
+            abbreviated_name = None
+        if address_one_str != "":
+            address_one = address_one_str
+        else:
+            address_one = None
+        if address_two_str != "":
+            address_two = address_two_str
+        else:
+            address_two = None
+        if city_str != "":
+            city = city_str
+        else:
+            city = None
+        if state_str != "" and state_str in sdif.State:
+            state = sdif.State(state_str)
+        else:
+            state = None
+        if postal_code_str != "":
+            postal_code = postal_code_str
+        else:
+            postal_code = None
+        if country_code_str != "" and country_code_str in sdif.Country:
+            country = sdif.Country(country_code_str)
+        else:
+            country = None
+        if region_str != "":
+            region = sdif.Region(region_str)
+        else:
+            region = None
+
+        # Check for existing club object
+        club_exists = False
+        for c in self.db.get_clubs():
+            if c.get_team_code() == team_code and c.get_lsc() == lsc:
+                club_exists = True
+                club = c
+                break
+        if not club_exists:
+            club = swim.Club(
+                organization,
+                team_code,
+                lsc,
+                full_name,
+                abbreviated_name,
+                address_one,
+                address_two,
+                city,
+                state,
+                postal_code,
+                country,
+                region,
+            )
+            self.db.add_club(club)
+        else: # Update any attributes that are empty
+            if club.get_lsc() == None:
+                club.set_lsc(lsc)
+            if club.get_abbreviated_name() == None:
+                club.set_abbreviated_name(abbreviated_name)
+            if club.get_address_one() == None:
+                club.set_address_one(address_one)
+            if club.get_address_two() == None:
+                club.set_address_two(address_two)
+            if club.get_city() == None:
+                club.set_city(city)
+            if club.get_state() == None:
+                club.set_state(state)
+            if club.get_postal_code() == None:
+                club.set_postal_code(postal_code)
+            if club.get_country() == None:
+                club.set_country(country)
+            if club.get_region() == None:
+                club.set_region(region)
+
+        # Set processing attributes
+        self.current_club = club
 
     def process_z0(self, line: str) -> None:
         self.current_meet = None
