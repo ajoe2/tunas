@@ -101,3 +101,9 @@ class Database:
         for mr in meet_results:
             assert isinstance(mr, swim.MeetResult)
         self.meet_results = meet_results
+
+    def find_swimmer_with_short_id(self, short_id: str) -> swim.Swimmer | None:
+        assert len(short_id) == 12
+        for s in self.get_swimmers():
+            if s.get_usa_id_short() == short_id:
+                return s

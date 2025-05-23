@@ -8,6 +8,7 @@ import enum
 import os
 
 import database
+import util
 from database import swim, sdif, stime
 
 
@@ -27,8 +28,12 @@ def read_cl2(file_path: str) -> database.Database:
                 paths.append(full_file_path)
 
     # Load cl2 files into database
+    files_read = 0
     for p in paths:
         processor.read_file(p)
+        files_read += 1
+        print(f"Files read: {files_read}", end="\r")
+    print()
 
     return db
 
@@ -56,7 +61,7 @@ class Cl2Processor:
                     case "C2":
                         pass
                     case "D0":
-                        pass
+                        self.process_d0(line)
                     case "D1":
                         pass
                     case "D2":
@@ -272,6 +277,104 @@ class Cl2Processor:
 
         # Set processing attributes
         self.current_club = club
+
+    def process_d0(self, line: str) -> None:
+        full_name_str = line[11:39].strip()
+        swimmer_short_id_str = line[39:51].strip()
+        attach_code_str = line[51].strip()
+        citizen_code_str = line[52:55].strip()
+        b_month_str = line[55:57].strip()
+        b_day_str = line[57:59].strip()
+        b_year_str = line[59:63].strip()
+        age_class_str = line[63:65].strip()
+        swimmer_sex_str = line[65].strip()
+        event_sex_str = line[66].strip()
+        event_distance_str = line[67:71].strip()
+        event_stroke_str = line[71].strip()
+        event_number_str = line[72:76].strip()
+        event_age_code_str = line[76:80].strip()
+        event_month_str = line[80:82].strip()
+        event_day_str = line[82:84].strip()
+        event_year_str = line[84:88].strip()
+        seed_time_str = line[88:96]
+        seed_course_str = line[96].strip()
+        prelim_time_str = line[97:105].strip()
+        prelim_course_str = line[105].strip()
+        swim_off_time_str = line[106:114].strip()
+        swim_off_course_str = line[114].strip()
+        finals_time_str = line[115:123].strip()
+        finals_course_str = line[123].strip()
+        prelim_heat_str = line[124:126].strip()
+        prelim_lane_str = line[126:128].strip()
+        finals_heat_str = line[128:130].strip()
+        finals_lane_str = line[130:132].strip()
+        prelims_place_str = line[132:135].strip()
+        finals_place_str = line[135:138].strip()
+        points_scored_str = line[138:142].strip()
+
+        # Cleanup
+        if len(swimmer_short_id_str) != 12:
+            return
+
+        # Parse full name
+        if full_name_str[-1].isupper() and full_name_str[-2] == " ":
+            middle_initial = full_name_str[-1]
+            full_name_str = full_name_str[:-2].strip()
+        else:
+            middle_initial = None
+        last_name, first_name = full_name_str.split(",")
+        last_name = last_name.strip()
+        first_name = first_name.strip()
+
+        # Standardize first name capitalization
+        first_name_components = first_name.split(" ")
+        first_name = ""
+        for c in first_name_components:
+            c = c.lower()
+            c = c[0].upper() + c[1:]
+            first_name = first_name + c + " "
+        first_name = first_name[:-1]
+
+        # Standardize last name capitalization
+        last_name_components = last_name.split(" ")
+        last_name = ""
+        for c in last_name_components:
+            if c != "":
+                c = c.lower()
+                c = c[0].upper() + c[1:]
+                last_name = last_name + c + " "
+        last_name = last_name[:-1]
+
+        # Parse sex, id, and age_class
+        swimmer_sex = sdif.Sex(swimmer_sex_str)
+        usa_id_short = swimmer_short_id_str
+        age_class = age_class_str
+
+        # Parse birthday
+        if b_day_str and b_month_str and b_year_str:
+            birthday = datetime.date(int(b_year_str), int(b_month_str), int(b_day_str))
+        elif util.is_old_id(usa_id_short):
+            b_month = int(usa_id_short[:2])
+            b_day = int(usa_id_short[2:4])
+            if int(usa_id_short[4:6]) > 50:
+                b_year = int("19" + usa_id_short[4:6])
+            else:
+                b_year = int("20" + usa_id_short[4:6])
+            try:
+                birthday = datetime.date(b_year, b_month, b_day)
+            except ValueError:
+                birthday = None
+        else:  # Birthday is missing and is using new usa swimming id
+            birthday = None
+
+        # At this point, birthday will be None if it is missing and the record has
+        # the new usa swimming id format
+
+        # If we can't figure out the birthday, look for swimmer using new id, sex, and age class
+
+        # If birthday exists, search for swimmer using name, sex, and birthday
+
+        # Once we look for the swimmer, either create it or update attributes
 
     def process_z0(self, line: str) -> None:
         self.current_meet = None
