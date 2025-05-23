@@ -2,13 +2,13 @@
 Backend data structures for tunas application.
 """
 
-from . import stime, swim, sdif
+from . import stime, swim
 
 
 def create_time_from_str(time_str: str) -> stime.Time:
     """
-    Create and return a time object corresponding to time_str. time_str
-    should be in mm:ss.hh format.
+    Create and return a time object corresponding to time_str which should be in
+    mm:ss.hh format.
     """
     minute_str, second_str, hundredth_str = "0", "0", "0"
     minute, second, hundredth = 0, 0, 0
@@ -19,7 +19,7 @@ def create_time_from_str(time_str: str) -> stime.Time:
         minute_str = first_split[0]
     next_split = first_split[-1].split(".")
     if len(next_split) != 2:
-        raise Exception(f"Invalid input: '{time_str}'. Should be in 'mm:ss.hh' format.")
+        raise Exception(f"Invalid time string: '{time_str}'")
     second_str = next_split[0]
     hundredth_str = next_split[1]
     try:
@@ -27,12 +27,17 @@ def create_time_from_str(time_str: str) -> stime.Time:
         second = int(second_str)
         hundredth = int(hundredth_str)
     except:
-        raise Exception(f"Invalid input: '{time_str}'. Time is not a valid time.")
+        raise Exception(f"Invalid time string: '{time_str}'")
 
     return stime.Time(minute, second, hundredth)
 
 
 class Database:
+    """
+    Stores information loaded from data files. Has access to all clubs, swimmers,
+    meets, and meet_results.
+    """
+
     def __init__(
         self,
         clubs: list[swim.Club] = [],
@@ -44,6 +49,22 @@ class Database:
         self.set_swimmers(swimmers)
         self.set_meets(meets)
         self.set_meet_results(meet_results)
+
+    def add_club(self, club: swim.Club) -> None:
+        assert type(club) == swim.Club
+        self.clubs.append(club)
+
+    def add_swimmer(self, swimmer: swim.Swimmer) -> None:
+        assert type(swimmer) == swim.Swimmer
+        self.swimmers.append(swimmer)
+
+    def add_meet(self, meet: swim.Meet) -> None:
+        assert type(meet) == swim.Meet
+        self.meets.append(meet)
+
+    def add_meet_result(self, meet_result: swim.MeetResult) -> None:
+        assert isinstance(meet_result, swim.MeetResult)
+        self.meet_results.append(meet_result)
 
     def get_clubs(self) -> list[swim.Club]:
         return self.clubs
@@ -80,19 +101,3 @@ class Database:
         for mr in meet_results:
             assert isinstance(mr, swim.MeetResult)
         self.meet_results = meet_results
-
-    def add_club(self, club: swim.Club) -> None:
-        assert type(club) == swim.Club
-        self.clubs.append(club)
-
-    def add_swimmer(self, swimmer: swim.Swimmer) -> None:
-        assert type(swimmer) == swim.Swimmer
-        self.swimmers.append(swimmer)
-
-    def add_meet(self, meet: swim.Meet) -> None:
-        assert type(meet) == swim.Meet
-        self.meets.append(meet)
-
-    def add_meet_result(self, meet_result: swim.MeetResult) -> None:
-        assert isinstance(meet_result, swim.MeetResult)
-        self.meet_results.append(meet_result)

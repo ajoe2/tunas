@@ -325,8 +325,8 @@ class Region(enum.Enum):
 
 class Sex(enum.Enum):
     """
-    Swimmer sex. Follows convention used in USA Swimming Standard
-    Interchange Format (SEX Code 010 and EVENT SEX Code 011).
+    All sexes defined under the USA Swimming Standard Interchange Format (SEX Code 010
+    and EVENT SEX Code 011).
     """
 
     MALE = "M"

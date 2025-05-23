@@ -38,6 +38,7 @@ class Cl2Processor:
         self.db = db
         self.meet = None
         self.current_club = None
+        self.current_swimmer = None
 
     def read_file(self, path: str):
         with open(path, "r") as file:
@@ -169,7 +170,7 @@ class Cl2Processor:
         country_code_str = line[139:142].strip()
         region_str = line[142].strip()
 
-        # Check for unattached swimmers
+        # Check if unattached
         if (
             lsc_code_str == "UN"
             or "unattached" in full_name_str.lower()
@@ -187,9 +188,9 @@ class Cl2Processor:
         organization = sdif.Organization(org_code_str)
         team_code = team_code_str
         full_name = full_name_str
-        try:
+        if lsc_code_str in sdif.LSC:
             lsc = sdif.LSC(lsc_code_str)
-        except ValueError:
+        else:
             lsc = None
 
         # Convert optional line components to internal type
@@ -275,3 +276,4 @@ class Cl2Processor:
     def process_z0(self, line: str) -> None:
         self.current_meet = None
         self.current_club = None
+        self.current_swimmer = None
