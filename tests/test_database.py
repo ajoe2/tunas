@@ -53,7 +53,7 @@ def test_database_basic():
         club,
         "A",
         "Johnny",
-        datetime.date(2000, 1, 1),
+        None,
         "GM2SP90AS920AA",
         sdif.Country.UNITED_STATES,
     )
@@ -64,12 +64,12 @@ def test_database_basic():
         "Swim Meet Classic",
         "Rome",
         "999 Cool Road",
-        datetime.date(2025, 1, 14),
-        datetime.date(2025, 1, 15),
+        datetime.date.today(),
+        datetime.date.today() + datetime.timedelta(days=1),
     )
 
     # Create Meet Result
-    meet_result = swim.MeetResult(
+    meet_result = swim.IndividualMeetResult(
         meet,
         sdif.Organization.USA_SWIMMING,
         "SCSC",
@@ -84,12 +84,12 @@ def test_database_basic():
         1,
         4,
         stime.Time(8, 0, 0),
-        None,
-        None,
-        None,
-        None,
-        None,
-        None,
+        "John",
+        "Doe",
+        sdif.Sex.FEMALE,
+        "GM2SP90AS920",
+        sdif.AttachStatus.ATTACHED,
+        swimmer_age_class="14",
     )
 
     # Add object pointers
@@ -113,6 +113,8 @@ def test_database_basic():
     assert club.get_meets()[0] == meet
     assert len(club.get_meet_results()) == 1
     assert club.get_meet_results()[0] == meet_result
+    print(datetime.date.today() + datetime.timedelta(days=364))
+    assert swimmer.get_age_range(datetime.date.today() + datetime.timedelta(days=366)) == (15, 16)
 
 
 def test_create_time_from_string_basic1():

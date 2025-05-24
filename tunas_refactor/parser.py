@@ -32,8 +32,8 @@ def read_cl2(file_path: str) -> database.Database:
     for p in paths:
         processor.read_file(p)
         files_read += 1
-        print(f"Files read: {files_read}", end="\r")
-    print()
+    #     print(f"Files read: {files_read}", end="\r")
+    # print()
 
     return db
 
@@ -356,7 +356,7 @@ class Cl2Processor:
         elif util.is_old_id(usa_id_short):
             b_month = int(usa_id_short[:2])
             b_day = int(usa_id_short[2:4])
-            if int(usa_id_short[4:6]) > 50:
+            if int(usa_id_short[4:6]) > datetime.date.today().year % 100:
                 b_year = int("19" + usa_id_short[4:6])
             else:
                 b_year = int("20" + usa_id_short[4:6])
@@ -370,9 +370,9 @@ class Cl2Processor:
         # At this point, birthday will be None if it is missing and the record has
         # the new usa swimming id format
 
-        # If we can't figure out the birthday, look for swimmer using new id, sex, and age class
+        # If we can't figure out the birthday, look for swimmer using new id and age class
 
-        # If birthday exists, search for swimmer using name, sex, and birthday
+        # If birthday exists, search for swimmer using name and birthday
 
         # Once we look for the swimmer, either create it or update attributes
 

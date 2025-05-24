@@ -218,7 +218,7 @@ class Swimmer:
         usa_id_long: str | None = None,
         citizenship: sdif.Country | None = None,
         meets: list[Meet] = list(),
-        meet_results: list[MeetResult] = list(),
+        meet_results: list[IndividualMeetResult] = list(),
     ) -> None:
         # Mandatory fields
         self.set_first_name(first_name)
@@ -303,10 +303,10 @@ class Swimmer:
             assert type(m) == Meet
         self.meets = meets
 
-    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+    def set_meet_results(self, meet_results: list[IndividualMeetResult]) -> None:
         assert type(meet_results) == list
         for mr in meet_results:
-            assert isinstance(mr, MeetResult)
+            assert isinstance(mr, IndividualMeetResult)
         self.meet_results = meet_results
 
     def get_first_name(self) -> str:
@@ -342,16 +342,82 @@ class Swimmer:
     def get_meets(self) -> list[Meet]:
         return self.meets
 
-    def get_meet_results(self) -> list[MeetResult]:
+    def get_meet_results(self) -> list[IndividualMeetResult]:
         return self.meet_results
 
     def add_meet(self, meet: Meet) -> None:
         assert type(meet) == Meet
         self.meets.append(meet)
 
-    def add_meet_result(self, meet_result: MeetResult) -> None:
-        assert isinstance(meet_result, MeetResult)
+    def add_meet_result(self, meet_result: IndividualMeetResult) -> None:
+        assert isinstance(meet_result, IndividualMeetResult)
         self.meet_results.append(meet_result)
+
+    def get_age_range(self, on_date: datetime.date) -> tuple[int, int]:
+        """
+        Return age range for the given swimmer.
+        """
+        min_age = 0
+        max_age = 100
+
+        birthday = self.get_birthday()
+
+        if birthday != None:
+            min_age = calculate_age(birthday, on_date)
+            max_age = min_age
+            return (min_age, max_age)
+
+        # Find and sort numerical age records
+        age_records = []
+        for mr in self.get_meet_results():
+            meet_start_date = mr.get_meet().get_start_date()
+            swimmer_age_class = mr.get_swimmer_age_class()
+            if swimmer_age_class != None and swimmer_age_class.isnumeric():
+                age_records.append((meet_start_date, int(swimmer_age_class)))
+
+        # If there are no age records, the swimmer only has high school records.
+        # Hopefully, this does not happen too often
+        if age_records == []:
+            min_age = 13
+            max_age = 20
+            return (min_age, max_age)
+
+        # Derive max and min birthday
+        # age_records[0] exists because we already checked for an empty list
+        age_records.sort(key=lambda record: record[0])
+        first_record = age_records[0]
+        birthday_min = datetime.date(
+            first_record[0].year - first_record[1] - 1,
+            first_record[0].month,
+            first_record[0].day,
+        ) + datetime.timedelta(days=1)
+        birthday_max = datetime.date(
+            first_record[0].year - first_record[1],
+            first_record[0].month,
+            first_record[0].day,
+        )
+        # Refine min and max birthday by iterating through records
+        for record in age_records:
+            min = datetime.date(
+                record[0].year - record[1] - 1, record[0].month, record[0].day
+            ) + datetime.timedelta(days=1)
+            max = datetime.date(
+                record[0].year - record[1], record[0].month, record[0].day
+            )
+            if min > birthday_min:
+                birthday_min = min
+            if max < birthday_max:
+                birthday_max = max
+
+        # Calculate min and max age
+        max_age = calculate_age(birthday_min, on_date)
+        min_age = calculate_age(birthday_max, on_date)
+
+        print(f"{min} {max} {min_age} {max_age}")
+
+        assert max_age >= min_age and max_age - min_age <= 1
+
+        return (min_age, max_age)
 
 
 class Meet:
@@ -508,7 +574,7 @@ class Meet:
         return self.meet_results
 
     def add_meet_result(self, meet_result: MeetResult):
-        assert type(meet_result) == MeetResult
+        assert isinstance(meet_result, MeetResult)
         self.meet_results.append(meet_result)
 
 
@@ -922,3 +988,14 @@ class IndividualMeetResult(MeetResult):
 
     def get_splits(self) -> dict[int, stime.Time]:
         return self.splits
+
+
+def calculate_age(birthday: datetime.date, on_date: datetime.date):
+    """
+    Calculate age on_date for given birthday.
+    """
+    return (
+        on_date.year
+        - birthday.year
+        - ((on_date.month, on_date.day) < (birthday.month, birthday.day))
+    )

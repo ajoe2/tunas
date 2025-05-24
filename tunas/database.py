@@ -658,4 +658,3 @@ class Database():
                     qualified.add(standard)
         return [standard for standard in TimeStandard.standards
                 if standard in qualified]
-
