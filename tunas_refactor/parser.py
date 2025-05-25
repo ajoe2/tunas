@@ -32,8 +32,8 @@ def read_cl2(file_path: str) -> database.Database:
     for p in paths:
         processor.read_file(p)
         files_read += 1
-    #     print(f"Files read: {files_read}", end="\r")
-    # print()
+        print(f"Files read: {files_read}", end="\r")
+    print()
 
     return db
 
