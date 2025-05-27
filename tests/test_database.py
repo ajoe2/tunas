@@ -114,7 +114,9 @@ def test_database_basic():
     assert len(club.get_meet_results()) == 1
     assert club.get_meet_results()[0] == meet_result
     print(datetime.date.today() + datetime.timedelta(days=364))
-    assert swimmer.get_age_range(datetime.date.today() + datetime.timedelta(days=366)) == (15, 16)
+    assert swimmer.get_age_range(
+        datetime.date.today() + datetime.timedelta(days=366)
+    ) == (15, 16)
 
 
 def test_create_time_from_string_basic1():

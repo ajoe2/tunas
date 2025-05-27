@@ -14,6 +14,7 @@ def is_old_id(id: str) -> bool:
         return True
     return False
 
+
 def standardize_course(course_str: str) -> str:
     """
     Standardize course data in D0 entry.

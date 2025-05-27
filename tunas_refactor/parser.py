@@ -446,29 +446,45 @@ class Cl2Processor:
             points_scored = float(points_scored_str)
 
         # Find swimmer
-        if self.current_swimmer != None and self.current_swimmer.get_usa_id_short() == usa_id_short:
+        if (
+            self.current_swimmer
+            and self.current_swimmer.get_usa_id_short() == usa_id_short
+        ):
+            # The current swimmer is still the same so we don't need to search
             pass
         else:
+            # The current swimmer has changed.
             swimmer = None
+
+            # First, search in the club. Then search the whole database. This needs
+            # to be refined.
             if self.current_club != None:
                 swimmer = self.current_club.find_swimmer_with_short_id(usa_id_short)
-            # if swimmer == None:
-            #     swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+                if swimmer == None:
+                    swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+
+            # If we can't find the swimmer, create it. Otherwise, update attributes
             if swimmer == None:
-                swimmer = swim.Swimmer(first_name, last_name, swimmer_sex, usa_id_short, self.current_club, middle_initial, None, birthday, None, citizen_code)
-                # self.db.add_swimmer(swimmer)
+                swimmer = swim.Swimmer(
+                    first_name,
+                    last_name,
+                    swimmer_sex,
+                    usa_id_short,
+                    self.current_club,
+                    middle_initial,
+                    None,
+                    birthday,
+                    None,
+                    citizen_code,
+                )
+                self.db.add_swimmer(swimmer)
                 if self.current_club != None:
                     self.current_club.get_swimmers().append(swimmer)
+            else:
+                pass  # TODO
+
+            # Set current swimmer
             self.current_swimmer = swimmer
-
-        # At this point, birthday will be None if it is missing and the record has
-        # the new usa swimming id format
-
-        # If we can't figure out the birthday, look for swimmer using new id and age class
-
-        # If birthday exists, search for swimmer using name and birthday
-
-        # Once we look for the swimmer, either create it or update attributes
 
     def process_z0(self, line: str) -> None:
         self.current_meet = None
