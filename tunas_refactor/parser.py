@@ -127,10 +127,7 @@ class Cl2Processor:
         else:
             country = None
         if course_code_str != "":
-            alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
-            if course_code_str in alpha_to_num_course.keys():
-                course_code_str = alpha_to_num_course[course_code_str]
-            course = sdif.Course(course_code_str)
+            course = sdif.Course(util.standardize_course(course_code_str))
         else:
             course = None
         if altitude_str != "":
@@ -175,30 +172,33 @@ class Cl2Processor:
         country_code_str = line[139:142].strip()
         region_str = line[142].strip()
 
-        # Check if unattached
-        if (
-            lsc_code_str == "UN"
-            or "unattached" in full_name_str.lower()
-            or (
-                "UN" in team_code_str.upper()
-                and (
-                    "unat" in full_name_str.lower() or "unnat" in full_name_str.lower()
-                )
-            )
-        ):
+        def is_unattached() -> bool:
+            """
+            Return true if line is an unattached club.
+            """
+            if lsc_code_str == "UN":
+                return True
+            if "unattached" in full_name_str.lower():
+                return True
+            if "UN" in team_code_str.upper() and (
+                "unat" in full_name_str.lower() or "unnat" in full_name_str.lower()
+            ):
+                return True
+            return False
+
+        # If unattached, set current club to None
+        if is_unattached():
             self.current_club = None
             return
 
-        # Convert mandatory line components to internal type
+        # Convert string data to internal types
         organization = sdif.Organization(org_code_str)
-        team_code = team_code_str
         full_name = full_name_str
+        team_code = team_code_str
         if lsc_code_str in sdif.LSC:
             lsc = sdif.LSC(lsc_code_str)
         else:
             lsc = None
-
-        # Convert optional line components to internal type
         if abbreviated_name_str != "":
             abbreviated_name = abbreviated_name_str
         else:
@@ -239,23 +239,9 @@ class Cl2Processor:
                 club_exists = True
                 club = c
                 break
-        if not club_exists:
-            club = swim.Club(
-                organization,
-                team_code,
-                lsc,
-                full_name,
-                abbreviated_name,
-                address_one,
-                address_two,
-                city,
-                state,
-                postal_code,
-                country,
-                region,
-            )
-            self.db.add_club(club)
-        else:  # Update any attributes that are empty
+
+        # If club exists, update abbributes. Otherwise, create new club.
+        if club_exists:
             if club.get_lsc() == None:
                 club.set_lsc(lsc)
             if club.get_abbreviated_name() == None:
@@ -274,8 +260,24 @@ class Cl2Processor:
                 club.set_country(country)
             if club.get_region() == None:
                 club.set_region(region)
+        else:
+            club = swim.Club(
+                organization,
+                team_code,
+                lsc,
+                full_name,
+                abbreviated_name,
+                address_one,
+                address_two,
+                city,
+                state,
+                postal_code,
+                country,
+                region,
+            )
+            self.db.add_club(club)
 
-        # Set processing attributes
+        # Set current club to the club we just created/found
         self.current_club = club
 
     def process_d0(self, line: str) -> None:
@@ -296,7 +298,7 @@ class Cl2Processor:
         event_month_str = line[80:82].strip()
         event_day_str = line[82:84].strip()
         event_year_str = line[84:88].strip()
-        seed_time_str = line[88:96]
+        seed_time_str = line[88:96].strip()
         seed_course_str = line[96].strip()
         prelim_time_str = line[97:105].strip()
         prelim_course_str = line[105].strip()
@@ -308,11 +310,11 @@ class Cl2Processor:
         prelim_lane_str = line[126:128].strip()
         finals_heat_str = line[128:130].strip()
         finals_lane_str = line[130:132].strip()
-        prelims_place_str = line[132:135].strip()
+        prelim_place_str = line[132:135].strip()
         finals_place_str = line[135:138].strip()
         points_scored_str = line[138:142].strip()
 
-        # Cleanup
+        # Ignore entries without an id
         if len(swimmer_short_id_str) != 12:
             return
 
@@ -364,8 +366,84 @@ class Cl2Processor:
                 birthday = datetime.date(b_year, b_month, b_day)
             except ValueError:
                 birthday = None
-        else:  # Birthday is missing and is using new usa swimming id
+        else:
             birthday = None
+
+        # Parse rest of data
+        attach_status = sdif.AttachStatus(attach_code_str)
+        event_sex = sdif.Sex(event_sex_str)
+        event_distance = int(event_distance_str)
+        event_stroke = sdif.Stroke(event_stroke_str)
+        event_number = event_number_str
+        event_date = datetime.date(
+            int(event_year_str), int(event_month_str), int(event_day_str)
+        )
+        if event_age_code_str[0:2] == "UN":
+            event_min_age = 0
+        else:
+            event_min_age = int(event_age_code_str[0:2])
+        if event_age_code_str[2:4] == "OV":
+            event_max_age = 1000
+        else:
+            event_max_age = int(event_age_code_str[2:4])
+        if citizen_code_str == "":
+            citizen_code = None
+        else:
+            citizen_code = sdif.Country(citizen_code_str)
+        if seed_time_str == "":
+            seed_time = None
+            seed_course = None
+        else:
+            seed_time = database.create_time_from_str(seed_time_str)
+            seed_course = sdif.Course(util.standardize_course(seed_course_str))
+        if prelim_time_str == "" or prelim_time_str in ["NT", "NS", "DNF", "DQ", "SCR"]:
+            prelim_time = None
+            prelim_course = None
+            prelim_heat = None
+            prelim_lane = None
+        else:
+            prelim_time = database.create_time_from_str(prelim_time_str)
+            prelim_course = sdif.Course(util.standardize_course(prelim_course_str))
+            prelim_heat = int(prelim_heat_str)
+            prelim_lane = int(prelim_lane_str)
+        if swim_off_time_str == "" or swim_off_time_str in [
+            "NT",
+            "NS",
+            "DNF",
+            "DQ",
+            "SCR",
+        ]:
+            swim_off_time = None
+            swim_off_course = None
+            swim_off_heat = None
+            swim_off_lane = None
+        else:
+            swim_off_time = database.create_time_from_str(swim_off_time_str)
+            swim_off_course = sdif.Course(util.standardize_course(swim_off_course_str))
+            swim_off_heat = None
+            swim_off_lane = None
+        if finals_time_str == "" or finals_time_str in ["NT", "NS", "DNF", "DQ", "SCR"]:
+            finals_time = None
+            finals_course = None
+            finals_heat = None
+            finals_lane = None
+        else:
+            finals_time = database.create_time_from_str(finals_time_str)
+            finals_course = sdif.Course(util.standardize_course(finals_course_str))
+            finals_heat = int(finals_heat_str)
+            finals_lane = int(finals_lane_str)
+        if prelim_place_str == "":
+            prelim_place = None
+        else:
+            prelim_place = int(prelim_place_str)
+        if finals_place_str == "":
+            finals_place = None
+        else:
+            finals_place = int(finals_place_str)
+        if points_scored_str == "":
+            points_scored = None
+        else:
+            points_scored = float(points_scored_str)
 
         # At this point, birthday will be None if it is missing and the record has
         # the new usa swimming id format
