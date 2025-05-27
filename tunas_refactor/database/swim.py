@@ -3,6 +3,7 @@ Data structures for representing swimming objects (club, swimmer, meet, etc.).
 """
 
 from __future__ import annotations
+from typing import Optional
 import datetime
 
 from . import stime, sdif
@@ -17,19 +18,19 @@ class Club:
         self,
         organization: sdif.Organization,
         team_code: str,
-        lsc: sdif.LSC | None,
+        lsc: Optional[sdif.LSC],
         full_name: str,
-        abbreviated_name: str | None = None,
-        address_one: str | None = None,
-        address_two: str | None = None,
-        city: str | None = None,
-        state: sdif.State | None = None,
-        postal_code: str | None = None,
-        country: sdif.Country | None = None,
-        region: sdif.Region | None = None,
-        swimmers: list[Swimmer] | None = None,
-        meets: list[Meet] | None = None,
-        meet_results: list[MeetResult] | None = None,
+        abbreviated_name: Optional[str] = None,
+        address_one: Optional[str] = None,
+        address_two: Optional[str] = None,
+        city: Optional[str] = None,
+        state: Optional[sdif.State] = None,
+        postal_code: Optional[str] = None,
+        country: Optional[sdif.Country] = None,
+        region: Optional[sdif.Region] = None,
+        swimmers: Optional[list[Swimmer]] = None,
+        meets: Optional[list[Meet]] = None,
+        meet_results: Optional[list[MeetResult]] = None,
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
@@ -63,7 +64,7 @@ class Club:
             assert len(team_code) <= 6 and len(team_code) > 0
         self.team_code = team_code
 
-    def set_lsc(self, lsc: sdif.LSC | None) -> None:
+    def set_lsc(self, lsc: Optional[sdif.LSC]) -> None:
         if lsc != None:
             assert type(lsc) == sdif.LSC
         self.lsc = lsc
@@ -73,52 +74,52 @@ class Club:
         assert len(full_name) > 0
         self.full_name = full_name
 
-    def set_abbreviated_name(self, abbreviated_name: str | None) -> None:
+    def set_abbreviated_name(self, abbreviated_name: Optional[str]) -> None:
         if abbreviated_name != None:
             assert type(abbreviated_name) == str
             assert len(abbreviated_name) > 0
         self.abbreviated_name = abbreviated_name
 
-    def set_address_one(self, address_one: str | None) -> None:
+    def set_address_one(self, address_one: Optional[str]) -> None:
         if address_one != None:
             assert type(address_one) == str
             assert len(address_one) > 0
         self.address_one = address_one
 
-    def set_address_two(self, address_two: str | None) -> None:
+    def set_address_two(self, address_two: Optional[str]) -> None:
         if address_two != None:
             assert type(address_two) == str
             assert len(address_two) > 0
         self.address_two = address_two
 
-    def set_city(self, city: str | None) -> None:
+    def set_city(self, city: Optional[str]) -> None:
         if city != None:
             assert type(city) == str
             assert len(city) > 0
         self.city = city
 
-    def set_state(self, state: sdif.State | None) -> None:
+    def set_state(self, state: Optional[sdif.State]) -> None:
         if state != None:
             assert type(state) == sdif.State
         self.state = state
 
-    def set_postal_code(self, postal_code: str | None) -> None:
+    def set_postal_code(self, postal_code: Optional[str]) -> None:
         if postal_code != None:
             assert type(postal_code) == str
             assert len(postal_code) > 0
         self.postal_code = postal_code
 
-    def set_country(self, country: sdif.Country | None) -> None:
+    def set_country(self, country: Optional[sdif.Country]) -> None:
         if country != None:
             assert type(country) == sdif.Country
         self.country = country
 
-    def set_region(self, region: sdif.Region | None) -> None:
+    def set_region(self, region: Optional[sdif.Region]) -> None:
         if region != None:
             assert type(region) == sdif.Region
         self.region = region
 
-    def set_swimmers(self, swimmers: list[Swimmer] | None) -> None:
+    def set_swimmers(self, swimmers: Optional[list[Swimmer]]) -> None:
         if swimmers == None:
             self.swimmers = []
             return
@@ -127,7 +128,7 @@ class Club:
             assert type(s) == Swimmer
         self.swimmers = swimmers
 
-    def set_meets(self, meets: list[Meet] | None) -> None:
+    def set_meets(self, meets: Optional[list[Meet]]) -> None:
         if meets == None:
             self.meets = []
             return
@@ -136,7 +137,7 @@ class Club:
             assert type(m) == Meet
         self.meets = meets
 
-    def set_meet_results(self, meet_results: list[MeetResult] | None) -> None:
+    def set_meet_results(self, meet_results: Optional[list[MeetResult]]) -> None:
         if meet_results == None:
             self.meet_results = []
             return
@@ -151,34 +152,34 @@ class Club:
     def get_team_code(self) -> str:
         return self.team_code
 
-    def get_lsc(self) -> sdif.LSC | None:
+    def get_lsc(self) -> Optional[sdif.LSC]:
         return self.lsc
 
     def get_full_name(self) -> str:
         return self.full_name
 
-    def get_abbreviated_name(self) -> str | None:
+    def get_abbreviated_name(self) -> Optional[str]:
         return self.abbreviated_name
 
-    def get_address_one(self) -> str | None:
+    def get_address_one(self) -> Optional[str]:
         return self.address_one
 
-    def get_address_two(self) -> str | None:
+    def get_address_two(self) -> Optional[str]:
         return self.address_two
 
-    def get_city(self) -> str | None:
+    def get_city(self) -> Optional[str]:
         return self.city
 
-    def get_state(self) -> sdif.State | None:
+    def get_state(self) -> Optional[sdif.State]:
         return self.state
 
-    def get_postal_code(self) -> str | None:
+    def get_postal_code(self) -> Optional[str]:
         return self.postal_code
 
-    def get_country(self) -> sdif.Country | None:
+    def get_country(self) -> Optional[sdif.Country]:
         return self.country
 
-    def get_region(self) -> sdif.Region | None:
+    def get_region(self) -> Optional[sdif.Region]:
         return self.region
 
     def get_swimmers(self) -> list[Swimmer]:
@@ -202,7 +203,7 @@ class Club:
         assert isinstance(meet_result, MeetResult)
         self.meet_results.append(meet_result)
 
-    def find_swimmer_with_short_id(self, short_id: str) -> Swimmer | None:
+    def find_swimmer_with_short_id(self, short_id: str) -> Optional[Swimmer]:
         assert len(short_id) == 12
         for s in self.get_swimmers():
             if s.get_usa_id_short() == short_id:
@@ -220,14 +221,14 @@ class Swimmer:
         last_name: str,
         sex: sdif.Sex,
         usa_id_short: str,
-        club: Club | None,
-        middle_initial: str | None = None,
-        preferred_first_name: str | None = None,
-        birthday: datetime.date | None = None,
-        usa_id_long: str | None = None,
-        citizenship: sdif.Country | None = None,
-        meets: list[Meet] | None = None,
-        meet_results: list[IndividualMeetResult] | None = None,
+        club: Optional[Club],
+        middle_initial: Optional[str] = None,
+        preferred_first_name: Optional[str] = None,
+        birthday: Optional[datetime.date] = None,
+        usa_id_long: Optional[str] = None,
+        citizenship: Optional[sdif.Country] = None,
+        meets: Optional[list[Meet]] = None,
+        meet_results: Optional[list[IndividualMeetResult]] = None,
     ) -> None:
         # Mandatory fields
         self.set_first_name(first_name)
@@ -266,7 +267,7 @@ class Swimmer:
         assert len(usa_id_short) == 12
         self.usa_id_short = usa_id_short
 
-    def set_club(self, club: Club | None) -> None:
+    def set_club(self, club: Optional[Club]) -> None:
         """
         Sets swimmer's club to the most recent associated club seen in the data.
         """
@@ -274,19 +275,19 @@ class Swimmer:
             assert type(club) == Club
         self.club = club
 
-    def set_middle_initial(self, middle_initial: str | None) -> None:
+    def set_middle_initial(self, middle_initial: Optional[str]) -> None:
         if middle_initial != None:
             assert type(middle_initial) == str
             assert len(middle_initial) == 1
         self.middle_initial = middle_initial
 
-    def set_preferred_first_name(self, preferred_first_name: str | None) -> None:
+    def set_preferred_first_name(self, preferred_first_name: Optional[str]) -> None:
         if preferred_first_name != None:
             assert type(preferred_first_name) == str
             assert len(preferred_first_name) > 0
         self.preferred_first_name = preferred_first_name
 
-    def set_birthday(self, birthday: datetime.date | None) -> None:
+    def set_birthday(self, birthday: Optional[datetime.date]) -> None:
         """
         Prior to Jan 2025, all records contained swimmer's birthdays. However, now
         they are excluded. If birthday is None, it can be estimated by looking at the
@@ -296,18 +297,18 @@ class Swimmer:
             assert type(birthday) == datetime.date
         self.birthday = birthday
 
-    def set_usa_id_long(self, usa_id_long: str | None) -> None:
+    def set_usa_id_long(self, usa_id_long: Optional[str]) -> None:
         if usa_id_long != None:
             assert type(usa_id_long) == str
             assert len(usa_id_long) == 14
         self.usa_id_long = usa_id_long
 
-    def set_citizenship(self, citizenship: sdif.Country | None) -> None:
+    def set_citizenship(self, citizenship: Optional[sdif.Country]) -> None:
         if citizenship != None:
             assert type(citizenship) == sdif.Country
         self.citizenship = citizenship
 
-    def set_meets(self, meets: list[Meet] | None) -> None:
+    def set_meets(self, meets: Optional[list[Meet]]) -> None:
         if meets == None:
             self.meets = []
             return
@@ -316,7 +317,9 @@ class Swimmer:
             assert type(m) == Meet
         self.meets = meets
 
-    def set_meet_results(self, meet_results: list[IndividualMeetResult] | None) -> None:
+    def set_meet_results(
+        self, meet_results: Optional[list[IndividualMeetResult]]
+    ) -> None:
         if meet_results == None:
             self.meet_results = []
             return
@@ -337,22 +340,22 @@ class Swimmer:
     def get_usa_id_short(self) -> str:
         return self.usa_id_short
 
-    def get_club(self) -> Club | None:
+    def get_club(self) -> Optional[Club]:
         return self.club
 
-    def get_middle_initial(self) -> str | None:
+    def get_middle_initial(self) -> Optional[str]:
         return self.middle_initial
 
-    def get_preferred_first_name(self) -> str | None:
+    def get_preferred_first_name(self) -> Optional[str]:
         return self.preferred_first_name
 
-    def get_birthday(self) -> datetime.date | None:
+    def get_birthday(self) -> Optional[datetime.date]:
         return self.birthday
 
-    def get_usa_id_long(self) -> str | None:
+    def get_usa_id_long(self) -> Optional[str]:
         return self.usa_id_long
 
-    def get_citizenship(self) -> sdif.Country | None:
+    def get_citizenship(self) -> Optional[sdif.Country]:
         return self.citizenship
 
     def get_meets(self) -> list[Meet]:
@@ -450,14 +453,14 @@ class Meet:
         address_one: str,
         start_date: datetime.date,
         end_date: datetime.date,
-        state: sdif.State | None = None,
-        address_two: str | None = None,
-        postal_code: str | None = None,
-        country: sdif.Country | None = None,
-        course: sdif.Course | None = None,
-        altitude: int | None = None,
-        meet_type: sdif.MeetType | None = None,
-        meet_results: list[MeetResult] | None = None,
+        state: Optional[sdif.State] = None,
+        address_two: Optional[str] = None,
+        postal_code: Optional[str] = None,
+        country: Optional[sdif.Country] = None,
+        course: Optional[sdif.Course] = None,
+        altitude: Optional[int] = None,
+        meet_type: Optional[sdif.MeetType] = None,
+        meet_results: Optional[list[MeetResult]] = None,
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
@@ -487,7 +490,7 @@ class Meet:
         assert type(name) == str and len(name) > 0
         self.name = name
 
-    def set_meet_type(self, meet_type: sdif.MeetType | None) -> None:
+    def set_meet_type(self, meet_type: Optional[sdif.MeetType]) -> None:
         if meet_type != None:
             assert type(meet_type) == sdif.MeetType
         self.meet_type = meet_type
@@ -496,7 +499,7 @@ class Meet:
         assert type(city) == str
         self.city = city
 
-    def set_state(self, state: sdif.State | None) -> None:
+    def set_state(self, state: Optional[sdif.State]) -> None:
         if state != None:
             assert type(state) == sdif.State
         self.state = state
@@ -513,33 +516,33 @@ class Meet:
         assert type(end_date) == datetime.date
         self.end_date = end_date
 
-    def set_address_two(self, address_two: str | None) -> None:
+    def set_address_two(self, address_two: Optional[str]) -> None:
         if address_two != None:
             assert type(address_two) == str
         self.address_two = address_two
 
-    def set_postal_code(self, postal_code: str | None) -> None:
+    def set_postal_code(self, postal_code: Optional[str]) -> None:
         if postal_code != None:
             assert type(postal_code) == str
             self.postal_code = postal_code
 
-    def set_country(self, country: sdif.Country | None) -> None:
+    def set_country(self, country: Optional[sdif.Country]) -> None:
         if country != None:
             assert type(country) == sdif.Country
         self.country = country
 
-    def set_course(self, course: sdif.Course | None) -> None:
+    def set_course(self, course: Optional[sdif.Course]) -> None:
         if course != None:
             assert type(course) == sdif.Course
         self.course = course
 
-    def set_altitude(self, altitude: int | None) -> None:
+    def set_altitude(self, altitude: Optional[int]) -> None:
         if altitude != None:
             assert type(altitude) == int
             assert altitude >= 0
         self.altitude = altitude
 
-    def set_meet_results(self, meet_results: list[MeetResult] | None) -> None:
+    def set_meet_results(self, meet_results: Optional[list[MeetResult]]) -> None:
         if meet_results == None:
             meet_results = []
             return
@@ -556,13 +559,13 @@ class Meet:
     def get_name(self) -> str:
         return self.name
 
-    def get_meet_type(self) -> sdif.MeetType | None:
+    def get_meet_type(self) -> Optional[sdif.MeetType]:
         return self.meet_type
 
     def get_city(self) -> str:
         return self.city
 
-    def get_state(self) -> sdif.State | None:
+    def get_state(self) -> Optional[sdif.State]:
         return self.state
 
     def get_address_one(self) -> str:
@@ -574,19 +577,19 @@ class Meet:
     def get_end_date(self) -> datetime.date:
         return self.end_date
 
-    def get_address_two(self) -> str | None:
+    def get_address_two(self) -> Optional[str]:
         return self.address_two
 
-    def get_postal_code(self) -> str | None:
+    def get_postal_code(self) -> Optional[str]:
         return self.postal_code
 
-    def get_country(self) -> sdif.Country | None:
+    def get_country(self) -> Optional[sdif.Country]:
         return self.country
 
-    def get_course(self) -> sdif.Course | None:
+    def get_course(self) -> Optional[sdif.Course]:
         return self.course
 
-    def get_altitude(self) -> int | None:
+    def get_altitude(self) -> Optional[int]:
         return self.altitude
 
     def get_meet_results(self) -> list[MeetResult]:
@@ -619,12 +622,12 @@ class MeetResult:
         heat: int,
         lane: int,
         final_time: stime.Time,
-        rank: int | None = None,
-        points: float | None = None,
-        seed_time: stime.Time | None = None,
-        seed_course: sdif.Course | None = None,
-        event_min_time_class: sdif.EventTimeClass | None = None,
-        event_max_time_class: sdif.EventTimeClass | None = None,
+        rank: Optional[int] = None,
+        points: Optional[float] = None,
+        seed_time: Optional[stime.Time] = None,
+        seed_course: Optional[sdif.Course] = None,
+        event_min_time_class: Optional[sdif.EventTimeClass] = None,
+        event_max_time_class: Optional[sdif.EventTimeClass] = None,
     ) -> None:
         # Mandatory fields
         self.set_meet(meet)
@@ -724,30 +727,30 @@ class MeetResult:
         assert type(final_time) == stime.Time
         self.final_time = final_time
 
-    def set_rank(self, rank: int | None) -> None:
+    def set_rank(self, rank: Optional[int]) -> None:
         if rank != None:
             assert type(rank) == int
             assert rank > 0
         self.rank = rank
 
-    def set_points(self, points: float | None) -> None:
+    def set_points(self, points: Optional[float]) -> None:
         if points != None:
             assert type(points) == float
             assert points >= 0
         self.points = points
 
-    def set_seed_time(self, seed_time: stime.Time | None) -> None:
+    def set_seed_time(self, seed_time: Optional[stime.Time]) -> None:
         if seed_time != None:
             assert type(seed_time) == stime.Time
         self.seed_time = seed_time
 
-    def set_seed_course(self, seed_course: sdif.Course | None) -> None:
+    def set_seed_course(self, seed_course: Optional[sdif.Course]) -> None:
         if seed_course != None:
             assert type(seed_course) == sdif.Course
         self.seed_course = seed_course
 
     def set_event_min_time_class(
-        self, event_min_time_class: sdif.EventTimeClass | None
+        self, event_min_time_class: Optional[sdif.EventTimeClass]
     ) -> None:
         if event_min_time_class != None:
             assert type(event_min_time_class) == sdif.EventTimeClass
@@ -755,7 +758,7 @@ class MeetResult:
         self.event_min_time_class = event_min_time_class
 
     def set_event_max_time_class(
-        self, event_max_time_class: sdif.EventTimeClass | None
+        self, event_max_time_class: Optional[sdif.EventTimeClass]
     ) -> None:
         if event_max_time_class != None:
             assert type(event_max_time_class) == sdif.EventTimeClass
@@ -804,22 +807,22 @@ class MeetResult:
     def get_final_time(self) -> stime.Time:
         return self.final_time
 
-    def get_rank(self) -> int | None:
+    def get_rank(self) -> Optional[int]:
         return self.rank
 
-    def get_points(self) -> float | None:
+    def get_points(self) -> Optional[float]:
         return self.points
 
-    def get_seed_time(self) -> stime.Time | None:
+    def get_seed_time(self) -> Optional[stime.Time]:
         return self.seed_time
 
-    def get_seed_course(self) -> sdif.Course | None:
+    def get_seed_course(self) -> Optional[sdif.Course]:
         return self.seed_course
 
-    def get_event_min_time_class(self) -> sdif.EventTimeClass | None:
+    def get_event_min_time_class(self) -> Optional[sdif.EventTimeClass]:
         return self.event_min_time_class
 
-    def get_event_max_time_class(self) -> sdif.EventTimeClass | None:
+    def get_event_max_time_class(self) -> Optional[sdif.EventTimeClass]:
         return self.event_max_time_class
 
 
@@ -851,18 +854,18 @@ class IndividualMeetResult(MeetResult):
         swimmer_sex: sdif.Sex,
         swimmer_usa_id_short: str,
         swimmer_attach_status: sdif.AttachStatus,
-        rank: int | None = None,
-        points: float | None = None,
-        seed_time: stime.Time | None = None,
-        seed_course: sdif.Course | None = None,
-        event_min_time_class: sdif.EventTimeClass | None = None,
-        event_max_time_class: sdif.EventTimeClass | None = None,
-        swimmer_middle_initial: str | None = None,
-        swimmer_age_class: str | None = None,
-        swimmer_birthday: datetime.date | None = None,
-        swimmer_usa_id_long: str | None = None,
-        swimmer_citizenship: sdif.Country | None = None,
-        splits: dict[int, stime.Time] | None = None,
+        rank: Optional[int] = None,
+        points: Optional[float] = None,
+        seed_time: Optional[stime.Time] = None,
+        seed_course: Optional[sdif.Course] = None,
+        event_min_time_class: Optional[sdif.EventTimeClass] = None,
+        event_max_time_class: Optional[sdif.EventTimeClass] = None,
+        swimmer_middle_initial: Optional[str] = None,
+        swimmer_age_class: Optional[str] = None,
+        swimmer_birthday: Optional[datetime.date] = None,
+        swimmer_usa_id_long: Optional[str] = None,
+        swimmer_citizenship: Optional[sdif.Country] = None,
+        splits: Optional[dict[int, stime.Time]] = None,
     ) -> None:
         super().__init__(
             meet,
@@ -926,7 +929,7 @@ class IndividualMeetResult(MeetResult):
         assert type(swimmer_attach_status) == sdif.AttachStatus
         self.swimmer_attach_status = swimmer_attach_status
 
-    def set_swimmer_middle_initial(self, swimmer_middle_initial: str | None) -> None:
+    def set_swimmer_middle_initial(self, swimmer_middle_initial: Optional[str]) -> None:
         if swimmer_middle_initial != None:
             assert type(swimmer_middle_initial) == str
             assert len(swimmer_middle_initial) == 1
@@ -934,7 +937,7 @@ class IndividualMeetResult(MeetResult):
 
         self.swimmer_middle_initial = swimmer_middle_initial
 
-    def set_swimmer_age_class(self, swimmer_age_class: str | None) -> None:
+    def set_swimmer_age_class(self, swimmer_age_class: Optional[str]) -> None:
         """
         Set the swimmer's age class. Age class should be a string consisting of an age
         (ex. 19) or a classification (ex. Jr).
@@ -947,7 +950,7 @@ class IndividualMeetResult(MeetResult):
                 assert age in ["Fr", "So", "Jr", "Sr"]
         self.swimmer_age_class = swimmer_age_class
 
-    def set_swimmer_birthday(self, swimmer_birthday: datetime.date | None) -> None:
+    def set_swimmer_birthday(self, swimmer_birthday: Optional[datetime.date]) -> None:
         """
         Prior to Jan 2025, all records contained swimmer's birthdays. However, now
         they are excluded. If birthday is None, it can be estimated by looking at the
@@ -957,18 +960,20 @@ class IndividualMeetResult(MeetResult):
             assert type(swimmer_birthday) == datetime.date
         self.swimmer_birthday = swimmer_birthday
 
-    def set_swimmer_usa_id_long(self, swimmer_usa_id_long: str | None) -> None:
+    def set_swimmer_usa_id_long(self, swimmer_usa_id_long: Optional[str]) -> None:
         if swimmer_usa_id_long != None:
             assert type(swimmer_usa_id_long) == str
             assert len(swimmer_usa_id_long) == 14
         self.swimmer_usa_id_long = swimmer_usa_id_long
 
-    def set_swimmer_citizenship(self, swimmer_citizenship: sdif.Country | None) -> None:
+    def set_swimmer_citizenship(
+        self, swimmer_citizenship: Optional[sdif.Country]
+    ) -> None:
         if swimmer_citizenship != None:
             assert type(swimmer_citizenship) == sdif.Country
         self.swimmer_citizenship = swimmer_citizenship
 
-    def set_splits(self, splits: dict[int, stime.Time] | None) -> None:
+    def set_splits(self, splits: Optional[dict[int, stime.Time]]) -> None:
         if splits == None:
             self.splits = dict()
         assert type(splits) == dict
@@ -992,19 +997,19 @@ class IndividualMeetResult(MeetResult):
     def get_swimmer_attach_status(self) -> sdif.AttachStatus:
         return self.swimmer_attach_status
 
-    def get_swimmer_middle_initial(self) -> str | None:
+    def get_swimmer_middle_initial(self) -> Optional[str]:
         return self.swimmer_middle_initial
 
-    def get_swimmer_age_class(self) -> str | None:
+    def get_swimmer_age_class(self) -> Optional[str]:
         return self.swimmer_age_class
 
-    def get_swimmer_birthday(self) -> datetime.date | None:
+    def get_swimmer_birthday(self) -> Optional[datetime.date]:
         return self.swimmer_birthday
 
-    def get_swimmer_usa_id_long(self) -> str | None:
+    def get_swimmer_usa_id_long(self) -> Optional[str]:
         return self.swimmer_usa_id_long
 
-    def get_swimmer_citizenship(self) -> sdif.Country | None:
+    def get_swimmer_citizenship(self) -> Optional[sdif.Country]:
         return self.swimmer_citizenship
 
     def get_splits(self) -> dict[int, stime.Time]:
