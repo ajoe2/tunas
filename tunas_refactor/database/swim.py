@@ -27,9 +27,9 @@ class Club:
         postal_code: str | None = None,
         country: sdif.Country | None = None,
         region: sdif.Region | None = None,
-        swimmers: list[Swimmer] = [],
-        meets: list[Meet] = [],
-        meet_results: list[MeetResult] = [],
+        swimmers: list[Swimmer] | None = None,
+        meets: list[Meet] | None = None,
+        meet_results: list[MeetResult] | None = None,
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
@@ -118,19 +118,28 @@ class Club:
             assert type(region) == sdif.Region
         self.region = region
 
-    def set_swimmers(self, swimmers: list[Swimmer]) -> None:
+    def set_swimmers(self, swimmers: list[Swimmer] | None) -> None:
+        if swimmers == None:
+            self.swimmers = []
+            return
         assert type(swimmers) == list
         for s in swimmers:
             assert type(s) == Swimmer
         self.swimmers = swimmers
 
-    def set_meets(self, meets: list[Meet]) -> None:
+    def set_meets(self, meets: list[Meet] | None) -> None:
+        if meets == None:
+            self.meets = []
+            return
         assert type(meets) == list
         for m in meets:
             assert type(m) == Meet
         self.meets = meets
 
-    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+    def set_meet_results(self, meet_results: list[MeetResult] | None) -> None:
+        if meet_results == None:
+            self.meet_results = []
+            return
         assert type(meet_results) == list
         for mr in meet_results:
             assert isinstance(mr, MeetResult)
@@ -211,14 +220,14 @@ class Swimmer:
         last_name: str,
         sex: sdif.Sex,
         usa_id_short: str,
-        club: Club,
+        club: Club | None,
         middle_initial: str | None = None,
         preferred_first_name: str | None = None,
         birthday: datetime.date | None = None,
         usa_id_long: str | None = None,
         citizenship: sdif.Country | None = None,
-        meets: list[Meet] = list(),
-        meet_results: list[IndividualMeetResult] = list(),
+        meets: list[Meet] | None = None,
+        meet_results: list[IndividualMeetResult] | None = None,
     ) -> None:
         # Mandatory fields
         self.set_first_name(first_name)
@@ -257,11 +266,12 @@ class Swimmer:
         assert len(usa_id_short) == 12
         self.usa_id_short = usa_id_short
 
-    def set_club(self, club: Club) -> None:
+    def set_club(self, club: Club | None) -> None:
         """
         Sets swimmer's club to the most recent associated club seen in the data.
         """
-        assert type(club) == Club
+        if club != None:
+            assert type(club) == Club
         self.club = club
 
     def set_middle_initial(self, middle_initial: str | None) -> None:
@@ -297,13 +307,19 @@ class Swimmer:
             assert type(citizenship) == sdif.Country
         self.citizenship = citizenship
 
-    def set_meets(self, meets: list[Meet]) -> None:
+    def set_meets(self, meets: list[Meet] | None) -> None:
+        if meets == None:
+            self.meets = []
+            return
         assert type(meets) == list
         for m in meets:
             assert type(m) == Meet
         self.meets = meets
 
-    def set_meet_results(self, meet_results: list[IndividualMeetResult]) -> None:
+    def set_meet_results(self, meet_results: list[IndividualMeetResult] | None) -> None:
+        if meet_results == None:
+            self.meet_results = []
+            return
         assert type(meet_results) == list
         for mr in meet_results:
             assert isinstance(mr, IndividualMeetResult)
@@ -321,7 +337,7 @@ class Swimmer:
     def get_usa_id_short(self) -> str:
         return self.usa_id_short
 
-    def get_club(self) -> Club:
+    def get_club(self) -> Club | None:
         return self.club
 
     def get_middle_initial(self) -> str | None:
@@ -441,7 +457,7 @@ class Meet:
         course: sdif.Course | None = None,
         altitude: int | None = None,
         meet_type: sdif.MeetType | None = None,
-        meet_results: list[MeetResult] = list(),
+        meet_results: list[MeetResult] | None = None,
     ) -> None:
         # Mandatory fields
         self.set_organization(organization)
@@ -523,7 +539,10 @@ class Meet:
             assert altitude >= 0
         self.altitude = altitude
 
-    def set_meet_results(self, meet_results: list[MeetResult]) -> None:
+    def set_meet_results(self, meet_results: list[MeetResult] | None) -> None:
+        if meet_results == None:
+            meet_results = []
+            return
         assert type(meet_results) == list
         new_results = []
         for mr in meet_results:
@@ -843,7 +862,7 @@ class IndividualMeetResult(MeetResult):
         swimmer_birthday: datetime.date | None = None,
         swimmer_usa_id_long: str | None = None,
         swimmer_citizenship: sdif.Country | None = None,
-        splits: dict[int, stime.Time] = dict(),
+        splits: dict[int, stime.Time] | None = None,
     ) -> None:
         super().__init__(
             meet,
@@ -949,7 +968,9 @@ class IndividualMeetResult(MeetResult):
             assert type(swimmer_citizenship) == sdif.Country
         self.swimmer_citizenship = swimmer_citizenship
 
-    def set_splits(self, splits: dict[int, stime.Time]) -> None:
+    def set_splits(self, splits: dict[int, stime.Time] | None) -> None:
+        if splits == None:
+            self.splits = dict()
         assert type(splits) == dict
         for dist in splits:
             assert type(dist) == int

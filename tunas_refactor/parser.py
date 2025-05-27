@@ -445,6 +445,22 @@ class Cl2Processor:
         else:
             points_scored = float(points_scored_str)
 
+        # Find swimmer
+        if self.current_swimmer != None and self.current_swimmer.get_usa_id_short() == usa_id_short:
+            pass
+        else:
+            swimmer = None
+            if self.current_club != None:
+                swimmer = self.current_club.find_swimmer_with_short_id(usa_id_short)
+            # if swimmer == None:
+            #     swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+            if swimmer == None:
+                swimmer = swim.Swimmer(first_name, last_name, swimmer_sex, usa_id_short, self.current_club, middle_initial, None, birthday, None, citizen_code)
+                # self.db.add_swimmer(swimmer)
+                if self.current_club != None:
+                    self.current_club.get_swimmers().append(swimmer)
+            self.current_swimmer = swimmer
+
         # At this point, birthday will be None if it is missing and the record has
         # the new usa swimming id format
 
