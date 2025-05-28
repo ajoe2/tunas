@@ -288,6 +288,7 @@ class Swimmer:
         # Internal
         self.set_meets(meets)
         self.set_meet_results(meet_results)
+        self.date_most_recent_swim = None
 
     def set_first_name(self, first_name: str) -> None:
         assert type(first_name) == str
@@ -368,6 +369,12 @@ class Swimmer:
         assert type(meet_results) == list
         for mr in meet_results:
             assert isinstance(mr, IndividualMeetResult)
+        for mr in meet_results:
+            if (
+                self.date_most_recent_swim == None
+                or mr.get_date_of_swim() > self.date_most_recent_swim
+            ):
+                self.date_most_recent_swim = mr.get_date_of_swim()
         self.meet_results = meet_results
 
     def get_first_name(self) -> str:
@@ -406,12 +413,17 @@ class Swimmer:
     def get_meet_results(self) -> list[IndividualMeetResult]:
         return self.meet_results
 
+    def get_date_most_recent_swim(self) -> Optional[datetime.date]:
+        return self.date_most_recent_swim
+
     def add_meet(self, meet: Meet) -> None:
         assert type(meet) == Meet
         self.meets.append(meet)
 
     def add_meet_result(self, meet_result: IndividualMeetResult) -> None:
         assert isinstance(meet_result, IndividualMeetResult)
+        if self.date_most_recent_swim == None or meet_result.get_date_of_swim() > self.date_most_recent_swim:
+            self.date_most_recent_swim = meet_result.get_date_of_swim()
         self.meet_results.append(meet_result)
 
     def get_age_range(self, on_date: datetime.date) -> tuple[int, int]:
@@ -477,6 +489,17 @@ class Swimmer:
         assert max_age >= min_age and max_age - min_age <= 1
 
         return (min_age, max_age)
+
+    def update_club(self, new_club: Club):
+        assert type(new_club) == Club
+        current_club = self.get_club()
+        if current_club == None:
+            self.set_club(new_club)
+            new_club.add_swimmer(self)
+        else:
+            current_club.get_swimmers().remove(self)
+            new_club.add_swimmer(self)
+            self.set_club(new_club)
 
 
 class Meet:

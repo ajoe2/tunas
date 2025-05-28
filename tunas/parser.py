@@ -316,21 +316,12 @@ class Cl2Processor:
         finals_place_str = line[135:138].strip()
         points_scored_str = line[138:142].strip()
 
-        # Ignore entries without a valid id
+        # Ignore entries without a valid short id
         if len(swimmer_short_id_str) != 12:
             return
 
-        # Parse full name
-        if full_name_str[-1].isupper() and full_name_str[-2] == " ":
-            middle_initial = full_name_str[-1]
-            full_name_str = full_name_str[:-2].strip()
-        else:
-            middle_initial = None
-        last_name, first_name = full_name_str.split(",")
-        last_name, first_name = last_name.strip(), first_name.strip()
-        last_name, first_name = util.title_case(last_name), util.title_case(first_name)
-
-        # Parse sex, id, and age_class
+        # Parse full name, sex, id, and age_class
+        first_name, middle_initial, last_name = util.parse_full_name(full_name_str)
         swimmer_sex = sdif.Sex(swimmer_sex_str)
         usa_id_short = swimmer_short_id_str
         age_class = age_class_str
@@ -340,8 +331,7 @@ class Cl2Processor:
             # If the birthday is in the data, we just read it.
             birthday = datetime.date(int(b_year_str), int(b_month_str), int(b_day_str))
         elif util.is_old_id(first_name, last_name, middle_initial, usa_id_short):
-            # If there is no birthday, but the swimmer has an old id, then we can
-            # reverse engineer the birthday.
+            # If the swimmer has an old id, we can reverse engineer the birthday.
             b_month = int(usa_id_short[:2])
             b_day = int(usa_id_short[2:4])
             if int(usa_id_short[4:6]) > datetime.date.today().year % 100:
@@ -514,33 +504,19 @@ class Cl2Processor:
                 if self.current_club is not None:
                     self.current_club.add_swimmer(self.current_swimmer)
 
-            # Check current_swimmer has been set properly
-            assert self.current_swimmer is not None
-
             # If we only found the swimmer in the database, move swimmer to current club
-            if found_swimmer and not swimmer_found_in_club:
-                swimmer_club = self.current_swimmer.get_club()
-                if self.current_club is None:
-                    pass  # Swimmer is unattached so we don't need to modify the club
-                elif (
-                    swimmer_club is None
-                    or len(self.current_swimmer.get_meet_results()) == 0
-                ):
-                    # If the swimmer doesn't have a club, set it to the current club
-                    self.current_swimmer.set_club(self.current_club)
-                    self.current_club.add_swimmer(self.current_swimmer)
-                else:
-                    # If the swimmer has a club, we need to modify it only if it is outdated
-                    most_recent_swim_date = self.current_swimmer.get_meet_results()[
-                        0
-                    ].get_date_of_swim()
-                    for mr in self.current_swimmer.get_meet_results():
-                        if mr.get_date_of_swim() > most_recent_swim_date:
-                            most_recent_swim_date = mr.get_date_of_swim()
-                    if most_recent_swim_date < event_date:
-                        swimmer_club.get_swimmers().remove(self.current_swimmer)
-                        self.current_swimmer.set_club(self.current_club)
-                        self.current_club.add_swimmer(self.current_swimmer)
+            if (
+                found_swimmer
+                and not swimmer_found_in_club
+                and self.current_club is not None
+            ):
+                # Check current_swimmer has been set properly
+                assert self.current_swimmer is not None
+
+                # Update swimmer club only if it is outdated
+                date_most_recent_swim = self.current_swimmer.get_date_most_recent_swim()
+                if date_most_recent_swim == None or date_most_recent_swim < event_date:
+                    self.current_swimmer.update_club(self.current_club)
 
         assert self.current_swimmer is not None
 

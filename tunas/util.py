@@ -68,3 +68,15 @@ def title_case(name: str) -> str:
             name = name + c + " "
     name = name[:-1]
     return name
+
+
+def parse_full_name(full_name: str) -> tuple[str, Optional[str], str]:
+    if full_name[-1].isupper() and full_name[-2] == " ":
+        middle_initial = full_name[-1]
+        full_name = full_name[:-2].strip()
+    else:
+        middle_initial = None
+    last_name, first_name = full_name.split(",")
+    last_name, first_name = last_name.strip(), first_name.strip()
+    last_name, first_name = title_case(last_name), title_case(first_name)
+    return (first_name, middle_initial, last_name)
