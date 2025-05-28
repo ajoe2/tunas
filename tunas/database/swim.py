@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Optional
 import datetime
 
-from . import stime, sdif
+from . import dutil, stime, sdif
 
 
 class Club:
@@ -208,6 +208,47 @@ class Club:
         for s in self.get_swimmers():
             if s.get_usa_id_short() == short_id:
                 return s
+
+    def find_swimmer_with_birthday(
+        self,
+        first_name: str,
+        middle_initial: Optional[str],
+        last_name: str,
+        birthday: datetime.date,
+        meet_start_date: datetime.date,
+        age_class: str,
+    ) -> Optional[Swimmer]:
+        old_id = sdif.get_old_id(first_name, middle_initial, last_name, birthday)
+        for swimmer in self.get_swimmers():
+            swimmer_birthday = swimmer.get_birthday()
+            if swimmer_birthday != birthday:
+                continue
+            swimmer_first_name = swimmer.get_first_name()
+            swimmer_last_name = swimmer.get_last_name()
+            swimmer_middle_initial = swimmer.get_middle_initial()
+            if swimmer_birthday is not None:
+                # Find swimmer by generating old ids and comparing hamming distance
+                swimmer_id = sdif.get_old_id(
+                    swimmer_first_name,
+                    swimmer_middle_initial,
+                    swimmer_last_name,
+                    swimmer_birthday,
+                )
+                if dutil.hamming_distance(swimmer_id, old_id) <= 1:
+                    return swimmer
+            else:
+                # Find swimmers with the same name and age
+                if not age_class.isnumeric():
+                    return None
+                if (
+                    swimmer_first_name == first_name
+                    and swimmer_last_name == last_name
+                    and swimmer_middle_initial == middle_initial
+                    and int(age_class) >= swimmer.get_age_range(meet_start_date)[0]
+                    and int(age_class) <= swimmer.get_age_range(meet_start_date)[1]
+                ):
+                    return swimmer
+        return None
 
 
 class Swimmer:
@@ -431,8 +472,6 @@ class Swimmer:
         # Calculate min and max age
         max_age = calculate_age(birthday_min, on_date)
         min_age = calculate_age(birthday_max, on_date)
-
-        print(f"{min} {max} {min_age} {max_age}")
 
         assert max_age >= min_age and max_age - min_age <= 1
 

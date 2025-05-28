@@ -18,9 +18,9 @@ def read_cl2(file_path: str) -> database.Database:
     db = database.Database()
     processor = Cl2Processor(db)
 
-    # Find cl2 files
+    # Get cl2 file paths
     paths = []
-    for root, dirs, files in os.walk(file_path):
+    for root, _, files in os.walk(file_path):
         for f in files:
             if f.endswith(".cl2"):
                 full_file_path = os.path.join(root, f)
@@ -77,7 +77,6 @@ class Cl2Processor:
                         self.process_z0(line)
 
     def process_b1(self, line: str) -> None:
-        # Parse line
         org_code_str = line[2].strip()
         name_str = line[11:41].strip()
         address_one_str = line[41:63].strip()
@@ -92,7 +91,7 @@ class Cl2Processor:
         altitude_str = line[137:141].strip()
         course_code_str = line[149].strip()
 
-        # Convert mandatory line components to internal type
+        # Parse data
         organization = sdif.Organization(org_code_str)
         name = name_str
         city = city_str
@@ -107,8 +106,6 @@ class Cl2Processor:
             int(end_date_str[:2]),
             int(end_date_str[2:4]),
         )
-
-        # Convert optional line components to internal type
         if address_two_str != "":
             address_two = address_two_str
         else:
@@ -158,6 +155,8 @@ class Cl2Processor:
         self.db.add_meet(new_meet)
 
     def process_c1(self, line: str) -> None:
+        assert self.current_meet is not None
+
         org_code_str = line[2].strip()
         lsc_code_str = line[11:13].strip()
         team_code_str = line[13:17].strip()
@@ -190,7 +189,7 @@ class Cl2Processor:
             self.current_club = None
             return
 
-        # Convert string data to internal types
+        # Parse string data
         organization = sdif.Organization(org_code_str)
         full_name = full_name_str
         team_code = team_code_str
@@ -276,14 +275,13 @@ class Cl2Processor:
             )
             self.db.add_club(club)
 
-        # Set current club to the club we just created/found
+        club.add_meet(self.current_meet)
         self.current_club = club
 
     def process_d0(self, line: str) -> None:
         assert self.current_meet is not None
 
         ignored_results = ["NT", "NS", "DNF", "DQ", "SCR"]
-
         org_code_str = line[2].strip()
         full_name_str = line[11:39].strip()
         swimmer_short_id_str = line[39:51].strip()
@@ -437,7 +435,7 @@ class Cl2Processor:
         else:
             points_scored = float(points_scored_str)
 
-        # Search for swimmer if swimmer is different from current_swimmer
+        # If swimmer is different from current_swimmer, find swimmer object
         different_current_swimmer = (
             self.current_swimmer is None
             or self.current_swimmer.get_usa_id_short() != usa_id_short
@@ -445,19 +443,51 @@ class Cl2Processor:
         if different_current_swimmer:
             swimmer_found_in_club = False
 
-            # Search for swimmer in current club
-            if self.current_club is not None:
-                self.current_swimmer = self.current_club.find_swimmer_with_short_id(
-                    usa_id_short
-                )
-                if self.current_swimmer is not None:
-                    swimmer_found_in_club = True
-                else:
-                    swimmer_found_in_club = False
+            # First try searching using birthday
+            if birthday is not None:
+                # Search for swimmer in current club
+                if self.current_club is not None:
+                    self.current_swimmer = self.current_club.find_swimmer_with_birthday(
+                        first_name,
+                        middle_initial,
+                        last_name,
+                        birthday,
+                        self.current_meet.get_start_date(),
+                        age_class,
+                    )
+                    if self.current_swimmer is not None:
+                        swimmer_found_in_club = True
+                    else:
+                        swimmer_found_in_club = False
 
-            # If we didn't find the swimmer in the current_club, look in the database
-            if not swimmer_found_in_club:
-                self.current_swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+                # Look in the database if not found
+                if not swimmer_found_in_club:
+                    self.current_swimmer = self.db.find_swimmer_with_birthday(
+                        first_name,
+                        middle_initial,
+                        last_name,
+                        birthday,
+                        self.current_meet.get_start_date(),
+                        age_class,
+                    )
+            
+            # Search for swimmer using id if not found
+            if self.current_swimmer is None:
+                # Search for swimmer in current club
+                if self.current_club is not None:
+                    self.current_swimmer = self.current_club.find_swimmer_with_short_id(
+                        usa_id_short
+                    )
+                    if self.current_swimmer is not None:
+                        swimmer_found_in_club = True
+                    else:
+                        swimmer_found_in_club = False
+
+                # If we didn't find the swimmer in the current_club, look in the database
+                if not swimmer_found_in_club:
+                    self.current_swimmer = self.db.find_swimmer_with_short_id(
+                        usa_id_short
+                    )
 
             # Create swimmer if not found
             found_swimmer = self.current_swimmer is not None

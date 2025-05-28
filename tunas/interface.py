@@ -70,6 +70,14 @@ def print_menu_and_process_input() -> bool:
             print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
             print(f"Number of meets: {len(DATABASE.get_meets())}")
             print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
+            swimmers = DATABASE.get_clubs()[0].get_swimmers()
+            swimmers.sort(key=lambda s: s.get_first_name() + s.get_last_name())
+            for swimmer in swimmers:
+                if swimmer.get_middle_initial() == None:
+                    m = ""
+                else:
+                    m = swimmer.get_middle_initial()
+                print(f"{swimmer.first_name:<20} {m:<1} {swimmer.last_name:<20} {str(swimmer.birthday):<10} {swimmer.usa_id_short:<12}")
         case "q" | "Q":
             return False
         case _:
