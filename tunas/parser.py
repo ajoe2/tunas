@@ -318,6 +318,7 @@ class Cl2Processor:
 
         # Ignore entries without a valid short id
         if len(swimmer_short_id_str) != 12:
+            self.current_swimmer = None
             return
 
         # Parse full name, sex, id, and age_class

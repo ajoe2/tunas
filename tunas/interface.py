@@ -3,6 +3,7 @@ Handles user interface for tunas application.
 """
 
 import database
+from database import swim
 import parser
 import os
 import datetime
@@ -11,10 +12,10 @@ import datetime
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
 MEET_DATA_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/meetData"
 
-# Global database=
+# Global database
 DATABASE: database.Database
 
-# Constants
+# Global constants
 TUNAS_LOGO = (
     "#############################################################\n"
     + "##########           Tunas: Data Analysis          ##########\n"
@@ -30,28 +31,37 @@ MAIN_MENU = (
     + "Quit (q/Q)\n"
 )
 LINE_BREAK = "-------------------------------------------------------------\n"
+LOADING_EXIT_MESSAGE = "Finished processing files!"
+PROGRAM_EXIT_MESSAGE = "Program exited!"
 
 
 def run_tunas_application():
+    """
+    Main logic for tunas application.
+    """
     print()
     print(TUNAS_LOGO)
     load_database()
-    print("Finished processing files!")
+    print(LOADING_EXIT_MESSAGE)
     print(LINE_BREAK)
     running = True
     while running:
         running = print_menu_and_process_input()
-    print("Program exited!")
+    print(PROGRAM_EXIT_MESSAGE)
 
 
 def load_database():
+    """
+    Create and set global database variable.
+    """
     global DATABASE
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
 
 
 def print_menu_and_process_input() -> bool:
     """
-    Return true if success, false otherwise.
+    Print menu and accept user input. After accepting user input, return
+    false if user wants to quit and true otherwise.
     """
     print(MAIN_MENU)
     user_input = input("Select mode > ")
@@ -67,11 +77,7 @@ def print_menu_and_process_input() -> bool:
             pass
         case "5":
             print()
-            print("Statistics:")
-            print(f"Number of clubs: {len(DATABASE.get_clubs())}")
-            print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
-            print(f"Number of meets: {len(DATABASE.get_meets())}")
-            print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
+            display_statistics()
         case "q" | "Q":
             return False
         case _:
@@ -82,6 +88,9 @@ def print_menu_and_process_input() -> bool:
 
 
 def run_club_mode():
+    """
+    Club mode main logic.
+    """
     print("Club mode:")
     code = input("Enter club code (ex. SCSC) > ")
     try:
@@ -94,20 +103,64 @@ def run_club_mode():
         print("Club found! Displaying swimmers...")
         print()
         swimmers = club.get_swimmers()
-        swimmers.sort(key=lambda s: s.get_age_range(datetime.date.today())[0])
+        # Remove swimmers without a birthday range
+        for swimmer in swimmers:
+            if swimmer.get_birthday_range() == None:
+                swimmers.remove(swimmer)
+
+        # Sort swimmer by earliest possible birthday
+        swimmers.sort(key=lambda s: s.get_birthday_range()[0], reverse=True)  # type: ignore
+
+        # Print swimmer information
         for swimmer in club.get_swimmers():
-            first = swimmer.get_first_name()
-            last = swimmer.get_last_name()
-            birthday = str(swimmer.get_birthday())
-            if swimmer.get_middle_initial() == None:
-                middle = ""
-            else:
-                middle = swimmer.get_middle_initial()
-            b_range = swimmer.get_birthday_range()
-            if b_range != None:
-                b_min, b_max = b_range
-            else:
-                b_min, b_max = "None", "None"
-            print(
-                f"{first + " " + str(middle):<19} {last:<18} ({b_min}, {b_max}) {swimmer.get_usa_id_long()} {swimmer.get_usa_id_short()}"
-            )
+            display_swimmer_information(swimmer)
+
+
+def display_statistics():
+    print("Statistics:")
+    print(f"Number of clubs: {len(DATABASE.get_clubs())}")
+    print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
+    print(f"Number of meets: {len(DATABASE.get_meets())}")
+    print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
+
+
+def display_swimmer_information(swimmer: swim.Swimmer):
+    # Calculate full name
+    first = swimmer.get_first_name()
+    last = swimmer.get_last_name()
+    middle = swimmer.get_middle_initial()
+    if middle is None:
+        full_name = f"{first} {last}"
+    else:
+        full_name = f"{first} {middle} {last}"
+
+    # Calculate birthday
+    b_range = swimmer.get_birthday_range()
+    if b_range == None:
+        b_range = f"--------------------------"
+    elif b_range[0] == b_range[1]:
+        b_range = f"{b_range[0]}"
+    else:
+        b_range = f"({b_range[0]}, {b_range[1]})"
+
+    # Calculate id
+    long_id = swimmer.get_usa_id_long()
+    if long_id == None:
+        long_id = f"--------------"
+
+    # Calcate club and lsc code
+    club = swimmer.get_club()
+    if club is not None:
+        club_code = club.get_team_code()
+        lsc = club.get_lsc()
+        if lsc is not None:
+            lsc_code = lsc.value
+        else:
+            lsc_code = "--"
+    else:
+        club_code = "----"
+        lsc_code = "--"
+
+    print(
+        f"{full_name:<27}  {long_id:<14}  {lsc_code:<2}-{club_code:<4}  {b_range:<25}"
+    )
