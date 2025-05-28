@@ -4,27 +4,6 @@ Most classes correspond to code tables defined in the SDIF specifications.
 """
 
 import enum
-import datetime
-from typing import Optional
-
-
-def get_old_id(
-    first_name: str,
-    middle_initial: Optional[str],
-    last_name: str,
-    birthday: datetime.date,
-) -> str:
-    month = str(birthday.month).zfill(2)
-    day = str(birthday.day).zfill(2)
-    year = str(birthday.year)[-2:]
-
-    first = (first_name.upper() + "**")[:3]
-    last = (last_name.upper() + "***")[:4]
-    if middle_initial == None:
-        middle_initial = "*"
-
-    old_id = month + day + year + first + middle_initial + last
-    return old_id
 
 
 class Organization(enum.Enum):

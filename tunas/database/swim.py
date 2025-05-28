@@ -1,5 +1,5 @@
 """
-Data structures for representing swimming objects (club, swimmer, meet, etc.).
+Data structures for representing swimming objects (club, swimmer, meet, meet result).
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from . import dutil, stime, sdif
 
 class Club:
     """
-    Represents a swim club.
+    Swim club representation.
     """
 
     def __init__(
@@ -218,7 +218,7 @@ class Club:
         meet_start_date: datetime.date,
         age_class: str,
     ) -> Optional[Swimmer]:
-        old_id = sdif.get_old_id(first_name, middle_initial, last_name, birthday)
+        old_id = dutil.generate_old_id(first_name, middle_initial, last_name, birthday)
         for swimmer in self.get_swimmers():
             swimmer_birthday = swimmer.get_birthday()
             if swimmer_birthday != birthday:
@@ -228,7 +228,7 @@ class Club:
             swimmer_middle_initial = swimmer.get_middle_initial()
             if swimmer_birthday is not None:
                 # Find swimmer by generating old ids and comparing hamming distance
-                swimmer_id = sdif.get_old_id(
+                swimmer_id = dutil.generate_old_id(
                     swimmer_first_name,
                     swimmer_middle_initial,
                     swimmer_last_name,
@@ -253,7 +253,7 @@ class Club:
 
 class Swimmer:
     """
-    Represents a swimmer.
+    Swimmer representation.
     """
 
     def __init__(
@@ -422,7 +422,10 @@ class Swimmer:
 
     def add_meet_result(self, meet_result: IndividualMeetResult) -> None:
         assert isinstance(meet_result, IndividualMeetResult)
-        if self.date_most_recent_swim == None or meet_result.get_date_of_swim() > self.date_most_recent_swim:
+        if (
+            self.date_most_recent_swim == None
+            or meet_result.get_date_of_swim() > self.date_most_recent_swim
+        ):
             self.date_most_recent_swim = meet_result.get_date_of_swim()
         self.meet_results.append(meet_result)
 
@@ -436,7 +439,7 @@ class Swimmer:
         birthday = self.get_birthday()
 
         if birthday != None:
-            min_age = calculate_age(birthday, on_date)
+            min_age = dutil.calculate_age(birthday, on_date)
             max_age = min_age
             return (min_age, max_age)
 
@@ -483,8 +486,8 @@ class Swimmer:
                 birthday_max = max
 
         # Calculate min and max age
-        max_age = calculate_age(birthday_min, on_date)
-        min_age = calculate_age(birthday_max, on_date)
+        max_age = dutil.calculate_age(birthday_min, on_date)
+        min_age = dutil.calculate_age(birthday_max, on_date)
 
         assert max_age >= min_age and max_age - min_age <= 1
 
@@ -1083,14 +1086,3 @@ class IndividualMeetResult(MeetResult):
 
     def get_splits(self) -> dict[int, stime.Time]:
         return self.splits
-
-
-def calculate_age(birthday: datetime.date, on_date: datetime.date):
-    """
-    Calculate age on_date for given birthday.
-    """
-    return (
-        on_date.year
-        - birthday.year
-        - ((on_date.month, on_date.day) < (birthday.month, birthday.day))
-    )

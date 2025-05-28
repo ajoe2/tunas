@@ -6,6 +6,43 @@ from typing import Optional
 from database import dutil
 
 
+def standardize_course(course_str: str) -> str:
+    """
+    Standardize course data in D0 entry.
+    """
+    alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
+    if course_str in alpha_to_num_course.keys():
+        course_str = alpha_to_num_course[course_str]
+    return course_str
+
+
+def title_case(name: str) -> str:
+    """
+    Convert name to title case
+    """
+    name_components = name.split(" ")
+    name = ""
+    for c in name_components:
+        if c != "":
+            c = c.lower()
+            c = c[0].upper() + c[1:]
+            name = name + c + " "
+    name = name[:-1]
+    return name
+
+
+def parse_full_name(full_name: str) -> tuple[str, Optional[str], str]:
+    if full_name[-1].isupper() and full_name[-2] == " ":
+        middle_initial = full_name[-1]
+        full_name = full_name[:-2].strip()
+    else:
+        middle_initial = None
+    last_name, first_name = full_name.split(",")
+    last_name, first_name = last_name.strip(), first_name.strip()
+    last_name, first_name = title_case(last_name), title_case(first_name)
+    return (first_name, middle_initial, last_name)
+
+
 def is_old_id(
     first_name: str,
     last_name: str,
@@ -43,40 +80,3 @@ def is_old_id(
         return False
 
     return True
-
-
-def standardize_course(course_str: str) -> str:
-    """
-    Standardize course data in D0 entry.
-    """
-    alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
-    if course_str in alpha_to_num_course.keys():
-        course_str = alpha_to_num_course[course_str]
-    return course_str
-
-
-def title_case(name: str) -> str:
-    """
-    Convert name to title case
-    """
-    name_components = name.split(" ")
-    name = ""
-    for c in name_components:
-        if c != "":
-            c = c.lower()
-            c = c[0].upper() + c[1:]
-            name = name + c + " "
-    name = name[:-1]
-    return name
-
-
-def parse_full_name(full_name: str) -> tuple[str, Optional[str], str]:
-    if full_name[-1].isupper() and full_name[-2] == " ":
-        middle_initial = full_name[-1]
-        full_name = full_name[:-2].strip()
-    else:
-        middle_initial = None
-    last_name, first_name = full_name.split(",")
-    last_name, first_name = last_name.strip(), first_name.strip()
-    last_name, first_name = title_case(last_name), title_case(first_name)
-    return (first_name, middle_initial, last_name)

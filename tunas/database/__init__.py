@@ -1,43 +1,15 @@
 """
-Backend data structures for tunas application.
+Database backend for tunas application.
 """
 
-from . import stime, swim, sdif, dutil
+from . import swim, dutil
 from typing import Optional
 import datetime
 
 
-def create_time_from_str(time_str: str) -> stime.Time:
-    """
-    Create and return a time object corresponding to time_str which should be in
-    mm:ss.hh format.
-    """
-    minute_str, second_str, hundredth_str = "0", "0", "0"
-    minute, second, hundredth = 0, 0, 0
-
-    # Parse string
-    first_split = time_str.split(":")
-    if len(first_split) == 2:
-        minute_str = first_split[0]
-    next_split = first_split[-1].split(".")
-    if len(next_split) != 2:
-        raise Exception(f"Invalid time string: '{time_str}'")
-    second_str = next_split[0]
-    hundredth_str = next_split[1]
-    try:
-        minute = int(minute_str)
-        second = int(second_str)
-        hundredth = int(hundredth_str)
-    except:
-        raise Exception(f"Invalid time string: '{time_str}'")
-
-    return stime.Time(minute, second, hundredth)
-
-
 class Database:
     """
-    Stores information loaded from data files. Has access to all clubs, swimmers,
-    meets, and meet_results.
+    Stores information loaded from meet result data files.
     """
 
     def __init__(
@@ -105,6 +77,10 @@ class Database:
         self.meet_results = meet_results
 
     def find_swimmer_with_short_id(self, short_id: str) -> swim.Swimmer | None:
+        """
+        Find swimmer in database who has id equal to short_id. Short id should
+        be in the new usa swimming id format.
+        """
         assert len(short_id) == 12
         for s in self.get_swimmers():
             if s.get_usa_id_short() == short_id:
@@ -119,7 +95,7 @@ class Database:
         meet_start_date: datetime.date,
         age_class: str,
     ) -> Optional[swim.Swimmer]:
-        old_id = sdif.get_old_id(first_name, middle_initial, last_name, birthday)
+        old_id = dutil.generate_old_id(first_name, middle_initial, last_name, birthday)
         for swimmer in self.get_swimmers():
             swimmer_birthday = swimmer.get_birthday()
             if swimmer_birthday != birthday:
@@ -129,7 +105,7 @@ class Database:
             swimmer_middle_initial = swimmer.get_middle_initial()
             if swimmer_birthday is not None:
                 # Find swimmer by generating old ids and comparing hamming distance
-                swimmer_id = sdif.get_old_id(
+                swimmer_id = dutil.generate_old_id(
                     swimmer_first_name,
                     swimmer_middle_initial,
                     swimmer_last_name,
@@ -150,7 +126,7 @@ class Database:
                 ):
                     return swimmer
         return None
-    
+
     def find_club(self, club_code) -> Optional[swim.Club]:
         assert len(club_code) == 4
         for c in self.get_clubs():

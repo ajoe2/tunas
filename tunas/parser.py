@@ -8,7 +8,7 @@ import os
 
 import database
 import util
-from database import swim, sdif
+from database import swim, sdif, stime
 
 
 def read_cl2(file_path: str) -> database.Database:
@@ -380,7 +380,7 @@ class Cl2Processor:
             seed_time = None
             seed_course = None
         else:
-            seed_time = database.create_time_from_str(seed_time_str)
+            seed_time = stime.create_time_from_str(seed_time_str)
             seed_course = sdif.Course(util.standardize_course(seed_course_str))
         if prelim_time_str == "" or prelim_time_str in ignored_results:
             prelim_time = None
@@ -388,7 +388,7 @@ class Cl2Processor:
             prelim_heat = None
             prelim_lane = None
         else:
-            prelim_time = database.create_time_from_str(prelim_time_str)
+            prelim_time = stime.create_time_from_str(prelim_time_str)
             prelim_course = sdif.Course(util.standardize_course(prelim_course_str))
             prelim_heat = int(prelim_heat_str)
             prelim_lane = int(prelim_lane_str)
@@ -398,7 +398,7 @@ class Cl2Processor:
             swim_off_heat = None
             swim_off_lane = None
         else:
-            swim_off_time = database.create_time_from_str(swim_off_time_str)
+            swim_off_time = stime.create_time_from_str(swim_off_time_str)
             swim_off_course = sdif.Course(util.standardize_course(swim_off_course_str))
             swim_off_heat = None
             swim_off_lane = None
@@ -408,7 +408,7 @@ class Cl2Processor:
             finals_heat = None
             finals_lane = None
         else:
-            finals_time = database.create_time_from_str(finals_time_str)
+            finals_time = stime.create_time_from_str(finals_time_str)
             finals_course = sdif.Course(util.standardize_course(finals_course_str))
             finals_heat = int(finals_heat_str)
             finals_lane = int(finals_lane_str)
