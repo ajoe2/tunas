@@ -281,6 +281,11 @@ class Cl2Processor:
         self.current_club = club
 
     def process_d0(self, line: str) -> None:
+        assert self.current_meet is not None
+
+        ignored_results = ["NT", "NS", "DNF", "DQ", "SCR"]
+
+        org_code_str = line[2].strip()
         full_name_str = line[11:39].strip()
         swimmer_short_id_str = line[39:51].strip()
         attach_code_str = line[51].strip()
@@ -314,7 +319,7 @@ class Cl2Processor:
         finals_place_str = line[135:138].strip()
         points_scored_str = line[138:142].strip()
 
-        # Ignore entries without an id
+        # Ignore entries without a valid id
         if len(swimmer_short_id_str) != 12:
             return
 
@@ -325,27 +330,8 @@ class Cl2Processor:
         else:
             middle_initial = None
         last_name, first_name = full_name_str.split(",")
-        last_name = last_name.strip()
-        first_name = first_name.strip()
-
-        # Standardize first name capitalization
-        first_name_components = first_name.split(" ")
-        first_name = ""
-        for c in first_name_components:
-            c = c.lower()
-            c = c[0].upper() + c[1:]
-            first_name = first_name + c + " "
-        first_name = first_name[:-1]
-
-        # Standardize last name capitalization
-        last_name_components = last_name.split(" ")
-        last_name = ""
-        for c in last_name_components:
-            if c != "":
-                c = c.lower()
-                c = c[0].upper() + c[1:]
-                last_name = last_name + c + " "
-        last_name = last_name[:-1]
+        last_name, first_name = last_name.strip(), first_name.strip()
+        last_name, first_name = util.title_case(last_name), util.title_case(first_name)
 
         # Parse sex, id, and age_class
         swimmer_sex = sdif.Sex(swimmer_sex_str)
@@ -354,30 +340,43 @@ class Cl2Processor:
 
         # Parse birthday
         if b_day_str and b_month_str and b_year_str:
+            # If the birthday is in the data, we just read it.
             birthday = datetime.date(int(b_year_str), int(b_month_str), int(b_day_str))
-        elif util.is_old_id(usa_id_short):
+        elif util.is_old_id(first_name, last_name, middle_initial, usa_id_short):
+            # If there is no birthday, but the swimmer has an old id, then we can
+            # reverse engineer the birthday.
             b_month = int(usa_id_short[:2])
             b_day = int(usa_id_short[2:4])
             if int(usa_id_short[4:6]) > datetime.date.today().year % 100:
                 b_year = int("19" + usa_id_short[4:6])
             else:
                 b_year = int("20" + usa_id_short[4:6])
-            try:
-                birthday = datetime.date(b_year, b_month, b_day)
-            except ValueError:
-                birthday = None
+            birthday = datetime.date(b_year, b_month, b_day)
+
+            # We can also get the middle initial from the old id
+            if middle_initial == None and usa_id_short[9] != "*":
+                middle_initial = usa_id_short[9]
         else:
+            # There is no way to retrieve the birthday
             birthday = None
 
         # Parse rest of data
+        organization = sdif.Organization(org_code_str)
         attach_status = sdif.AttachStatus(attach_code_str)
         event_sex = sdif.Sex(event_sex_str)
         event_distance = int(event_distance_str)
         event_stroke = sdif.Stroke(event_stroke_str)
         event_number = event_number_str
-        event_date = datetime.date(
-            int(event_year_str), int(event_month_str), int(event_day_str)
-        )
+        event_year = int(event_year_str)
+        event_month = int(event_month_str)
+        event_day = int(event_day_str)
+        event_date = datetime.date(event_year, event_month, event_day)
+        if self.current_club == None:
+            team_code = None
+            lsc = None
+        else:
+            team_code = self.current_club.get_team_code()
+            lsc = self.current_club.get_lsc()
         if event_age_code_str[0:2] == "UN":
             event_min_age = 0
         else:
@@ -396,7 +395,7 @@ class Cl2Processor:
         else:
             seed_time = database.create_time_from_str(seed_time_str)
             seed_course = sdif.Course(util.standardize_course(seed_course_str))
-        if prelim_time_str == "" or prelim_time_str in ["NT", "NS", "DNF", "DQ", "SCR"]:
+        if prelim_time_str == "" or prelim_time_str in ignored_results:
             prelim_time = None
             prelim_course = None
             prelim_heat = None
@@ -406,13 +405,7 @@ class Cl2Processor:
             prelim_course = sdif.Course(util.standardize_course(prelim_course_str))
             prelim_heat = int(prelim_heat_str)
             prelim_lane = int(prelim_lane_str)
-        if swim_off_time_str == "" or swim_off_time_str in [
-            "NT",
-            "NS",
-            "DNF",
-            "DQ",
-            "SCR",
-        ]:
+        if swim_off_time_str == "" or swim_off_time_str in ignored_results:
             swim_off_time = None
             swim_off_course = None
             swim_off_heat = None
@@ -422,7 +415,7 @@ class Cl2Processor:
             swim_off_course = sdif.Course(util.standardize_course(swim_off_course_str))
             swim_off_heat = None
             swim_off_lane = None
-        if finals_time_str == "" or finals_time_str in ["NT", "NS", "DNF", "DQ", "SCR"]:
+        if finals_time_str == "" or finals_time_str in ignored_results:
             finals_time = None
             finals_course = None
             finals_heat = None
@@ -432,11 +425,11 @@ class Cl2Processor:
             finals_course = sdif.Course(util.standardize_course(finals_course_str))
             finals_heat = int(finals_heat_str)
             finals_lane = int(finals_lane_str)
-        if prelim_place_str == "":
+        if prelim_place_str == "" or int(prelim_place_str) <= 0:
             prelim_place = None
         else:
             prelim_place = int(prelim_place_str)
-        if finals_place_str == "":
+        if finals_place_str == "" or int(finals_place_str) <= 0:
             finals_place = None
         else:
             finals_place = int(finals_place_str)
@@ -445,46 +438,191 @@ class Cl2Processor:
         else:
             points_scored = float(points_scored_str)
 
-        # Find swimmer
-        if (
-            self.current_swimmer
-            and self.current_swimmer.get_usa_id_short() == usa_id_short
-        ):
-            # The current swimmer is still the same so we don't need to search
-            pass
-        else:
-            # The current swimmer has changed.
-            swimmer = None
+        # Search for swimmer if swimmer is different from current_swimmer
+        different_current_swimmer = (
+            self.current_swimmer is None
+            or self.current_swimmer.get_usa_id_short() != usa_id_short
+        )
+        if different_current_swimmer:
+            swimmer_found_in_club = False
 
-            # First, search in the club. Then search the whole database. This needs
-            # to be refined.
-            if self.current_club != None:
-                swimmer = self.current_club.find_swimmer_with_short_id(usa_id_short)
-                if swimmer == None:
-                    swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+            # Search for swimmer in current club
+            if self.current_club is not None:
+                self.current_swimmer = self.current_club.find_swimmer_with_short_id(
+                    usa_id_short
+                )
+                if self.current_swimmer is not None:
+                    swimmer_found_in_club = True
+                else:
+                    swimmer_found_in_club = False
 
-            # If we can't find the swimmer, create it. Otherwise, update attributes
-            if swimmer == None:
-                swimmer = swim.Swimmer(
+            # If we didn't find the swimmer in the current_club, look in the database
+            if not swimmer_found_in_club:
+                self.current_swimmer = self.db.find_swimmer_with_short_id(usa_id_short)
+
+            # Create swimmer if not found
+            found_swimmer = self.current_swimmer is not None
+            if not found_swimmer:
+                self.current_swimmer = swim.Swimmer(
                     first_name,
                     last_name,
                     swimmer_sex,
                     usa_id_short,
                     self.current_club,
                     middle_initial,
+                    None,  # Preferred first name is not contained in d0
+                    birthday,
+                    None,  # USA ID long is not contained in d0
+                    citizen_code,
+                )
+
+                # Add swimmer to database and current club
+                self.db.add_swimmer(self.current_swimmer)
+                if self.current_club is not None:
+                    self.current_club.get_swimmers().append(self.current_swimmer)
+
+            # Check current_swimmer has been set properly
+            assert self.current_swimmer is not None
+
+            # If we only found the swimmer in the database, add to current club (if applicable)
+            if found_swimmer and not swimmer_found_in_club:
+                if self.current_club is None:
+                    pass  # Swimmer is unattached so we don't need to modify the club
+                elif self.current_swimmer.get_club() is None:
+                    # If the swimmer doesn't have a club, set it to the current club
+                    self.current_swimmer.set_club(self.current_club)
+                else:
+                    # If the swimmer has a club, we need to modify it if it is outdated (TODO)
+                    pass
+
+        assert self.current_swimmer is not None  # For type checker
+
+        # Add prelim result to the current swimmer
+        if prelim_time is not None:
+            event = sdif.Event((event_distance, event_stroke, prelim_course))
+            mr = swim.IndividualMeetResult(
+                self.current_meet,
+                organization,
+                team_code,
+                lsc,
+                sdif.Session.PRELIMS,
+                event_date,
+                event,
+                event_min_age,
+                event_max_age,
+                event_number,
+                event_sex,
+                prelim_heat,
+                prelim_lane,
+                prelim_time,
+                first_name,
+                last_name,
+                swimmer_sex,
+                usa_id_short,
+                attach_status,
+                prelim_place,
+                None,
+                seed_time,
+                seed_course,
+                None,
+                None,
+                middle_initial,
+                age_class,
+                birthday,
+                None,
+                citizen_code,
+            )
+            self.current_swimmer.add_meet_result(mr)
+            self.current_meet.add_meet_result(mr)
+            self.db.add_meet_result(mr)
+            if self.current_club != None:
+                self.current_club.add_meet_result(mr)
+
+        # Add swim off result to current swimmer
+        if swim_off_time is not None:
+            event = sdif.Event((event_distance, event_stroke, swim_off_course))
+            mr = swim.IndividualMeetResult(
+                self.current_meet,
+                organization,
+                team_code,
+                lsc,
+                sdif.Session.SWIM_OFFS,
+                event_date,
+                event,
+                event_min_age,
+                event_max_age,
+                event_number,
+                event_sex,
+                swim_off_heat,
+                swim_off_lane,
+                swim_off_time,
+                first_name,
+                last_name,
+                swimmer_sex,
+                usa_id_short,
+                attach_status,
+                None,
+                None,
+                seed_time,
+                seed_course,
+                None,
+                None,
+                middle_initial,
+                age_class,
+                birthday,
+                None,
+                citizen_code,
+            )
+            self.current_swimmer.add_meet_result(mr)
+            self.db.add_meet_result(mr)
+            self.current_meet.add_meet_result(mr)
+            if self.current_club is not None:
+                self.current_club.add_meet_result(mr)
+
+        # Add finals time to swimmer object
+        if finals_time is not None:
+            try:
+                event = sdif.Event((event_distance, event_stroke, finals_course))
+            except:
+                pass
+            else:
+                mr = swim.IndividualMeetResult(
+                    self.current_meet,
+                    organization,
+                    team_code,
+                    lsc,
+                    sdif.Session.FINALS,
+                    event_date,
+                    event,
+                    event_min_age,
+                    event_max_age,
+                    event_number,
+                    event_sex,
+                    finals_heat,
+                    finals_lane,
+                    finals_time,
+                    first_name,
+                    last_name,
+                    swimmer_sex,
+                    usa_id_short,
+                    attach_status,
+                    finals_place,
+                    points_scored,
+                    seed_time,
+                    seed_course,
                     None,
+                    None,
+                    middle_initial,
+                    age_class,
                     birthday,
                     None,
                     citizen_code,
                 )
-                self.db.add_swimmer(swimmer)
+                self.current_swimmer.add_meet_result(mr)
+                self.current_meet.add_meet_result(mr)
+                self.db.add_meet_result(mr)
                 if self.current_club != None:
-                    self.current_club.get_swimmers().append(swimmer)
-            else:
-                pass  # TODO
-
-            # Set current swimmer
-            self.current_swimmer = swimmer
+                    self.current_club.add_meet_result(mr)
 
     def process_z0(self, line: str) -> None:
         self.current_meet = None

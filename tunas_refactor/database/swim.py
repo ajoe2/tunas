@@ -545,7 +545,6 @@ class Meet:
     def set_meet_results(self, meet_results: Optional[list[MeetResult]]) -> None:
         if meet_results == None:
             meet_results = []
-            return
         assert type(meet_results) == list
         new_results = []
         for mr in meet_results:
@@ -610,8 +609,8 @@ class MeetResult:
         self,
         meet: Meet,
         organization: sdif.Organization,
-        team_code: str,
-        lsc: sdif.LSC,
+        team_code: Optional[str],
+        lsc: Optional[sdif.LSC],
         session: sdif.Session,
         date_of_swim: datetime.date,
         event: sdif.Event,
@@ -619,8 +618,8 @@ class MeetResult:
         event_max_age: int,
         event_number: str,
         event_sex: sdif.Sex,
-        heat: int,
-        lane: int,
+        heat: Optional[int],
+        lane: Optional[int],
         final_time: stime.Time,
         rank: Optional[int] = None,
         points: Optional[float] = None,
@@ -661,14 +660,14 @@ class MeetResult:
         assert type(organization) == sdif.Organization
         self.organization = organization
 
-    def set_team_code(self, team_code: str) -> None:
+    def set_team_code(self, team_code: Optional[str]) -> None:
         if team_code != None:
             assert type(team_code) == str
             assert team_code.isupper()
             assert len(team_code) <= 4 and len(team_code) > 0
         self.team_code = team_code
 
-    def set_lsc(self, lsc: sdif.LSC) -> None:
+    def set_lsc(self, lsc: Optional[sdif.LSC]) -> None:
         if lsc != None:
             assert type(lsc) == sdif.LSC
         self.lsc = lsc
@@ -713,14 +712,16 @@ class MeetResult:
         assert type(event_sex) == sdif.Sex
         self.event_sex = event_sex
 
-    def set_heat(self, heat: int) -> None:
-        assert type(heat) == int
-        assert heat >= 0 and heat <= 99
+    def set_heat(self, heat: Optional[int]) -> None:
+        if heat != None:
+            assert type(heat) == int
+            assert heat >= 0 and heat <= 99
         self.heat = heat
 
-    def set_lane(self, lane: int) -> None:
-        assert type(lane) == int
-        assert lane >= 0 and lane <= 99
+    def set_lane(self, lane: Optional[int]) -> None:
+        if lane != None:
+            assert type(lane) == int
+            assert lane >= 0 and lane <= 99
         self.lane = lane
 
     def set_final_time(self, final_time: stime.Time) -> None:
@@ -771,10 +772,10 @@ class MeetResult:
     def get_organization(self) -> sdif.Organization:
         return self.organization
 
-    def get_team_code(self) -> str:
+    def get_team_code(self) -> Optional[str]:
         return self.team_code
 
-    def get_lsc(self) -> sdif.LSC:
+    def get_lsc(self) -> Optional[sdif.LSC]:
         return self.lsc
 
     def get_session(self) -> sdif.Session:
@@ -798,10 +799,10 @@ class MeetResult:
     def get_event_sex(self) -> sdif.Sex:
         return self.event_sex
 
-    def get_heat(self) -> int:
+    def get_heat(self) -> Optional[int]:
         return self.heat
 
-    def get_lane(self) -> int:
+    def get_lane(self) -> Optional[int]:
         return self.lane
 
     def get_final_time(self) -> stime.Time:
@@ -837,8 +838,8 @@ class IndividualMeetResult(MeetResult):
         self,
         meet: Meet,
         organization: sdif.Organization,
-        team_code: str,
-        lsc: sdif.LSC,
+        team_code: Optional[str],
+        lsc: Optional[sdif.LSC],
         session: sdif.Session,
         date_of_swim: datetime.date,
         event: sdif.Event,
@@ -846,8 +847,8 @@ class IndividualMeetResult(MeetResult):
         event_max_age: int,
         event_number: str,
         event_sex: sdif.Sex,
-        heat: int,
-        lane: int,
+        heat: Optional[int],
+        lane: Optional[int],
         final_time: stime.Time,
         swimmer_first_name: str,
         swimmer_last_name: str,
@@ -943,11 +944,16 @@ class IndividualMeetResult(MeetResult):
         (ex. 19) or a classification (ex. Jr).
         """
         if swimmer_age_class != None:
-            try:
+            if swimmer_age_class.isnumeric():
                 age = int(swimmer_age_class)
                 assert age >= 0 and age < 100
-            except:
-                assert age in ["Fr", "So", "Jr", "Sr"]
+            else:
+                assert swimmer_age_class.upper() in [
+                    "FR",
+                    "SO",
+                    "JR",
+                    "SR",
+                ], swimmer_age_class
         self.swimmer_age_class = swimmer_age_class
 
     def set_swimmer_birthday(self, swimmer_birthday: Optional[datetime.date]) -> None:
@@ -975,8 +981,8 @@ class IndividualMeetResult(MeetResult):
 
     def set_splits(self, splits: Optional[dict[int, stime.Time]]) -> None:
         if splits == None:
-            self.splits = dict()
-        assert type(splits) == dict
+            splits = dict()
+        assert type(splits) == dict, splits
         for dist in splits:
             assert type(dist) == int
             assert type(splits[dist]) == stime.Time

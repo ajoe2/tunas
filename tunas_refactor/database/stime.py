@@ -3,6 +3,7 @@ Contains custom time class used to represent swimming times.
 """
 
 from __future__ import annotations  # Enable future annotations
+from typing import Optional
 
 
 class Time:
@@ -73,13 +74,16 @@ class Time:
         """
         return f"Time({self.minute}, {self.second}, {self.hundredth})"
 
-    def __gt__(self, other_time: Time) -> bool:
+    def __gt__(self, other_time: Optional[Time]) -> bool:
         """
         Return true if self is a longer time than other_time.
 
         Keyword arguments:
         other_time -- Time object that is being compared against
         """
+        if other_time is None:
+            return False
+
         # Compare minutes
         if self.get_minute() > other_time.get_minute():
             return True
@@ -98,7 +102,7 @@ class Time:
         # Self must equal other_time so return false
         return False
 
-    def __lt__(self, other_time: Time) -> bool:
+    def __lt__(self, other_time: Optional[Time]) -> bool:
         """
         Return true if self is a shorter time than other_time.
 
@@ -107,13 +111,15 @@ class Time:
         """
         return other_time > self
 
-    def __eq__(self, other_time: Time) -> bool:
+    def __eq__(self, other_time: Optional[Time]) -> bool:
         """
         Return true if self is equal to other_time.
 
         Keyword arguments:
         other_time -- Time object that is being compared against
         """
+        if other_time is None:
+            return False
         return (
             self.get_minute() == other_time.get_minute()
             and self.get_second() == other_time.get_second()
