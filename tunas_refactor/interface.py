@@ -25,9 +25,10 @@ MAIN_MENU = (
     + "2) Time standards\n"
     + "3) Club information\n"
     + "4) Relay mode\n"
+    + "5) Database statistics\n"
     + "Quit (q/Q)\n"
 )
-LINE_BREAK = "-------------------------------------------------------------"
+LINE_BREAK = "-------------------------------------------------------------\n"
 
 
 def run_tunas_application():
@@ -43,6 +44,7 @@ def run_tunas_application():
 
 
 def load_database():
+    global DATABASE
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
 
 
@@ -61,6 +63,13 @@ def print_menu_and_process_input() -> bool:
             pass
         case "4":
             pass
+        case "5":
+            print()
+            print("Database statistics:")
+            print(f"Number of clubs: {len(DATABASE.get_clubs())}")
+            print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
+            print(f"Number of meets: {len(DATABASE.get_meets())}")
+            print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
         case "q" | "Q":
             return False
         case _:

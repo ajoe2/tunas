@@ -4,12 +4,11 @@ structure for higher level application code.
 """
 
 import datetime
-import enum
 import os
 
 import database
 import util
-from database import swim, sdif, stime
+from database import swim, sdif
 
 
 def read_cl2(file_path: str) -> database.Database:
