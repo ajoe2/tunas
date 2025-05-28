@@ -103,6 +103,11 @@ def run_club_mode():
                 middle = ""
             else:
                 middle = swimmer.get_middle_initial()
+            b_range = swimmer.get_birthday_range()
+            if b_range != None:
+                b_min, b_max = b_range
+            else:
+                b_min, b_max = "None", "None"
             print(
-                f"{first:<18} {middle:<1} {last:<18} {birthday} {swimmer.get_age_range(datetime.date.today())}"
+                f"{first + " " + str(middle):<19} {last:<18} ({b_min}, {b_max}) {swimmer.get_usa_id_long()} {swimmer.get_usa_id_short()}"
             )

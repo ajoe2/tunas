@@ -433,17 +433,29 @@ class Swimmer:
         """
         Return age range for the given swimmer.
         """
-        min_age = 0
-        max_age = 100
+        min_age: int
+        max_age: int
 
+        birthday_range = self.get_birthday_range()
+        if birthday_range != None:
+            # Calculate min and max age
+            birthday_min, birthday_max = birthday_range
+            max_age = dutil.calculate_age(birthday_min, on_date)
+            min_age = dutil.calculate_age(birthday_max, on_date)
+        else:
+            # Set min and max age to defaults
+            min_age, max_age = 1, 99
+
+        assert max_age >= min_age
+        return (min_age, max_age)
+
+    def get_birthday_range(self) -> Optional[tuple[datetime.date, datetime.date]]:
+        # If the swimmer has a birthday, then the range is just the birthday.
         birthday = self.get_birthday()
+        if birthday is not None:
+            return birthday, birthday
 
-        if birthday != None:
-            min_age = dutil.calculate_age(birthday, on_date)
-            max_age = min_age
-            return (min_age, max_age)
-
-        # Find and sort numerical age records
+        # Find numerical age records
         age_records = []
         for mr in self.get_meet_results():
             meet_start_date = mr.get_meet().get_start_date()
@@ -451,47 +463,41 @@ class Swimmer:
             if swimmer_age_class != None and swimmer_age_class.isnumeric():
                 age_records.append((meet_start_date, int(swimmer_age_class)))
 
-        # If there are no age records, the swimmer only has high school records.
-        # Hopefully, this does not happen too often
-        if age_records == []:
-            min_age = 13
-            max_age = 20
-            return (min_age, max_age)
+        # We can't guess the birthday without age records
+        if len(age_records) == 0:
+            return None
 
-        # Derive max and min birthday
-        # age_records[0] exists because we already checked for an empty list
-        age_records.sort(key=lambda record: record[0])
-        first_record = age_records[0]
+        # Set birthday min and birthday max
         birthday_min = datetime.date(
-            first_record[0].year - first_record[1] - 1,
-            first_record[0].month,
-            first_record[0].day,
+            age_records[0][0].year - age_records[0][1] - 1,
+            age_records[0][0].month,
+            age_records[0][0].day,
         ) + datetime.timedelta(days=1)
         birthday_max = datetime.date(
-            first_record[0].year - first_record[1],
-            first_record[0].month,
-            first_record[0].day,
+            age_records[0][0].year - age_records[0][1],
+            age_records[0][0].month,
+            age_records[0][0].day,
         )
-        # Refine min and max birthday by iterating through records
+
+        # Iterating through records and refine min/max birthday
         for record in age_records:
-            min = datetime.date(
-                record[0].year - record[1] - 1, record[0].month, record[0].day
-            ) + datetime.timedelta(days=1)
-            max = datetime.date(
-                record[0].year - record[1], record[0].month, record[0].day
+            record_date, record_age = record
+            record_year, record_month, record_day = (
+                record_date.year,
+                record_date.month,
+                record_date.day,
             )
+            min = datetime.date(
+                record_year - record_age - 1, record_month, record_day
+            ) + datetime.timedelta(days=1)
+            max = datetime.date(record_year - record_age, record_month, record_day)
+
             if min > birthday_min:
                 birthday_min = min
             if max < birthday_max:
                 birthday_max = max
 
-        # Calculate min and max age
-        max_age = dutil.calculate_age(birthday_min, on_date)
-        min_age = dutil.calculate_age(birthday_max, on_date)
-
-        assert max_age >= min_age and max_age - min_age <= 1
-
-        return (min_age, max_age)
+        return birthday_min, birthday_max
 
     def update_club(self, new_club: Club):
         assert type(new_club) == Club

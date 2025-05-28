@@ -66,7 +66,7 @@ class Cl2Processor:
                     case "D2":
                         pass
                     case "D3":
-                        pass
+                        self.process_d3(line)
                     case "E0":
                         pass
                     case "F0":
@@ -658,6 +658,31 @@ class Cl2Processor:
                 self.db.add_meet_result(mr)
                 if self.current_club != None:
                     self.current_club.add_meet_result(mr)
+
+    def process_d3(self, line: str) -> None:
+        # If there was an error reading the d0 line, return.
+        if self.current_swimmer is None:
+            return
+
+        full_id = line[2:16].strip()
+        preferred_first_name = line[16:31].strip()
+        curr_long_id = self.current_swimmer.get_usa_id_long()
+        curr_preferred_name = self.current_swimmer.get_preferred_first_name()
+
+        # Update full id if applicable
+        if len(full_id) == 14:
+            old_id = util.is_old_id(
+                self.current_swimmer.get_first_name(),
+                self.current_swimmer.get_last_name(),
+                self.current_swimmer.get_middle_initial(),
+                full_id,
+            )
+            if not old_id and curr_long_id is None:
+                self.current_swimmer.set_usa_id_long(full_id)
+
+        # Update preferred first name if applicable
+        if len(preferred_first_name) > 0 and curr_preferred_name is None:
+            self.current_swimmer.set_preferred_first_name(preferred_first_name)
 
     def process_z0(self, line: str) -> None:
         self.current_meet = None
