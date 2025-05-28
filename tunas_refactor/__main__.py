@@ -3,23 +3,64 @@ Entry point for tunas application.
 """
 
 import parser
+import database
+
+TUNAS_LOGO = (
+    "#############################################################\n"
+    + "##########           Tunas: Data Analysis          ##########\n"
+    + "#############################################################\n"
+    + "Version: 1.0.0\n"
+)
+MAIN_MENU = (
+    "1) Swimmer information\n"
+    + "2) Time standards\n"
+    + "3) Club information\n"
+    + "4) Relay mode\n"
+    + "Quit (q/Q)\n"
+)
+DATABASE: database.Database
+
+
+def print_menu_and_process_input() -> bool:
+    """
+    Return true if success, false otherwise.
+    """
+    print(MAIN_MENU)
+    user_input = input("Select mode > ")
+    match user_input:
+        case "1":
+            pass
+        case "2":
+            pass
+        case "3":
+            pass
+        case "4":
+            pass
+        case "q" | "Q":
+            return False
+        case _:
+            print(f"Invalid input: '{user_input}'")
+            print(f"Please try again!")
+            pass
+    print()
+    return True
 
 
 def main():
     """
     Run Tunas application.
     """
-    print("Program started")
-    db = parser.read_cl2("/Users/ajoe/code/tunas/data/meetData")
-    print(f"Number of meets: {len(db.get_meets())}")
-    print(f"Number of meet results: {len(db.get_meet_results())}")
-    print(f"Number of swimmers: {len(db.get_swimmers())}")
-    print(f"Number of clubs: {len(db.get_clubs())}")
-    swimmers = db.get_clubs()[0].get_swimmers()
-    swimmers.sort(key=lambda s: s.get_first_name() + s.get_last_name())
-    for swimmer in swimmers:
-        print(f"{swimmer.first_name} {swimmer.last_name} {swimmer.get_usa_id_short()}")
-    print("Program ended")
+    print()
+    print(TUNAS_LOGO)
+    DATABASE = parser.read_cl2("/Users/ajoe/code/tunas/data/meetData")
+    print(
+        "Finished processing files!\n"
+        + "-------------------------------------------------------------"
+    )
+    running = True
+    while running:
+        running = print_menu_and_process_input()
+    print("Program exited!")
 
 
 if __name__ == "__main__":
