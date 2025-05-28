@@ -2,7 +2,7 @@
 Test file for util.py
 """
 
-from tunas_refactor import util
+from tunas import util
 
 
 def test_id_checker():

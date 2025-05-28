@@ -4,8 +4,8 @@ Tests for database package
 
 import datetime
 
-import tunas_refactor.database as database
-from tunas_refactor.database import swim, sdif, stime
+import tunas.database as database
+from tunas.database import swim, sdif, stime
 
 
 def test_database_basic():
