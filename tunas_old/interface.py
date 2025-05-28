@@ -12,6 +12,7 @@ class Interface():
            "2) Time standards\n" + \
            "3) Club information\n" + \
            "4) Relay mode\n" + \
+           "5) Statistics\n" + \
            "Quit (q/Q)\n"
     SWIMMER_MODE_MENU = "1) Full time history\n" + \
                         "2) Best times\n" + \
@@ -89,6 +90,14 @@ class Interface():
                 self.run_club_mode()
             case '4':
                 self.run_relay_mode()
+            case '5':
+                print()
+                print("Database statistics:")
+                print(f"Number of clubs: {len(self.db.get_clubs())}")
+                print(f"Number of swimmers: {len(self.db.get_swimmers())}")
+                print(f"Number of meets: {len(self.db.get_meets())}")
+                print(f"Number of meet results: {len(self.db.get_meet_results())}")
+                print()
             case 'q' | 'Q':
                 return False
             case _:

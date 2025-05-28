@@ -7,6 +7,7 @@ import enum
 import datetime
 from typing import Optional
 
+
 def get_old_id(
     first_name: str,
     middle_initial: Optional[str],

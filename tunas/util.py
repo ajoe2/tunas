@@ -3,6 +3,7 @@ Utility functions for tunas application.
 """
 
 from typing import Optional
+from database import dutil
 
 
 def is_old_id(
@@ -38,7 +39,7 @@ def is_old_id(
     )[: len(alpha_id)]
 
     # If name portion doesn't match, return
-    if hamming_distance(alpha_id, alpha_id_construct) > 2:
+    if dutil.hamming_distance(alpha_id, alpha_id_construct) > 2:
         return False
 
     return True
@@ -52,16 +53,6 @@ def standardize_course(course_str: str) -> str:
     if course_str in alpha_to_num_course.keys():
         course_str = alpha_to_num_course[course_str]
     return course_str
-
-
-def hamming_distance(str1: str, str2: str) -> int:
-    assert len(str1) == len(str2)
-
-    diffs = 0
-    for i in range(len(str1)):
-        if str1[i] != str2[i]:
-            diffs += 1
-    return diffs
 
 
 def title_case(name: str) -> str:
