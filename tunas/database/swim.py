@@ -261,7 +261,7 @@ class Swimmer:
         first_name: str,
         last_name: str,
         sex: sdif.Sex,
-        usa_id_short: str,
+        usa_id_short: Optional[str],
         club: Optional[Club],
         middle_initial: Optional[str] = None,
         preferred_first_name: Optional[str] = None,
@@ -303,9 +303,10 @@ class Swimmer:
         assert type(sex) == sdif.Sex
         self.sex = sex
 
-    def set_usa_id_short(self, usa_id_short: str) -> None:
-        assert type(usa_id_short) == str
-        assert len(usa_id_short) == 12
+    def set_usa_id_short(self, usa_id_short: Optional[str]) -> None:
+        if usa_id_short is not None:
+            assert type(usa_id_short) == str
+            assert len(usa_id_short) == 12
         self.usa_id_short = usa_id_short
 
     def set_club(self, club: Optional[Club]) -> None:
@@ -378,7 +379,7 @@ class Swimmer:
     def get_sex(self) -> sdif.Sex:
         return self.sex
 
-    def get_usa_id_short(self) -> str:
+    def get_usa_id_short(self) -> Optional[str]:
         return self.usa_id_short
 
     def get_club(self) -> Optional[Club]:

@@ -470,7 +470,7 @@ class Cl2Processor:
                         self.current_meet.get_start_date(),
                         age_class,
                     )
-            
+
             # Search for swimmer using id if not found
             if self.current_swimmer is None:
                 # Search for swimmer in current club
@@ -492,11 +492,15 @@ class Cl2Processor:
             # Create swimmer if not found
             found_swimmer = self.current_swimmer is not None
             if not found_swimmer:
+                if util.is_old_id(first_name, last_name, middle_initial, usa_id_short):
+                    short_id = None
+                else:
+                    short_id = usa_id_short
                 self.current_swimmer = swim.Swimmer(
                     first_name,
                     last_name,
                     swimmer_sex,
-                    usa_id_short,
+                    short_id,
                     self.current_club,
                     middle_initial,
                     None,  # Preferred first name is not contained in d0
@@ -508,23 +512,49 @@ class Cl2Processor:
                 # Add swimmer to database and current club
                 self.db.add_swimmer(self.current_swimmer)
                 if self.current_club is not None:
-                    self.current_club.get_swimmers().append(self.current_swimmer)
+                    self.current_club.add_swimmer(self.current_swimmer)
 
             # Check current_swimmer has been set properly
             assert self.current_swimmer is not None
 
-            # If we only found the swimmer in the database, add to current club (if applicable)
+            # If we only found the swimmer in the database, move swimmer to current club
             if found_swimmer and not swimmer_found_in_club:
+                swimmer_club = self.current_swimmer.get_club()
                 if self.current_club is None:
                     pass  # Swimmer is unattached so we don't need to modify the club
-                elif self.current_swimmer.get_club() is None:
+                elif (
+                    swimmer_club is None
+                    or len(self.current_swimmer.get_meet_results()) == 0
+                ):
                     # If the swimmer doesn't have a club, set it to the current club
                     self.current_swimmer.set_club(self.current_club)
+                    self.current_club.add_swimmer(self.current_swimmer)
                 else:
-                    # If the swimmer has a club, we need to modify it if it is outdated (TODO)
-                    pass
+                    # If the swimmer has a club, we need to modify it only if it is outdated
+                    most_recent_swim_date = self.current_swimmer.get_meet_results()[
+                        0
+                    ].get_date_of_swim()
+                    for mr in self.current_swimmer.get_meet_results():
+                        if mr.get_date_of_swim() > most_recent_swim_date:
+                            most_recent_swim_date = mr.get_date_of_swim()
+                    if most_recent_swim_date < event_date:
+                        swimmer_club.get_swimmers().remove(self.current_swimmer)
+                        self.current_swimmer.set_club(self.current_club)
+                        self.current_club.add_swimmer(self.current_swimmer)
 
-        assert self.current_swimmer is not None  # For type checker
+        assert self.current_swimmer is not None
+
+        # Update swimmer attributes
+        if self.current_swimmer.get_usa_id_short() == None and not util.is_old_id(
+            first_name, last_name, middle_initial, usa_id_short
+        ):
+            self.current_swimmer.set_usa_id_short(usa_id_short)
+        if self.current_swimmer.get_middle_initial() == None and middle_initial != None:
+            self.current_swimmer.set_middle_initial(middle_initial)
+        if self.current_swimmer.get_birthday() == None and birthday != None:
+            self.current_swimmer.set_birthday(birthday)
+        if self.current_swimmer.get_citizenship() == None and citizen_code != None:
+            self.current_swimmer.set_citizenship(citizen_code)
 
         # Add prelim result to the current swimmer
         if prelim_time is not None:
