@@ -3,12 +3,11 @@ Parser for tunas application. Handle reading data and creating underlying data
 structure for higher level application code.
 """
 
-import datetime
 import os
+import datetime
 
 import database
 import util
-from database import swim, sdif, stime
 
 
 def read_cl2(file_path: str) -> database.Database:
@@ -27,6 +26,7 @@ def read_cl2(file_path: str) -> database.Database:
                 paths.append(full_file_path)
 
     # Load cl2 files into database
+    print("Loading files...")
     files_read = 0
     for p in paths:
         processor.read_file(p)
@@ -91,27 +91,27 @@ class Cl2Processor:
         altitude_str = line[137:141].strip()
         course_code_str = line[149].strip()
 
+        # Parse start date and end date
+        start_date_year = int(start_date_str[4:])
+        start_date_month = int(start_date_str[:2])
+        start_date_day = int(start_date_str[2:4])
+        end_date_year = int(end_date_str[4:])
+        end_date_month = int(end_date_str[:2])
+        end_date_day = int(end_date_str[2:4])
+
         # Parse data
-        organization = sdif.Organization(org_code_str)
+        organization = database.sdif.Organization(org_code_str)
         name = name_str
         city = city_str
         address_one = address_one_str
-        start_date = datetime.date(
-            int(start_date_str[4:]),
-            int(start_date_str[:2]),
-            int(start_date_str[2:4]),
-        )
-        end_date = datetime.date(
-            int(end_date_str[4:]),
-            int(end_date_str[:2]),
-            int(end_date_str[2:4]),
-        )
+        start_date = datetime.date(start_date_year, start_date_month, start_date_day)
+        end_date = datetime.date(end_date_year, end_date_month, start_date_day)
         if address_two_str != "":
             address_two = address_two_str
         else:
             address_two = None
         if state_str != "":
-            state = sdif.State(state_str)
+            state = database.sdif.State(state_str)
         else:
             state = None
         if postal_code_str != "":
@@ -119,11 +119,12 @@ class Cl2Processor:
         else:
             postal_code = None
         if country_code_str != "":
-            country = sdif.Country(country_code_str)
+            country = database.sdif.Country(country_code_str)
         else:
             country = None
         if course_code_str != "":
-            course = sdif.Course(util.standardize_course(course_code_str))
+            standardized_course = util.standardize_course(course_code_str)
+            course = database.sdif.Course(standardized_course)
         else:
             course = None
         if altitude_str != "":
@@ -131,12 +132,12 @@ class Cl2Processor:
         else:
             altitude = None
         if meet_type_str != "":
-            meet_type = sdif.MeetType(meet_type_str)
+            meet_type = database.sdif.MeetType(meet_type_str)
         else:
             meet_type = None
 
         # Create meet object
-        new_meet = swim.Meet(
+        new_meet = database.swim.Meet(
             organization,
             name,
             city,
@@ -155,6 +156,7 @@ class Cl2Processor:
         self.db.add_meet(new_meet)
 
     def process_c1(self, line: str) -> None:
+        # The current meet should be set before we reach a c1 line
         assert self.current_meet is not None
 
         org_code_str = line[2].strip()
@@ -190,11 +192,11 @@ class Cl2Processor:
             return
 
         # Parse string data
-        organization = sdif.Organization(org_code_str)
+        organization = database.sdif.Organization(org_code_str)
         full_name = full_name_str
         team_code = team_code_str
-        if lsc_code_str in sdif.LSC:
-            lsc = sdif.LSC(lsc_code_str)
+        if lsc_code_str in database.sdif.LSC:
+            lsc = database.sdif.LSC(lsc_code_str)
         else:
             lsc = None
         if abbreviated_name_str != "":
@@ -213,20 +215,20 @@ class Cl2Processor:
             city = city_str
         else:
             city = None
-        if state_str != "" and state_str in sdif.State:
-            state = sdif.State(state_str)
+        if state_str != "" and state_str in database.sdif.State:
+            state = database.sdif.State(state_str)
         else:
             state = None
         if postal_code_str != "":
             postal_code = postal_code_str
         else:
             postal_code = None
-        if country_code_str != "" and country_code_str in sdif.Country:
-            country = sdif.Country(country_code_str)
+        if country_code_str != "" and country_code_str in database.sdif.Country:
+            country = database.sdif.Country(country_code_str)
         else:
             country = None
         if region_str != "":
-            region = sdif.Region(region_str)
+            region = database.sdif.Region(region_str)
         else:
             region = None
 
@@ -259,7 +261,7 @@ class Cl2Processor:
             if club.get_region() == None:
                 club.set_region(region)
         else:
-            club = swim.Club(
+            club = database.swim.Club(
                 organization,
                 team_code,
                 lsc,
@@ -273,8 +275,10 @@ class Cl2Processor:
                 country,
                 region,
             )
+            # We need to add the club to the database if we create it
             self.db.add_club(club)
 
+        # Add club to current meet and set current_club to club
         club.add_meet(self.current_meet)
         self.current_club = club
 
@@ -323,7 +327,7 @@ class Cl2Processor:
 
         # Parse full name, sex, id, and age_class
         first_name, middle_initial, last_name = util.parse_full_name(full_name_str)
-        swimmer_sex = sdif.Sex(swimmer_sex_str)
+        swimmer_sex = database.sdif.Sex(swimmer_sex_str)
         usa_id_short = swimmer_short_id_str
         age_class = age_class_str
 
@@ -349,11 +353,11 @@ class Cl2Processor:
             birthday = None
 
         # Parse rest of data
-        organization = sdif.Organization(org_code_str)
-        attach_status = sdif.AttachStatus(attach_code_str)
-        event_sex = sdif.Sex(event_sex_str)
+        organization = database.sdif.Organization(org_code_str)
+        attach_status = database.sdif.AttachStatus(attach_code_str)
+        event_sex = database.sdif.Sex(event_sex_str)
         event_distance = int(event_distance_str)
-        event_stroke = sdif.Stroke(event_stroke_str)
+        event_stroke = database.sdif.Stroke(event_stroke_str)
         event_number = event_number_str
         event_year = int(event_year_str)
         event_month = int(event_month_str)
@@ -376,21 +380,23 @@ class Cl2Processor:
         if citizen_code_str == "":
             citizen_code = None
         else:
-            citizen_code = sdif.Country(citizen_code_str)
+            citizen_code = database.sdif.Country(citizen_code_str)
         if seed_time_str == "":
             seed_time = None
             seed_course = None
         else:
-            seed_time = stime.create_time_from_str(seed_time_str)
-            seed_course = sdif.Course(util.standardize_course(seed_course_str))
+            seed_time = database.stime.create_time_from_str(seed_time_str)
+            seed_course = database.sdif.Course(util.standardize_course(seed_course_str))
         if prelim_time_str == "" or prelim_time_str in ignored_results:
             prelim_time = None
             prelim_course = None
             prelim_heat = None
             prelim_lane = None
         else:
-            prelim_time = stime.create_time_from_str(prelim_time_str)
-            prelim_course = sdif.Course(util.standardize_course(prelim_course_str))
+            prelim_time = database.stime.create_time_from_str(prelim_time_str)
+            prelim_course = database.sdif.Course(
+                util.standardize_course(prelim_course_str)
+            )
             prelim_heat = int(prelim_heat_str)
             prelim_lane = int(prelim_lane_str)
         if swim_off_time_str == "" or swim_off_time_str in ignored_results:
@@ -399,8 +405,10 @@ class Cl2Processor:
             swim_off_heat = None
             swim_off_lane = None
         else:
-            swim_off_time = stime.create_time_from_str(swim_off_time_str)
-            swim_off_course = sdif.Course(util.standardize_course(swim_off_course_str))
+            swim_off_time = database.stime.create_time_from_str(swim_off_time_str)
+            swim_off_course = database.sdif.Course(
+                util.standardize_course(swim_off_course_str)
+            )
             swim_off_heat = None
             swim_off_lane = None
         if finals_time_str == "" or finals_time_str in ignored_results:
@@ -409,8 +417,10 @@ class Cl2Processor:
             finals_heat = None
             finals_lane = None
         else:
-            finals_time = stime.create_time_from_str(finals_time_str)
-            finals_course = sdif.Course(util.standardize_course(finals_course_str))
+            finals_time = database.stime.create_time_from_str(finals_time_str)
+            finals_course = database.sdif.Course(
+                util.standardize_course(finals_course_str)
+            )
             finals_heat = int(finals_heat_str)
             finals_lane = int(finals_lane_str)
         if prelim_place_str == "" or int(prelim_place_str) <= 0:
@@ -484,7 +494,7 @@ class Cl2Processor:
                     short_id = None
                 else:
                     short_id = usa_id_short
-                self.current_swimmer = swim.Swimmer(
+                self.current_swimmer = database.swim.Swimmer(
                     first_name,
                     last_name,
                     swimmer_sex,
@@ -532,13 +542,13 @@ class Cl2Processor:
 
         # Add prelim result to the current swimmer
         if prelim_time is not None:
-            event = sdif.Event((event_distance, event_stroke, prelim_course))
-            mr = swim.IndividualMeetResult(
+            event = database.sdif.Event((event_distance, event_stroke, prelim_course))
+            mr = database.swim.IndividualMeetResult(
                 self.current_meet,
                 organization,
                 team_code,
                 lsc,
-                sdif.Session.PRELIMS,
+                database.sdif.Session.PRELIMS,
                 event_date,
                 event,
                 event_min_age,
@@ -573,13 +583,13 @@ class Cl2Processor:
 
         # Add swim off result to current swimmer
         if swim_off_time is not None:
-            event = sdif.Event((event_distance, event_stroke, swim_off_course))
-            mr = swim.IndividualMeetResult(
+            event = database.sdif.Event((event_distance, event_stroke, swim_off_course))
+            mr = database.swim.IndividualMeetResult(
                 self.current_meet,
                 organization,
                 team_code,
                 lsc,
-                sdif.Session.SWIM_OFFS,
+                database.sdif.Session.SWIM_OFFS,
                 event_date,
                 event,
                 event_min_age,
@@ -615,16 +625,18 @@ class Cl2Processor:
         # Add finals time to swimmer object
         if finals_time is not None:
             try:
-                event = sdif.Event((event_distance, event_stroke, finals_course))
+                event = database.sdif.Event(
+                    (event_distance, event_stroke, finals_course)
+                )
             except:
                 pass
             else:
-                mr = swim.IndividualMeetResult(
+                mr = database.swim.IndividualMeetResult(
                     self.current_meet,
                     organization,
                     team_code,
                     lsc,
-                    sdif.Session.FINALS,
+                    database.sdif.Session.FINALS,
                     event_date,
                     event,
                     event_min_age,

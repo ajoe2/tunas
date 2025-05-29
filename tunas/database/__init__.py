@@ -2,7 +2,7 @@
 Database backend for tunas application.
 """
 
-from . import swim, dutil
+from . import swim, dutil, sdif, stime
 from typing import Optional
 import datetime
 

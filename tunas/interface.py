@@ -1,23 +1,22 @@
 """
-Handles user interface for tunas application.
+User interface logic for tunas application.
 """
 
 import os
-import datetime
 
-import database
 import parser
+import database
 import relaygen
 
-# Data path
+# Paths
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
 MEET_DATA_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/meetData"
 
-# Global database
+# Global database and relay generator
 DATABASE: database.Database
 RELAY_GENERATOR: relaygen.RelayGenerator
 
-# Global constants
+# String constatns
 TUNAS_LOGO = (
     "#############################################################\n"
     + "##########           Tunas: Data Analysis          ##########\n"
@@ -95,32 +94,17 @@ def run_swimmer_mode():
     Swimmer mode main logic
     """
     print("Swimmer mode:")
-    code = input("Enter swimmer id > ")
-    swimmer = DATABASE.find_swimmer_with_long_id(code)
+    id = input("Enter swimmer id > ")
+    swimmer = DATABASE.find_swimmer_with_long_id(id)
     if swimmer == None:
         print("Swimmer not found!")
     else:
-        print(
-            f"Swimmer found! Displaying time history for "
-            + f"{swimmer.get_first_name()} {swimmer.get_last_name()} ({code})"
-        )
+        print(f"Swimmer found! Displaying time history for {swimmer.get_full_name()}")
         print()
         meet_results = swimmer.get_meet_results()
         meet_results.sort(key=lambda mr: (mr.get_event(), mr.get_date_of_swim()))
         for mr in meet_results:
-            if mr.get_team_code() != None and mr.get_lsc() != None:
-                full_code = f"{str(mr.get_lsc())}-{mr.get_team_code()}"
-            elif mr.get_team_code() != None and mr.get_lsc() == None:
-                full_code = f"   {mr.get_team_code()}"
-            elif mr.get_team_code() == None and mr.get_lsc() != None:
-                full_code = f"{mr.get_lsc()}     "
-            else:
-                full_code = ""
-            print(
-                f"{mr.get_event()}  {str(mr.get_final_time()):<8}  "
-                + f"{str(mr.get_swimmer_age_class()):<2}  "
-                + f"{mr.get_meet().get_name():<30}  {full_code:<7}  {mr.get_date_of_swim()}"
-            )
+            display_ind_meet_result_info(mr)
 
 
 def run_club_mode():
@@ -134,17 +118,17 @@ def run_club_mode():
     except:
         club = None
     if club == None:
-        print("Club not found!")
+        print(f"Could not find club with club code {code}")
     else:
         print("Club found! Displaying swimmers...")
         print()
         swimmers = club.get_swimmers()
+
         # Remove swimmers without a birthday range
         for swimmer in swimmers:
             if swimmer.get_birthday_range() == None:
                 swimmers.remove(swimmer)
-
-        # Sort swimmer by earliest possible birthday
+        # Sort swimmer by birthday
         swimmers.sort(key=lambda s: s.get_birthday_range()[0], reverse=True)  # type: ignore
 
         # Print swimmer information
@@ -162,22 +146,16 @@ def display_statistics():
 
 def display_swimmer_information(swimmer: database.swim.Swimmer):
     # Calculate full name
-    first = swimmer.get_first_name()
-    last = swimmer.get_last_name()
-    middle = swimmer.get_middle_initial()
-    if middle is None:
-        full_name = f"{first} {last}"
-    else:
-        full_name = f"{first} {middle} {last}"
+    full_name = swimmer.get_full_name()
 
     # Calculate birthday
     b_range = swimmer.get_birthday_range()
     if b_range == None:
-        b_range = f"--------------------------"
+        b_range = f"-----------------------"
     elif b_range[0] == b_range[1]:
         b_range = f"{b_range[0]}"
     else:
-        b_range = f"({b_range[0]}, {b_range[1]})"
+        b_range = f"{b_range[0]} - {b_range[1]}"
 
     # Calculate id
     long_id = swimmer.get_usa_id_long()
@@ -196,7 +174,22 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
     else:
         club_code = "----"
         lsc_code = "--"
+    full_code = f"{lsc_code:<2}-{club_code:<4}"
 
+    print(f"{full_name:<27}  {long_id:<14}  {full_code}  {b_range:<25}")
+
+
+def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
+    if mr.get_team_code() != None and mr.get_lsc() != None:
+        full_code = f"{str(mr.get_lsc())}-{mr.get_team_code()}"
+    elif mr.get_team_code() != None and mr.get_lsc() == None:
+        full_code = f"   {mr.get_team_code()}"
+    elif mr.get_team_code() == None and mr.get_lsc() != None:
+        full_code = f"{mr.get_lsc()}     "
+    else:
+        full_code = ""
     print(
-        f"{full_name:<27}  {long_id:<14}  {lsc_code:<2}-{club_code:<4}  {b_range:<25}"
+        f"{mr.get_event()}  {str(mr.get_final_time()):<8}  "
+        + f"{str(mr.get_swimmer_age_class()):<2}  "
+        + f"{mr.get_meet().get_name():<30}  {full_code:<7}  {mr.get_date_of_swim()}"
     )

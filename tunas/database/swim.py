@@ -369,6 +369,12 @@ class Swimmer:
     def get_last_name(self) -> str:
         return self.last_name
 
+    def get_full_name(self) -> str:
+        if self.middle_initial != None:
+            return f"{self.first_name} {self.middle_initial} {self.last_name}"
+        else:
+            return f"{self.first_name} {self.last_name}"
+
     def get_sex(self) -> sdif.Sex:
         return self.sex
 
@@ -1005,7 +1011,7 @@ class IndividualMeetResult(MeetResult):
             if swimmer_age_class.isnumeric():
                 age = int(swimmer_age_class)
                 if age < 4 or age > 99:
-                    swimmer_age_class = "NA" # Corrupt entry
+                    swimmer_age_class = "NA"  # Corrupt entry
             else:
                 assert swimmer_age_class.upper() in [
                     "FR",
