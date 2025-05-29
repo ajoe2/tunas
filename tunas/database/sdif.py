@@ -3,6 +3,7 @@ Constants defined in the USA Swimming Standard Interchange Format (SDIF).
 Most classes correspond to code tables defined in the SDIF specifications.
 """
 
+from __future__ import annotations
 import enum
 
 
@@ -560,7 +561,18 @@ class Event(enum.Enum):
 
     def __str__(self) -> str:
         event_basic = f"{self.get_distance()} {self.get_stroke()}"
-        return f"{event_basic: <10} {self.get_course()}"
+        return f"{event_basic: <10}  {self.get_course()}"
+
+    def __eq__(self, value: Event) -> bool:
+        return self.name == value.name
+
+    def __lt__(self, value: Event) -> bool:
+        self_index = list(Event.__members__).index(self.name)
+        value_index = list(Event.__members__).index(value.name)
+        return self_index < value_index
+
+    def __gt__(self, value: Event) -> bool:
+        return value < self
 
     def get_distance(self) -> int:
         """

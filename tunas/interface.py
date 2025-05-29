@@ -104,11 +104,12 @@ def run_swimmer_mode():
         )
         print()
         meet_results = swimmer.get_meet_results()
-        meet_results.sort(key=lambda mr: mr.get_date_of_swim())
+        meet_results.sort(key=lambda mr: (mr.get_event(), mr.get_date_of_swim()))
         for mr in meet_results:
             print(
-                f"{mr.get_event()}  {str(mr.get_final_time()):<7}  {str(mr.get_swimmer_age_class()):<2}  "
-                + f"{mr.get_meet().get_name():<30}  {mr.get_date_of_swim()}"
+                f"{mr.get_event()}  {str(mr.get_final_time()):<8}  "
+                + f"{str(mr.get_swimmer_age_class()):<2}  "
+                + f"{mr.get_meet().get_name():<30}  {str(mr.get_lsc())}-{mr.get_team_code():<4}  {mr.get_date_of_swim()}"
             )
 
 
