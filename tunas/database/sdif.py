@@ -460,35 +460,6 @@ class Session(enum.Enum):
         return self.value
 
 
-class AgeGroup(enum.Enum):
-    """
-    Swimmer age group. Each age group is represented by a min and
-    max age.
-    """
-
-    AG_10_u = (0, 10)
-    AG_11_12 = (11, 12)
-    AG_13_14 = (13, 14)
-    AG_15_16 = (15, 16)
-    AG_17_18 = (17, 18)
-    AG_SENIOR = (13, 1000)
-
-    def __str__(self) -> str:
-        match self:
-            case AgeGroup.AG_10_u:
-                return "10&u"
-            case AgeGroup.AG_SENIOR:
-                return "senior"
-            case _:
-                return f"{self.get_min_age()}-{self.get_max_age()}"
-
-    def get_min_age(self) -> int:
-        return self.value[0]
-
-    def get_max_age(self) -> int:
-        return self.value[1]
-
-
 class Event(enum.Enum):
     """
     Swim event. Each event is represented by a distance, stroke,

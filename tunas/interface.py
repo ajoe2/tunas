@@ -2,11 +2,12 @@
 Handles user interface for tunas application.
 """
 
-import database
-from database import swim
-import parser
 import os
 import datetime
+
+import database
+import parser
+import relaygen
 
 # Data path
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -14,6 +15,7 @@ MEET_DATA_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/meetData"
 
 # Global database
 DATABASE: database.Database
+RELAY_GENERATOR: relaygen.RelayGenerator
 
 # Global constants
 TUNAS_LOGO = (
@@ -106,10 +108,18 @@ def run_swimmer_mode():
         meet_results = swimmer.get_meet_results()
         meet_results.sort(key=lambda mr: (mr.get_event(), mr.get_date_of_swim()))
         for mr in meet_results:
+            if mr.get_team_code() != None and mr.get_lsc() != None:
+                full_code = f"{str(mr.get_lsc())}-{mr.get_team_code()}"
+            elif mr.get_team_code() != None and mr.get_lsc() == None:
+                full_code = f"   {mr.get_team_code()}"
+            elif mr.get_team_code() == None and mr.get_lsc() != None:
+                full_code = f"{mr.get_lsc()}     "
+            else:
+                full_code = ""
             print(
                 f"{mr.get_event()}  {str(mr.get_final_time()):<8}  "
                 + f"{str(mr.get_swimmer_age_class()):<2}  "
-                + f"{mr.get_meet().get_name():<30}  {str(mr.get_lsc())}-{mr.get_team_code():<4}  {mr.get_date_of_swim()}"
+                + f"{mr.get_meet().get_name():<30}  {full_code:<7}  {mr.get_date_of_swim()}"
             )
 
 
@@ -150,7 +160,7 @@ def display_statistics():
     print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
 
 
-def display_swimmer_information(swimmer: swim.Swimmer):
+def display_swimmer_information(swimmer: database.swim.Swimmer):
     # Calculate full name
     first = swimmer.get_first_name()
     last = swimmer.get_last_name()
