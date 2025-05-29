@@ -86,6 +86,16 @@ class Database:
             if s.get_usa_id_short() == short_id:
                 return s
 
+    def find_swimmer_with_long_id(self, long_id: str) -> swim.Swimmer | None:
+        """
+        Find swimmer in database who has id equal to short_id. Short id should
+        be in the new usa swimming id format.
+        """
+        assert len(long_id) == 14
+        for s in self.get_swimmers():
+            if s.get_usa_id_long() == long_id:
+                return s
+
     def find_swimmer_with_birthday(
         self,
         first_name: str,

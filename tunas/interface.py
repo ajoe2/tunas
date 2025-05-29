@@ -67,7 +67,8 @@ def print_menu_and_process_input() -> bool:
     user_input = input("Select mode > ")
     match user_input:
         case "1":
-            pass
+            print()
+            run_swimmer_mode()
         case "2":
             pass
         case "3":
@@ -85,6 +86,30 @@ def print_menu_and_process_input() -> bool:
             pass
     print()
     return True
+
+
+def run_swimmer_mode():
+    """
+    Swimmer mode main logic
+    """
+    print("Swimmer mode:")
+    code = input("Enter swimmer id > ")
+    swimmer = DATABASE.find_swimmer_with_long_id(code)
+    if swimmer == None:
+        print("Swimmer not found!")
+    else:
+        print(
+            f"Swimmer found! Displaying time history for "
+            + f"{swimmer.get_first_name()} {swimmer.get_last_name()} ({code})"
+        )
+        print()
+        meet_results = swimmer.get_meet_results()
+        meet_results.sort(key=lambda mr: mr.get_date_of_swim())
+        for mr in meet_results:
+            print(
+                f"{mr.get_event()}  {str(mr.get_final_time()):<7}  {str(mr.get_swimmer_age_class()):<2}  "
+                + f"{mr.get_meet().get_name():<30}  {mr.get_date_of_swim()}"
+            )
 
 
 def run_club_mode():
