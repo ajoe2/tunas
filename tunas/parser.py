@@ -433,6 +433,7 @@ class Cl2Processor:
         )
         if different_current_swimmer:
             swimmer_found_in_club = False
+            self.current_swimmer = None
 
             # First try searching using birthday
             if birthday is not None:
@@ -443,8 +444,6 @@ class Cl2Processor:
                         middle_initial,
                         last_name,
                         birthday,
-                        self.current_meet.get_start_date(),
-                        age_class,
                     )
                     if self.current_swimmer is not None:
                         swimmer_found_in_club = True
@@ -458,8 +457,6 @@ class Cl2Processor:
                         middle_initial,
                         last_name,
                         birthday,
-                        self.current_meet.get_start_date(),
-                        age_class,
                     )
 
             # Search for swimmer using id if not found

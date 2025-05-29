@@ -102,39 +102,25 @@ class Database:
         middle_initial: Optional[str],
         last_name: str,
         birthday: datetime.date,
-        meet_start_date: datetime.date,
-        age_class: str,
     ) -> Optional[swim.Swimmer]:
         old_id = dutil.generate_old_id(first_name, middle_initial, last_name, birthday)
         for swimmer in self.get_swimmers():
             swimmer_birthday = swimmer.get_birthday()
-            if swimmer_birthday != birthday:
+            if swimmer_birthday is None or swimmer_birthday != birthday:
                 continue
             swimmer_first_name = swimmer.get_first_name()
             swimmer_last_name = swimmer.get_last_name()
             swimmer_middle_initial = swimmer.get_middle_initial()
-            if swimmer_birthday is not None:
-                # Find swimmer by generating old ids and comparing hamming distance
-                swimmer_id = dutil.generate_old_id(
-                    swimmer_first_name,
-                    swimmer_middle_initial,
-                    swimmer_last_name,
-                    swimmer_birthday,
-                )
-                if dutil.hamming_distance(swimmer_id, old_id) <= 1:
-                    return swimmer
-            else:
-                # Find swimmers with the same name and age
-                if not age_class.isnumeric():
-                    return None
-                if (
-                    swimmer_first_name == first_name
-                    and swimmer_last_name == last_name
-                    and swimmer_middle_initial == middle_initial
-                    and int(age_class) >= swimmer.get_age_range(meet_start_date)[0]
-                    and int(age_class) <= swimmer.get_age_range(meet_start_date)[1]
-                ):
-                    return swimmer
+            
+            # Find swimmer by generating old ids and comparing hamming distance
+            swimmer_id = dutil.generate_old_id(
+                swimmer_first_name,
+                swimmer_middle_initial,
+                swimmer_last_name,
+                swimmer_birthday,
+            )
+            if dutil.hamming_distance(swimmer_id, old_id) <= 1:
+                return swimmer
         return None
 
     def find_club(self, club_code) -> Optional[swim.Club]:
