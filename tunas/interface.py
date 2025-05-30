@@ -42,7 +42,7 @@ def run_tunas_application():
     """
     print()
     print(TUNAS_LOGO)
-    load_database()
+    load()
     print(LOADING_EXIT_MESSAGE)
     print(LINE_BREAK)
     running = True
@@ -51,12 +51,18 @@ def run_tunas_application():
     print(PROGRAM_EXIT_MESSAGE)
 
 
-def load_database():
+def load():
     """
     Create and set global database variable.
     """
     global DATABASE
+    global RELAY_GENERATOR
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
+
+    # Load relay generator. Default club is SCSC.
+    default_club = DATABASE.find_club("SCSC")
+    assert default_club is not None
+    RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, default_club)
 
 
 def print_menu_and_process_input() -> bool:
@@ -76,7 +82,8 @@ def print_menu_and_process_input() -> bool:
             print()
             run_club_mode()
         case "4":
-            pass
+            print()
+            run_relay_mode()
         case "5":
             print()
             display_statistics()
@@ -134,6 +141,19 @@ def run_club_mode():
         # Print swimmer information
         for swimmer in club.get_swimmers():
             display_swimmer_information(swimmer)
+
+
+def run_relay_mode():
+    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.FREE_200_RELAY_SCY)
+    for relay in relays:
+        for swimmer in relay:
+            best_time = swimmer.get_best_meet_result(
+                database.sdif.Event.FREE_50_SCY
+            ).get_final_time()  # type: ignore
+            print(
+                f"{swimmer.get_full_name():<20}  {database.sdif.Event.FREE_50_SCY} {best_time}"
+            )
+        print()
 
 
 def display_statistics():

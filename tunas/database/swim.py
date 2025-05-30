@@ -502,6 +502,20 @@ class Swimmer:
             new_club.add_swimmer(self)
             self.set_club(new_club)
 
+    def get_best_meet_result(self, event: sdif.Event) -> Optional[IndividualMeetResult]:
+        """
+        Return meet result with fastest time for event
+        """
+        valid_results: list[IndividualMeetResult]
+        valid_results = []
+        for mr in self.get_meet_results():
+            if mr.get_event() == event:
+                valid_results.append(mr)
+        if len(valid_results) == 0:
+            return None
+        else:
+            return min(valid_results, key=lambda mr: mr.get_final_time())
+
 
 class Meet:
     """

@@ -466,6 +466,7 @@ class Event(enum.Enum):
     and course.
     """
 
+    # Individual events
     FREE_25_SCY = (25, Stroke.FREESTYLE, Course.SCY)
     FREE_50_SCY = (50, Stroke.FREESTYLE, Course.SCY)
     FREE_100_SCY = (100, Stroke.FREESTYLE, Course.SCY)
@@ -529,6 +530,23 @@ class Event(enum.Enum):
     FLY_200_LCM = (200, Stroke.BUTTERFLY, Course.LCM)
     IM_200_LCM = (200, Stroke.INDIVIDUAL_MEDLEY, Course.LCM)
     IM_400_LCM = (400, Stroke.INDIVIDUAL_MEDLEY, Course.LCM)
+
+    # Relay events
+    FREE_200_RELAY_SCY = (200, Stroke.FREESTYLE_RELAY, Course.SCY)
+    FREE_400_RELAY_SCY = (400, Stroke.FREESTYLE_RELAY, Course.SCY)
+    FREE_800_RELAY_SCY = (800, Stroke.FREESTYLE_RELAY, Course.SCY)
+    MEDLEY_200_RELAY_SCY = (200, Stroke.MEDLEY_RELAY, Course.SCY)
+    MEDLEY_400_RELAY_SCY = (400, Stroke.MEDLEY_RELAY, Course.SCY)
+    FREE_200_RELAY_SCM = (200, Stroke.FREESTYLE_RELAY, Course.SCM)
+    FREE_400_RELAY_SCM = (400, Stroke.FREESTYLE_RELAY, Course.SCM)
+    FREE_800_RELAY_SCM = (800, Stroke.FREESTYLE_RELAY, Course.SCM)
+    MEDLEY_200_RELAY_SCM = (200, Stroke.MEDLEY_RELAY, Course.SCM)
+    MEDLEY_400_RELAY_SCM = (400, Stroke.MEDLEY_RELAY, Course.SCM)
+    FREE_200_RELAY_LCM = (200, Stroke.FREESTYLE_RELAY, Course.LCM)
+    FREE_400_RELAY_LCM = (400, Stroke.FREESTYLE_RELAY, Course.LCM)
+    FREE_800_RELAY_LCM = (800, Stroke.FREESTYLE_RELAY, Course.LCM)
+    MEDLEY_200_RELAY_LCM = (200, Stroke.MEDLEY_RELAY, Course.LCM)
+    MEDLEY_400_RELAY_LCM = (400, Stroke.MEDLEY_RELAY, Course.LCM)
 
     def __str__(self) -> str:
         event_basic = f"{self.get_distance()} {self.get_stroke()}"
