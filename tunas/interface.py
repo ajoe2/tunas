@@ -180,16 +180,27 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
 
 
 def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
-    if mr.get_team_code() != None and mr.get_lsc() != None:
-        full_code = f"{str(mr.get_lsc())}-{mr.get_team_code()}"
-    elif mr.get_team_code() != None and mr.get_lsc() == None:
-        full_code = f"   {mr.get_team_code()}"
-    elif mr.get_team_code() == None and mr.get_lsc() != None:
-        full_code = f"{mr.get_lsc()}     "
+    event = mr.get_event()
+    final_time = mr.get_final_time()
+    age_class = mr.get_swimmer_age_class()
+    meet_name = mr.get_meet().get_name()
+    swim_date = mr.get_date_of_swim()
+
+    if age_class == None:
+        age_class = ""
+
+    # Calculate full code
+    lsc_code = mr.get_lsc()
+    team_code = mr.get_team_code()
+    if team_code == None:
+        team_code = ""
+    if lsc_code == None:
+        lsc_code = ""
     else:
-        full_code = ""
+        lsc_code = lsc_code.value
+    full_code = f"{lsc_code:>2}-{team_code:<4}"
+
     print(
-        f"{mr.get_event()}  {str(mr.get_final_time()):<8}  "
-        + f"{str(mr.get_swimmer_age_class()):<2}  "
-        + f"{mr.get_meet().get_name():<30}  {full_code:<7}  {mr.get_date_of_swim()}"
+        f"{event}  {str(final_time):<8}  {age_class:<2}  {meet_name:<30}  "
+        + f"{full_code:<7}  {swim_date}"
     )

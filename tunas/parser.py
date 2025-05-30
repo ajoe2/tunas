@@ -105,7 +105,7 @@ class Cl2Processor:
         city = city_str
         address_one = address_one_str
         start_date = datetime.date(start_date_year, start_date_month, start_date_day)
-        end_date = datetime.date(end_date_year, end_date_month, start_date_day)
+        end_date = datetime.date(end_date_year, end_date_month, end_date_day)
         if address_two_str != "":
             address_two = address_two_str
         else:
@@ -331,6 +331,11 @@ class Cl2Processor:
         usa_id_short = swimmer_short_id_str
         age_class = age_class_str
 
+        # Check to see if the usa_id_short is in the new id format
+        is_new_id = not util.is_old_id(
+            first_name, last_name, middle_initial, usa_id_short
+        )
+
         # Parse birthday
         if b_day_str and b_month_str and b_year_str:
             # If the birthday is in the data, we just read it.
@@ -436,16 +441,21 @@ class Cl2Processor:
         else:
             points_scored = float(points_scored_str)
 
-        # If swimmer is different from current_swimmer, find swimmer object
-        different_current_swimmer = (
+        # Before searching for the corresponding swimmer, we check if the
+        # most recent swimmer is what we are looking for. This improves performance
+        # significantly because we don't have to iterate over the pool of swimmers for
+        # every entry, which has O(n) runtime.
+        need_to_find_swimmer = (
             self.current_swimmer is None
             or self.current_swimmer.get_usa_id_short() != usa_id_short
         )
-        if different_current_swimmer:
-            swimmer_found_in_club = False
-            self.current_swimmer = None
+        if need_to_find_swimmer:
+            self.current_swimmer = None  # Reset current swimmer to none
+            found_in_club = False
 
-            # First try searching using birthday
+            # If the swimmer has a birthday, we first try searching using the
+            # name and birthday. This is mainly relevant for pre 2025 data since
+            # post 2025 data doesn't have birthdays.
             if birthday is not None:
                 # Search for swimmer in current club
                 if self.current_club is not None:
@@ -455,13 +465,13 @@ class Cl2Processor:
                         last_name,
                         birthday,
                     )
-                    if self.current_swimmer is not None:
-                        swimmer_found_in_club = True
-                    else:
-                        swimmer_found_in_club = False
+                if self.current_swimmer is not None:
+                    found_in_club = True
+                else:
+                    found_in_club = False
 
-                # Look in the database if not found
-                if not swimmer_found_in_club:
+                # If we didn't find the swimmer in the club, look through the database.
+                if not found_in_club:
                     self.current_swimmer = self.db.find_swimmer_with_birthday(
                         first_name,
                         middle_initial,
@@ -469,31 +479,36 @@ class Cl2Processor:
                         birthday,
                     )
 
-            # Search for swimmer using id if not found
+            # If we don't find the swimmer using their birthday (either doesn't exit
+            # or didn't have a birthday in the data entry), then we need to search
+            # using the usa swimming id.
             if self.current_swimmer is None:
                 # Search for swimmer in current club
                 if self.current_club is not None:
                     self.current_swimmer = self.current_club.find_swimmer_with_short_id(
                         usa_id_short
                     )
-                    if self.current_swimmer is not None:
-                        swimmer_found_in_club = True
-                    else:
-                        swimmer_found_in_club = False
+                if self.current_swimmer is not None:
+                    found_in_club = True
+                else:
+                    found_in_club = False
 
                 # If we didn't find the swimmer in the current_club, look in the database
-                if not swimmer_found_in_club:
+                if not found_in_club:
                     self.current_swimmer = self.db.find_swimmer_with_short_id(
                         usa_id_short
                     )
 
-            # Create swimmer if not found
-            found_swimmer = self.current_swimmer is not None
-            if not found_swimmer:
-                if util.is_old_id(first_name, last_name, middle_initial, usa_id_short):
-                    short_id = None
-                else:
+            # If we still didn't find the swimmer, then we need to create it.
+            if self.current_swimmer is None:
+                # Only set the short id if it is in the new id format.
+                if is_new_id:
                     short_id = usa_id_short
+                else:
+                    short_id = None
+
+                # Create swimmer
+                created_swimmer = True
                 self.current_swimmer = database.swim.Swimmer(
                     first_name,
                     last_name,
@@ -511,17 +526,19 @@ class Cl2Processor:
                 self.db.add_swimmer(self.current_swimmer)
                 if self.current_club is not None:
                     self.current_club.add_swimmer(self.current_swimmer)
+            else:
+                created_swimmer = False
+
+            # Check current_swimmer has been set properly
+            assert self.current_swimmer is not None
 
             # If we only found the swimmer in the database, move swimmer to current club
             if (
-                found_swimmer
-                and not swimmer_found_in_club
-                and self.current_club is not None
+                self.current_club is not None
+                and not found_in_club
+                and not created_swimmer
             ):
-                # Check current_swimmer has been set properly
-                assert self.current_swimmer is not None
-
-                # Update swimmer club only if it is outdated
+                # Update swimmer club if it is the newest data entry
                 date_most_recent_swim = self.current_swimmer.get_date_most_recent_swim()
                 if date_most_recent_swim == None or date_most_recent_swim < event_date:
                     self.current_swimmer.update_club(self.current_club)
@@ -529,9 +546,7 @@ class Cl2Processor:
         assert self.current_swimmer is not None
 
         # Update swimmer attributes
-        if self.current_swimmer.get_usa_id_short() == None and not util.is_old_id(
-            first_name, last_name, middle_initial, usa_id_short
-        ):
+        if self.current_swimmer.get_usa_id_short() == None and is_new_id:
             self.current_swimmer.set_usa_id_short(usa_id_short)
         if self.current_swimmer.get_middle_initial() == None and middle_initial != None:
             self.current_swimmer.set_middle_initial(middle_initial)
