@@ -102,8 +102,10 @@ def run_swimmer_mode():
     """
     print("Swimmer mode:")
     id = input("Enter swimmer id > ")
-    swimmer = DATABASE.find_swimmer_with_long_id(id)
-    if swimmer == None:
+    try:
+        swimmer = DATABASE.find_swimmer_with_long_id(id)
+        assert swimmer is not None
+    except:
         print("Swimmer not found!")
     else:
         print(f"Swimmer found! Displaying time history for {swimmer.get_full_name()}")
@@ -205,6 +207,7 @@ def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
     age_class = mr.get_swimmer_age_class()
     meet_name = mr.get_meet().get_name()
     swim_date = mr.get_date_of_swim()
+    session = mr.get_session()
 
     if age_class == None:
         age_class = ""
@@ -221,6 +224,6 @@ def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
     full_code = f"{lsc_code:>2}-{team_code:<4}"
 
     print(
-        f"{event}  {str(final_time):<8}  {age_class:<2}  {meet_name:<30}  "
+        f"{event}  {str(final_time):<8}  {session}  {age_class:<2}  {meet_name:<30}  "
         + f"{full_code:<7}  {swim_date}"
     )
