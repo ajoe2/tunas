@@ -1,5 +1,5 @@
 """
-Contains custom time class used to represent swimming times.
+Custom time class for representing meet result times + associated helper functions.
 """
 
 from __future__ import annotations  # Enable future annotations
@@ -11,10 +11,11 @@ def create_time_from_str(time_str: str) -> Time:
     Create and return a time object corresponding to time_str which should be in
     mm:ss.hh format.
     """
+    # Set default values
     minute_str, second_str, hundredth_str = "0", "0", "0"
     minute, second, hundredth = 0, 0, 0
 
-    # Parse string
+    # Parse time_str and return time object
     first_split = time_str.split(":")
     if len(first_split) == 2:
         minute_str = first_split[0]
@@ -29,7 +30,6 @@ def create_time_from_str(time_str: str) -> Time:
         hundredth = int(hundredth_str)
     except:
         raise Exception(f"Invalid time string: '{time_str}'")
-
     return Time(minute, second, hundredth)
 
 
@@ -40,9 +40,9 @@ class Time:
 
     def __init__(
         self,
-        minute=0,
-        second=0,
-        hundredth=0,
+        minute: int = 0,
+        second: int = 0,
+        hundredth: int = 0,
     ) -> None:
         """
         Create a time oject. There are two ways to create a time object:
@@ -74,11 +74,7 @@ class Time:
         >>> str(t3) == ""
         True
         """
-        if (
-            self.get_hundredth() == 0
-            and self.get_minute() == 0
-            and self.get_second() == 0
-        ):
+        if self == Time(0, 0, 0):
             return ""
         m = str(self.get_minute())
         s = str(self.get_second()).zfill(2)
@@ -99,7 +95,13 @@ class Time:
         >>> t2
         Time(0, 32, 10)
         """
-        return f"Time({self.minute}, {self.second}, {self.hundredth})"
+        return f"Time({self.get_minute()}, {self.get_second()}, {self.get_hundredth()})"
+
+    def __hash__(self) -> int:
+        """
+        Return time hash.
+        """
+        return self.get_minute() + self.get_second() + self.get_hundredth()
 
     def __gt__(self, other_time: Optional[Time]) -> bool:
         """

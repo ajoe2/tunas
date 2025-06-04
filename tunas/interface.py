@@ -10,7 +10,7 @@ import relaygen
 
 # Useful paths
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
-MEET_DATA_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/meetData"
+MEET_DATA_PATH = os.path.join(os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "meetData")
 
 # Global database and session information
 DATABASE: database.Database
@@ -149,12 +149,10 @@ def run_club_mode():
 
 
 def run_relay_mode():
-    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.MEDLEY_200_RELAY_SCY)
+    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.FREE_200_RELAY_SCY)
     for relay in relays:
         for swimmer in relay:
-            print(
-                f"{swimmer.get_full_name():<20}"
-            )
+            print(f"{swimmer.get_full_name():<20}")
         print()
 
 
