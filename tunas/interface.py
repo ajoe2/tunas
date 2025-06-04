@@ -8,15 +8,15 @@ import parser
 import database
 import relaygen
 
-# Paths
+# Useful paths
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
 MEET_DATA_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/meetData"
 
-# Global database and relay generator
+# Global database and session information
 DATABASE: database.Database
 RELAY_GENERATOR: relaygen.RelayGenerator
 
-# String constatns
+# String constants
 TUNAS_LOGO = (
     "#############################################################\n"
     + "##########           Tunas: Data Analysis          ##########\n"
@@ -32,8 +32,8 @@ MAIN_MENU = (
     + "Quit (q/Q)\n"
 )
 LINE_BREAK = "-------------------------------------------------------------\n"
-LOADING_EXIT_MESSAGE = "Finished processing files!"
-PROGRAM_EXIT_MESSAGE = "Program exited!"
+FINISHED_LOADING = "Finished processing files!"
+PROGRAM_EXIT = "Program exited!"
 
 
 def run_tunas_application():
@@ -42,26 +42,29 @@ def run_tunas_application():
     """
     print()
     print(TUNAS_LOGO)
-    load()
-    print(LOADING_EXIT_MESSAGE)
+    load_data()
+    print(FINISHED_LOADING)
     print(LINE_BREAK)
     running = True
     while running:
         running = print_menu_and_process_input()
-    print(PROGRAM_EXIT_MESSAGE)
+    print(PROGRAM_EXIT)
 
 
-def load():
+def load_data():
     """
     Create and set global database variable.
     """
     global DATABASE
     global RELAY_GENERATOR
+
+    # Load database
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
 
     # Load relay generator. Default club is SCSC.
-    default_club = DATABASE.find_club("SCSC")
-    assert default_club is not None
+    default = "SCSC"
+    default_club = DATABASE.find_club(default)
+    assert default_club is not None  # SCSC should exist
     RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, default_club)
 
 
@@ -146,14 +149,11 @@ def run_club_mode():
 
 
 def run_relay_mode():
-    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.FREE_200_RELAY_SCY)
+    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.MEDLEY_200_RELAY_SCY)
     for relay in relays:
         for swimmer in relay:
-            best_time = swimmer.get_best_meet_result(
-                database.sdif.Event.FREE_50_SCY
-            ).get_final_time()  # type: ignore
             print(
-                f"{swimmer.get_full_name():<20}  {database.sdif.Event.FREE_50_SCY} {best_time}"
+                f"{swimmer.get_full_name():<20}"
             )
         print()
 
