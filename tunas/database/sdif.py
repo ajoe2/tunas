@@ -337,6 +337,13 @@ class Sex(enum.Enum):
     def __str__(self) -> str:
         return self.value
 
+    def get_name(self) -> str:
+        """
+        Get standard name representation of sex.
+        """
+        lower = self.name.lower()
+        return lower[0].upper() + lower[1:]
+
 
 class Stroke(enum.Enum):
     """

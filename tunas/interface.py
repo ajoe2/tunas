@@ -42,6 +42,15 @@ RELAY_MENU = (
     + "8) Include swimmer\n"
     + "Back (b/B)\n"
 )
+RELAY_SETTINGS_MENU = (
+    "1) Club\n"
+    + "2) Age range\n"
+    + "3) Sex\n"
+    + "4) Course\n"
+    + "5) Date\n"
+    + "6) Num relays\n"
+    + "Back (b/B)\n"
+)
 LINE_BREAK = "-------------------------------------------------------------\n"
 FINISHED_LOADING = "Finished processing files!"
 PROGRAM_EXIT = "Program exited!"
@@ -169,8 +178,7 @@ def run_relay_mode():
         match selection:
             case "1":
                 print()
-                print("Not implemented yet!")
-                print()
+                run_relay_settings()
             case "2":
                 dist = 200
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
@@ -228,6 +236,72 @@ def run_relay_mode():
                 break
             case _:
                 print("Invalid selection!")
+
+
+def run_relay_settings():
+    while True:
+        cur_club = RELAY_GENERATOR.get_club()
+        cur_min_age, cur_max_age = RELAY_GENERATOR.get_age_range()
+        cur_sex = RELAY_GENERATOR.get_sex()
+        cur_course = RELAY_GENERATOR.get_course()
+        cur_date = RELAY_GENERATOR.get_relay_date()
+        cur_num_relays = RELAY_GENERATOR.get_num_relays()
+        query_settings = (
+            f"Query settings:\n"
+            + f" * {"Club:":<12} {cur_club.get_lsc()}-{cur_club.get_team_code()}\n"
+            + f" * {"Age range:":<12} {cur_min_age}-{cur_max_age}\n"
+            + f" * {"Sex:":<12} {cur_sex.get_name()}\n"
+            + f" * {"Course:":<12} {cur_course}\n"
+            + f" * {"Date::":<12} {cur_date}\n"
+            + f" * {"Num relays:":<12} {cur_num_relays}\n"
+        )
+
+        print(query_settings)
+        print(RELAY_SETTINGS_MENU)
+        selection = input("Selection > ")
+        match selection:
+            case "1":
+                pass
+            case "2":
+                pass
+            case "3":
+                selection = input("\n1) Female\n2) Male\n\nSelection > ")
+                if not (selection == "1" or selection == "2"):
+                    print("Invalid selection!")
+                    print()
+                    continue
+                if selection == "1":
+                    new_sex = database.sdif.Sex.FEMALE
+                else:
+                    new_sex = database.sdif.Sex.MALE
+                RELAY_GENERATOR.set_sex(new_sex)
+                print(f"Success! New sex set to: {new_sex.get_name()}")
+                print()
+            case "4":
+                pass
+            case "5":
+                pass
+            case "6":
+                new_num = input("Number of relays > ")
+                try:
+                    new_num = int(new_num)
+                    assert new_num > 0
+                except:
+                    print(
+                        f"Invalid selection! Make sure the number of relays is an "
+                        + f"integer greater than zero."
+                    )
+                    print()
+                    continue
+                RELAY_GENERATOR.set_num_relays(new_num)
+                print(f"Success! Number of relays set to: {new_num}")
+                print()
+            case "b" | "B":
+                print()
+                break
+            case _:
+                print("Invalid selection!")
+                print()
 
 
 def display_statistics():
