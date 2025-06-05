@@ -7,7 +7,9 @@ import enum
 
 # Data path
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
-TIME_STANDARDS_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH) + "/data/timeStandards"
+TIME_STANDARDS_PATH = os.path.join(
+    os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "timeStandards"
+)
 
 
 class TimeStandard(enum.Enum):
@@ -22,5 +24,5 @@ class TimeStandard(enum.Enum):
     SECT = "Sectionals"
     FUT = "Futures"
     JNAT = "Junior Nationals"
-    NAT = "Nations"
+    NAT = "Nationals"
     OT = "Olympic Trials"
