@@ -428,20 +428,14 @@ class Swimmer:
         min_age: int
         max_age: int
 
-        birthday_range = self.get_birthday_range()
-        if birthday_range != None:
-            # Calculate min and max age
-            birthday_min, birthday_max = birthday_range
-            max_age = dutil.calculate_age(birthday_min, on_date)
-            min_age = dutil.calculate_age(birthday_max, on_date)
-        else:
-            # Set min and max age to defaults
-            min_age, max_age = 1, 99
+        birthday_min, birthday_max = self.get_birthday_range()
+        max_age = dutil.calculate_age(birthday_min, on_date)
+        min_age = dutil.calculate_age(birthday_max, on_date)
 
         assert max_age >= min_age
         return (min_age, max_age)
 
-    def get_birthday_range(self) -> Optional[tuple[datetime.date, datetime.date]]:
+    def get_birthday_range(self) -> tuple[datetime.date, datetime.date]:
         # If the swimmer has a birthday, then the range is just the birthday.
         birthday = self.get_birthday()
         if birthday is not None:
@@ -455,9 +449,19 @@ class Swimmer:
             if swimmer_age_class != None and swimmer_age_class.isnumeric():
                 age_records.append((meet_start_date, int(swimmer_age_class)))
 
-        # We can't guess the birthday without age records
+        # If there are no age records, we give a large range
         if len(age_records) == 0:
-            return None
+            min_birth = datetime.date(
+                datetime.date.today().year - 99,
+                datetime.date.today().month,
+                datetime.date.today().day,
+            )
+            max_birth = datetime.date(
+                datetime.date.today().year - 1,
+                datetime.date.today().month,
+                datetime.date.today().day,
+            )
+            return (min_birth, max_birth)
 
         # Set birthday min and birthday max
         birthday_min = datetime.date(

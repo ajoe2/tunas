@@ -4,15 +4,15 @@ User interface logic for tunas application.
 
 import os
 
-import parser
 import database
+import parser
 import relaygen
 
-# Useful paths
+# Important paths
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
 MEET_DATA_PATH = os.path.join(os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "meetData")
 
-# Global database and session information
+# Global database and session objects
 DATABASE: database.Database
 RELAY_GENERATOR: relaygen.RelayGenerator
 
@@ -60,7 +60,6 @@ def run_tunas_application():
     """
     Main logic for tunas application.
     """
-    print()
     print(TUNAS_LOGO)
     load_data()
     print(FINISHED_LOADING)
@@ -82,10 +81,9 @@ def load_data():
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
 
     # Load relay generator. Default club is SCSC.
-    default = "SCSC"
-    default_club = DATABASE.find_club(default)
-    assert default_club is not None  # SCSC should exist
-    RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, default_club)
+    scsc = DATABASE.find_club("SCSC")
+    assert scsc is not None  # SCSC should exist
+    RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, scsc)
 
 
 def print_menu_and_process_input() -> bool:
@@ -113,9 +111,9 @@ def print_menu_and_process_input() -> bool:
         case "q" | "Q":
             return False
         case _:
-            print(f"Invalid input: '{user_input}'\n" + "Please try again!")
+            print(f"Invalid selection: '{user_input}'.")
+            print()
             pass
-    print()
     return True
 
 
@@ -134,9 +132,12 @@ def run_swimmer_mode():
         print(f"Swimmer found! Displaying time history for {swimmer.get_full_name()}")
         print()
         meet_results = swimmer.get_meet_results()
-        meet_results.sort(key=lambda mr: (mr.get_event(), mr.get_date_of_swim()))
+        meet_results.sort(
+            key=lambda mr: (mr.get_event(), mr.get_date_of_swim(), mr.get_session())
+        )
         for mr in meet_results:
             display_ind_meet_result_info(mr)
+    print()
 
 
 def run_club_mode():
@@ -147,25 +148,21 @@ def run_club_mode():
     code = input("Enter club code (ex. SCSC) > ")
     try:
         club = DATABASE.find_club(code)
+        assert club is not None
     except:
-        club = None
-    if club == None:
         print(f"Could not find club with club code {code}")
     else:
         print("Club found! Displaying swimmers...")
         print()
-        swimmers = club.get_swimmers()
 
-        # Remove swimmers without a birthday range
-        for swimmer in swimmers:
-            if swimmer.get_birthday_range() == None:
-                swimmers.remove(swimmer)
-        # Sort swimmer by birthday
-        swimmers.sort(key=lambda s: s.get_birthday_range()[0], reverse=True)  # type: ignore
+        # Sort swimmers by birthday
+        swimmers = club.get_swimmers()
+        swimmers.sort(key=lambda s: s.get_birthday_range()[0], reverse=True)
 
         # Print swimmer information
         for swimmer in club.get_swimmers():
             display_swimmer_information(swimmer)
+    print()
 
 
 def run_relay_mode():
@@ -184,8 +181,8 @@ def run_relay_mode():
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
                 event = database.sdif.Event((dist, stroke, course))
-
                 relays = RELAY_GENERATOR.generate_relays(event)
+
                 print()
                 display_relays(relays, event)
             case "3":
@@ -193,8 +190,8 @@ def run_relay_mode():
                 stroke = database.sdif.Stroke.MEDLEY_RELAY
                 course = RELAY_GENERATOR.get_course()
                 event = database.sdif.Event((dist, stroke, course))
-
                 relays = RELAY_GENERATOR.generate_relays(event)
+
                 print()
                 display_relays(relays, event)
             case "4":
@@ -202,8 +199,8 @@ def run_relay_mode():
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
                 event = database.sdif.Event((dist, stroke, course))
-
                 relays = RELAY_GENERATOR.generate_relays(event)
+
                 print()
                 display_relays(relays, event)
             case "5":
@@ -211,8 +208,8 @@ def run_relay_mode():
                 stroke = database.sdif.Stroke.MEDLEY_RELAY
                 course = RELAY_GENERATOR.get_course()
                 event = database.sdif.Event((dist, stroke, course))
-
                 relays = RELAY_GENERATOR.generate_relays(event)
+
                 print()
                 display_relays(relays, event)
             case "6":
@@ -220,8 +217,8 @@ def run_relay_mode():
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
                 event = database.sdif.Event((dist, stroke, course))
-
                 relays = RELAY_GENERATOR.generate_relays(event)
+
                 print()
                 display_relays(relays, event)
             case "7":
@@ -233,9 +230,11 @@ def run_relay_mode():
                 print("Not implemented yet!")
                 print()
             case "b" | "B":
+                print()
                 break
             case _:
                 print("Invalid selection!")
+                print()
 
 
 def run_relay_settings():
@@ -306,34 +305,63 @@ def run_relay_settings():
 
 def display_statistics():
     print("Statistics:")
-    print(f"Number of clubs: {len(DATABASE.get_clubs())}")
-    print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
-    print(f"Number of meets: {len(DATABASE.get_meets())}")
-    print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
+    print(f"Number of clubs: {len(DATABASE.get_clubs()):,}")
+    print(f"Number of swimmers: {len(DATABASE.get_swimmers()):,}")
+    print(f"Number of meets: {len(DATABASE.get_meets()):,}")
+    print(f"Number of meet results: {len(DATABASE.get_meet_results()):,}")
+    print()
 
 
 def display_relays(
     relays: list[list[database.swim.Swimmer]], event: database.sdif.Event
 ):
     leg_dist = event.get_distance() // 4
-    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
-        relay_type = "Free"
-        strokes = ["Free", "Free", "Free", "Free"]
-    else:
-        relay_type = "Medley"
-        strokes = ["Back", "Breast", "Fly", "Free"]
     course = event.get_course()
+    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
+        relay_stroke = database.sdif.Stroke.FREESTYLE_RELAY
+        leg_strokes = relaygen.FREESTYLE_RELAY_STROKES
+    else:
+        relay_stroke = database.sdif.Stroke.MEDLEY_RELAY
+        leg_strokes = relaygen.MEDLEY_RELAY_STROKES
+    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
 
     curr_relay_letter = "A"
     for relay in relays:
-        print(f"4x{leg_dist} {relay_type} {course} Relay: '{curr_relay_letter}'")
-        if relay == []:
-            print("Not enough swimmers!")
-        else:
+        total_time = str(relaygen.get_relay_time(relay, event))
+        print(
+            f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}]"
+        )
+        if relay is not []:
             for i in range(4):
-                stroke = strokes[i]
+                leg_event = leg_events[i]
                 swimmer = relay[i]
-                print(f"{stroke:<6} {swimmer.get_full_name()}")
+                club = RELAY_GENERATOR.get_club()
+                mr = swimmer.get_best_meet_result(leg_event)
+                assert mr is not None
+
+                # Pull data
+                full_name = swimmer.get_full_name()
+                usa_id = swimmer.get_usa_id_long()
+                stroke = str(leg_event.get_stroke())
+                meet_name = mr.get_meet().get_name()
+                best_time = str(mr.get_final_time())
+
+                # Get full club code
+                if club.get_lsc() is not None:
+                    full_club_code = f"{club.get_lsc()}-{club.get_team_code()}"
+                else:
+                    full_club_code = club.get_team_code()
+
+                # Condense age range if possible
+                age_range = swimmer.get_age_range(RELAY_GENERATOR.get_relay_date())
+                if age_range[0] == age_range[1]:
+                    age_range = age_range[0]
+
+                print(
+                    f" {stroke:<6}  {full_name:<20}  {age_range:<8}  {usa_id:<14}  {full_club_code:<7}  {best_time:<8}  {meet_name:<30}"
+                )
+        else:
+            print("Not enough swimmers!")
         print()
         curr_relay_letter = chr(ord(curr_relay_letter) + 1)
 

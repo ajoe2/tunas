@@ -22,6 +22,34 @@ MEDLEY_RELAY_STROKES = [
 ]
 
 
+def get_relay_time(
+    relay: list[database.swim.Swimmer], event: database.sdif.Event
+) -> database.stime.Time:
+    """
+    Calculate relay time using swimmer and event information.
+    """
+    assert len(relay) == 4
+
+    # Get leg events
+    leg_dist = event.get_distance() // 4
+    course = event.get_course()
+    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
+        leg_strokes = FREESTYLE_RELAY_STROKES
+    else:
+        leg_strokes = MEDLEY_RELAY_STROKES
+    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
+
+    # Calculate time
+    total_time = database.stime.Time()
+    for i in range(4):
+        swimmer = relay[i]
+        mr = swimmer.get_best_meet_result(leg_events[i])
+        assert mr is not None
+        total_time += mr.get_final_time()
+
+    return total_time
+
+
 class RelayGenerator:
     """
     Generate optimal relay assignments.
