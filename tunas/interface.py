@@ -31,6 +31,17 @@ MAIN_MENU = (
     + "5) Database statistics\n"
     + "Quit (q/Q)\n"
 )
+RELAY_MENU = (
+    "1) Settings\n"
+    + "2) 4 x 50 Free\n"
+    + "3) 4 x 50 Medley\n"
+    + "4) 4 x 100 Free\n"
+    + "5) 4 x 100 Medley\n"
+    + "6) 4 x 200 Free\n"
+    + "7) Exclude swimmer\n"
+    + "8) Include swimmer\n"
+    + "Back (b/B)\n"
+)
 LINE_BREAK = "-------------------------------------------------------------\n"
 FINISHED_LOADING = "Finished processing files!"
 PROGRAM_EXIT = "Program exited!"
@@ -149,11 +160,74 @@ def run_club_mode():
 
 
 def run_relay_mode():
-    relays = RELAY_GENERATOR.generate_relays(database.sdif.Event.FREE_200_RELAY_SCY)
-    for relay in relays:
-        for swimmer in relay:
-            print(f"{swimmer.get_full_name():<20}")
-        print()
+    """
+    Relay mode main loop.
+    """
+    while True:
+        print(RELAY_MENU)
+        selection = input("Selection > ")
+        match selection:
+            case "1":
+                print()
+                print("Not implemented yet!")
+                print()
+            case "2":
+                dist = 200
+                stroke = database.sdif.Stroke.FREESTYLE_RELAY
+                course = RELAY_GENERATOR.get_course()
+                event = database.sdif.Event((dist, stroke, course))
+
+                relays = RELAY_GENERATOR.generate_relays(event)
+                print()
+                display_relays(relays, event)
+            case "3":
+                dist = 200
+                stroke = database.sdif.Stroke.MEDLEY_RELAY
+                course = RELAY_GENERATOR.get_course()
+                event = database.sdif.Event((dist, stroke, course))
+
+                relays = RELAY_GENERATOR.generate_relays(event)
+                print()
+                display_relays(relays, event)
+            case "4":
+                dist = 400
+                stroke = database.sdif.Stroke.FREESTYLE_RELAY
+                course = RELAY_GENERATOR.get_course()
+                event = database.sdif.Event((dist, stroke, course))
+
+                relays = RELAY_GENERATOR.generate_relays(event)
+                print()
+                display_relays(relays, event)
+            case "5":
+                dist = 400
+                stroke = database.sdif.Stroke.MEDLEY_RELAY
+                course = RELAY_GENERATOR.get_course()
+                event = database.sdif.Event((dist, stroke, course))
+
+                relays = RELAY_GENERATOR.generate_relays(event)
+                print()
+                display_relays(relays, event)
+            case "6":
+                dist = 800
+                stroke = database.sdif.Stroke.FREESTYLE_RELAY
+                course = RELAY_GENERATOR.get_course()
+                event = database.sdif.Event((dist, stroke, course))
+
+                relays = RELAY_GENERATOR.generate_relays(event)
+                print()
+                display_relays(relays, event)
+            case "7":
+                print()
+                print("Not implemented yet!")
+                print()
+            case "8":
+                print()
+                print("Not implemented yet!")
+                print()
+            case "b" | "B":
+                break
+            case _:
+                print("Invalid selection!")
 
 
 def display_statistics():
@@ -162,6 +236,32 @@ def display_statistics():
     print(f"Number of swimmers: {len(DATABASE.get_swimmers())}")
     print(f"Number of meets: {len(DATABASE.get_meets())}")
     print(f"Number of meet results: {len(DATABASE.get_meet_results())}")
+
+
+def display_relays(
+    relays: list[list[database.swim.Swimmer]], event: database.sdif.Event
+):
+    leg_dist = event.get_distance() // 4
+    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
+        relay_type = "Free"
+        strokes = ["Free", "Free", "Free", "Free"]
+    else:
+        relay_type = "Medley"
+        strokes = ["Back", "Breast", "Fly", "Free"]
+    course = event.get_course()
+
+    curr_relay_letter = "A"
+    for relay in relays:
+        print(f"4x{leg_dist} {relay_type} {course} Relay: '{curr_relay_letter}'")
+        if relay == []:
+            print("Not enough swimmers!")
+        else:
+            for i in range(4):
+                stroke = strokes[i]
+                swimmer = relay[i]
+                print(f"{stroke:<6} {swimmer.get_full_name()}")
+        print()
+        curr_relay_letter = chr(ord(curr_relay_letter) + 1)
 
 
 def display_swimmer_information(swimmer: database.swim.Swimmer):
