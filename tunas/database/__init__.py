@@ -123,8 +123,8 @@ class Database:
                 return swimmer
         return None
 
-    def find_club(self, club_code) -> Optional[swim.Club]:
-        assert len(club_code) <= 4
+    def find_club(self, club_code: str) -> Optional[swim.Club]:
+        assert type(club_code) == str and len(club_code) <= 4
         for c in self.get_clubs():
             if c.get_team_code() == club_code:
                 return c

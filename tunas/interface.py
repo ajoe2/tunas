@@ -3,6 +3,7 @@ User interface logic for tunas application.
 """
 
 import os
+import datetime
 
 import database
 import parser
@@ -260,9 +261,36 @@ def run_relay_settings():
         selection = input("Selection > ")
         match selection:
             case "1":
-                pass
+                code = input("New club code > ")
+                try:
+                    new_club = DATABASE.find_club(code)
+                    assert new_club is not None
+                except:
+                    print("Club not found!")
+                    print()
+                else:
+                    RELAY_GENERATOR.set_club(new_club)
+                    name = new_club.get_full_name()
+                    if new_club.get_lsc() is not None:
+                        team_code = f"{new_club.get_lsc()}-{new_club.get_team_code()}"
+                    else:
+                        team_code = new_club.get_team_code()
+                    print(f"Success! New club set to: {name} ({team_code})")
+                    print()
             case "2":
-                pass
+                min_age = input("New min age > ")
+                max_age = input("New max age > ")
+                try:
+                    min_age = int(min_age)
+                    max_age = int(max_age)
+                    assert min_age <= max_age
+                except:
+                    print("Invalid selection!")
+                    print()
+                else:
+                    RELAY_GENERATOR.set_age_range((min_age, max_age))
+                    print(f"Success! Age range set to ({min_age}, {max_age})")
+                    print()
             case "3":
                 selection = input("\n1) Female\n2) Male\n\nSelection > ")
                 if not (selection == "1" or selection == "2"):
@@ -277,9 +305,33 @@ def run_relay_settings():
                 print(f"Success! New sex set to: {new_sex.get_name()}")
                 print()
             case "4":
-                pass
+                selection = input("\n1) SCY\n2) SCM\n3) LCM\n\nSelection > ")
+                if not selection in ["1", "2", "3"]:
+                    print("Invalid selection!")
+                    print()
+                    continue
+                if selection == "1":
+                    new_course = database.sdif.Course.SCY
+                elif selection == "2":
+                    new_course = database.sdif.Course.SCM
+                else:
+                    new_course = database.sdif.Course.LCM
+                RELAY_GENERATOR.set_course(new_course)
+                print(f"Success! New course set to: {new_course}")
+                print()
             case "5":
-                pass
+                try:
+                    new_year = int(input("Enter year > "))
+                    new_month = int(input("Enter month > "))
+                    new_day = int(input("Enter day > "))
+                    new_date = datetime.date(new_year, new_month, new_day)
+                except:
+                    print("Invalid selection!")
+                    print()
+                else:
+                    RELAY_GENERATOR.set_relay_date(new_date)
+                    print(f"Success! New relay date set to: {new_date}")
+                    print()
             case "6":
                 new_num = input("Number of relays > ")
                 try:
@@ -327,11 +379,14 @@ def display_relays(
 
     curr_relay_letter = "A"
     for relay in relays:
-        total_time = str(relaygen.get_relay_time(relay, event))
+        if relay != []:
+            total_time = str(relaygen.get_relay_time(relay, event))
+        else:
+            total_time = "-"
         print(
             f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}]"
         )
-        if relay is not []:
+        if relay != []:
             for i in range(4):
                 leg_event = leg_events[i]
                 swimmer = relay[i]
