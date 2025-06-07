@@ -9,8 +9,8 @@ import database
 
 def standardize_course(course_str: str) -> str:
     """
-    Given a numerical or alphabetic course string (ex. 'S' or '1'), return the
-    numerical representation.
+    Return numeric representation of course string. Course string can be
+    alphabetic or numeric.
     """
     alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
     if course_str in alpha_to_num_course.keys():
@@ -55,7 +55,7 @@ def is_old_id(
     usa_id: str,
 ) -> bool:
     """
-    Check if usa_id is in the old id format.
+    Check if usa_id is in the old USA Swimming id format.
     """
     # usa_id should be 12 or 14 characters long
     assert len(usa_id) == 12 or len(usa_id) == 14

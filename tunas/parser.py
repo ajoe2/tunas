@@ -45,6 +45,12 @@ class Cl2Processor:
         self.current_swimmer = None
 
     def read_file(self, path: str):
+        """
+        Load data from file specified at path into self.db.
+        """
+        assert os.path.isfile(path)
+        assert path.endswith(".cl2")
+
         with open(path, "r") as file:
             for line in file:
                 header = line[:2]
@@ -77,6 +83,9 @@ class Cl2Processor:
                         self.process_z0(line)
 
     def process_b1(self, line: str) -> None:
+        """
+        Process B1 line in cl2 file.
+        """
         org_code_str = line[2].strip()
         name_str = line[11:41].strip()
         address_one_str = line[41:63].strip()
@@ -156,7 +165,9 @@ class Cl2Processor:
         self.db.add_meet(new_meet)
 
     def process_c1(self, line: str) -> None:
-        # The current meet should be set before we reach a c1 line
+        """
+        Process C1 line in cl2 file.
+        """
         assert self.current_meet is not None
 
         org_code_str = line[2].strip()
@@ -283,6 +294,9 @@ class Cl2Processor:
         self.current_club = club
 
     def process_d0(self, line: str) -> None:
+        """
+        Process D0 line in cl2 file.
+        """
         assert self.current_meet is not None
 
         ignored_results = ["NT", "NS", "DNF", "DQ", "SCR"]
@@ -443,19 +457,17 @@ class Cl2Processor:
 
         # Before searching for the corresponding swimmer, we check if the
         # most recent swimmer is what we are looking for. This improves performance
-        # significantly because we don't have to iterate over the pool of swimmers for
+        # because we don't have to iterate over the pool of swimmers for
         # every entry, which has O(n) runtime.
         need_to_find_swimmer = (
             self.current_swimmer is None
             or self.current_swimmer.get_usa_id_short() != usa_id_short
         )
         if need_to_find_swimmer:
-            self.current_swimmer = None  # Reset current swimmer to none
+            self.current_swimmer = None  # Reset current swimmer to None
             found_in_club = False
 
-            # If the swimmer has a birthday, we first try searching using the
-            # name and birthday. This is mainly relevant for pre 2025 data since
-            # post 2025 data doesn't have birthdays.
+            # If the swimmer has a birthday, we search using the name and birthday.
             if birthday is not None:
                 # Search for swimmer in current club
                 if self.current_club is not None:
@@ -685,6 +697,9 @@ class Cl2Processor:
                     self.current_club.add_meet_result(mr)
 
     def process_d3(self, line: str) -> None:
+        """
+        Process D3 line in cl2 file.
+        """
         # If there was an error reading the d0 line, return.
         if self.current_swimmer is None:
             return
@@ -710,6 +725,9 @@ class Cl2Processor:
             self.current_swimmer.set_preferred_first_name(preferred_first_name)
 
     def process_z0(self, line: str) -> None:
+        """
+        Process Z0 line in cl2 file.
+        """
         self.current_meet = None
         self.current_club = None
         self.current_swimmer = None

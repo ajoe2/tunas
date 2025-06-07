@@ -26,18 +26,14 @@ def get_relay_leg_events(relay_event: database.sdif.Event) -> list[database.sdif
     """
     Return leg events for a given relay event.
     """
-    assert (
-        relay_event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
-        or relay_event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
-    )
+    is_free_relay = relay_event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
+    is_medley_relay = relay_event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
+    assert is_free_relay or is_medley_relay
 
     leg_dist = relay_event.get_distance() // 4
     course = relay_event.get_course()
-    if relay_event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
-        leg_strokes = FREESTYLE_RELAY_STROKES
-    else:
-        leg_strokes = MEDLEY_RELAY_STROKES
-    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
+    leg_strokes = FREESTYLE_RELAY_STROKES if is_free_relay else MEDLEY_RELAY_STROKES
+    leg_events = [database.sdif.Event((leg_dist, strk, course)) for strk in leg_strokes]
     return leg_events
 
 
@@ -46,23 +42,23 @@ def get_relay_time(
     event: database.sdif.Event,
 ) -> database.stime.Time:
     """
-    Calculate relay time using swimmer and event information.
+    Calculate total relay time.
     """
     assert len(relay) == 4
 
     leg_events = get_relay_leg_events(event)
-    total_time = database.stime.Time()
+    total_time = database.stime.Time(0, 0, 0)
     for i in range(4):
         swimmer = relay[i]
-        mr = swimmer.get_best_meet_result(leg_events[i])
-        assert mr is not None
-        total_time += mr.get_final_time()
+        best_mr = swimmer.get_best_meet_result(leg_events[i])
+        assert best_mr is not None  # Every swimmer should have a valid time.
+        total_time += best_mr.get_final_time()
     return total_time
 
 
 class RelayGenerator:
     """
-    Generate optimal relay assignments.
+    Generate optimal relay assignments and maintain settings.
     """
 
     def __init__(
@@ -72,7 +68,7 @@ class RelayGenerator:
         relay_date: datetime.date = datetime.date.today(),
         num_relays: int = 2,
         sex: database.sdif.Sex = database.sdif.Sex.FEMALE,
-        course: database.sdif.Course = database.sdif.Course.SCY,
+        course: database.sdif.Course = database.sdif.Course.LCM,
         age_range: tuple[int, int] = (7, 10),
     ) -> None:
         self.set_database(db)
@@ -142,24 +138,26 @@ class RelayGenerator:
         """
         Generate relays based on the current settings.
         """
-        assert (
-            event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
-            or event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
-        )
+        is_free_relay = event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
+        is_medley_relay = event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
+        assert is_free_relay or is_medley_relay
+
+        # Get leg information, min/max age, and eligible swimmers
+        leg_events = get_relay_leg_events(event)
+        min_age, max_age = self.get_age_range()
+        eligible_swimmers = self.get_club().get_swimmers()
 
         # Find valid swimmers for each leg
-        leg_events = get_relay_leg_events(event)
         best_le1: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le2: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le3: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le4: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
-        min_age, max_age = self.get_age_range()
-        eligible_swimmers = self.get_club().get_swimmers()
-
         for swimmer in eligible_swimmers:
             if swimmer.get_sex() != self.get_sex():
                 continue
             s_min_age, s_max_age = swimmer.get_age_range(self.get_relay_date())
+            # If swimmer is the right age and has a meet result for the given leg 
+            # event, add them to the list of eligible swimmers.
             if not s_min_age > max_age and not s_max_age < min_age:
                 le1, le2, le3, le4 = leg_events
                 best_le1_mr = swimmer.get_best_meet_result(le1)
@@ -185,7 +183,6 @@ class RelayGenerator:
         generated_relays: list[list[database.swim.Swimmer]] = []
         remaining_relays: int = self.get_num_relays()
         while remaining_relays > 0:
-            # Check if there are still valid swimmers for each leg
             if (
                 len(best_le1) == 0
                 or len(best_le2) == 0
@@ -196,7 +193,7 @@ class RelayGenerator:
                 remaining_relays -= 1
                 continue
 
-            # Find top four swimmers for each leg
+            # Get top four swimmers for each leg
             top_four_l1 = best_le1[:4]
             top_four_l2 = best_le2[:4]
             top_four_l3 = best_le3[:4]
