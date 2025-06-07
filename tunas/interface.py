@@ -52,9 +52,13 @@ RELAY_SETTINGS_MENU = (
     + "6) Num relays\n"
     + "Back (b/B)\n"
 )
+SEX_MENU = "1) Female\n" + "2) Male\n" + "Back (b/B)\n"
 LINE_BREAK = "-------------------------------------------------------------\n"
 FINISHED_LOADING = "Finished processing files!"
 PROGRAM_EXIT = "Program exited!"
+
+# Defaults
+DEFAULT_CLUB_CODE = "SCSC"
 
 
 def run_tunas_application():
@@ -81,8 +85,8 @@ def load_data():
     # Load database
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
 
-    # Load relay generator. Default club is SCSC.
-    scsc = DATABASE.find_club("SCSC")
+    # Load relay generator with default club.
+    scsc = DATABASE.find_club(DEFAULT_CLUB_CODE)
     assert scsc is not None  # SCSC should exist
     RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, scsc)
 
@@ -168,7 +172,7 @@ def run_club_mode():
 
 def run_relay_mode():
     """
-    Relay mode main loop.
+    Run relay mode.
     """
     while True:
         print(RELAY_MENU)
@@ -262,7 +266,11 @@ def run_relay_mode():
 
 
 def run_relay_settings():
+    """
+    Display relay generation settings and allow the user to make changes.
+    """
     while True:
+        # Current settings
         cur_club = RELAY_GENERATOR.get_club()
         cur_min_age, cur_max_age = RELAY_GENERATOR.get_age_range()
         cur_sex = RELAY_GENERATOR.get_sex()
@@ -279,6 +287,7 @@ def run_relay_settings():
             + f" * {"Num relays:":<12} {cur_num_relays}\n"
         )
 
+        # Allow the user to change settings
         print(query_settings)
         print(RELAY_SETTINGS_MENU)
         selection = input("Selection > ")
@@ -289,8 +298,7 @@ def run_relay_settings():
                     new_club = DATABASE.find_club(code)
                     assert new_club is not None
                 except:
-                    print("Club not found!")
-                    print()
+                    display_error(f"could not find club with code '{code}'!")
                 else:
                     RELAY_GENERATOR.set_club(new_club)
                     name = new_club.get_full_name()
@@ -299,7 +307,7 @@ def run_relay_settings():
                     else:
                         team_code = new_club.get_team_code()
                     print(f"Success! New club set to: {name} ({team_code})")
-                    print()
+                print()
             case "2":
                 min_age = input("New min age > ")
                 max_age = input("New max age > ")
@@ -308,16 +316,21 @@ def run_relay_settings():
                     max_age = int(max_age)
                     assert min_age <= max_age
                 except:
-                    print("Invalid selection!")
-                    print()
+                    display_error(f"could not set age range ({min_age}, {max_age})!")
                 else:
                     RELAY_GENERATOR.set_age_range((min_age, max_age))
-                    print(f"Success! Age range set to ({min_age}, {max_age})")
-                    print()
+                    print(f"Success! Age range set to ({min_age}, {max_age}).")
+                print()
             case "3":
-                selection = input("\n1) Female\n2) Male\n\nSelection > ")
+                print()
+                print(SEX_MENU)
+                print()
+                selection = input("Selection > ")
+                if selection == "b" or selection == "B":
+                    print()
+                    continue
                 if not (selection == "1" or selection == "2"):
-                    print("Invalid selection!")
+                    display_error(f"invalid selection '{selection}'!")
                     print()
                     continue
                 if selection == "1":
@@ -330,7 +343,7 @@ def run_relay_settings():
             case "4":
                 selection = input("\n1) SCY\n2) SCM\n3) LCM\n\nSelection > ")
                 if not selection in ["1", "2", "3"]:
-                    print("Invalid selection!")
+                    display_error(f"invalid selection '{selection}'!")
                     print()
                     continue
                 if selection == "1":
@@ -349,7 +362,7 @@ def run_relay_settings():
                     new_day = int(input("Enter day > "))
                     new_date = datetime.date(new_year, new_month, new_day)
                 except:
-                    print("Invalid selection!")
+                    display_error(f"invalid selection!")
                     print()
                 else:
                     RELAY_GENERATOR.set_relay_date(new_date)
@@ -361,9 +374,9 @@ def run_relay_settings():
                     new_num = int(new_num)
                     assert new_num > 0
                 except:
-                    print(
-                        f"Invalid selection! Make sure the number of relays is an "
-                        + f"integer greater than zero."
+                    display_error(
+                        f"invalid selection! Make sure the input is an integer greater "
+                        + f"than zero."
                     )
                     print()
                     continue
@@ -435,8 +448,11 @@ def display_relays(
                 if age_range[0] == age_range[1]:
                     age_range = age_range[0]
 
+                # Get swimmer sex
+                sex = str(swimmer.get_sex())
+
                 print(
-                    f" {stroke:<6}  {full_name:<20}  {age_range:<8}  {usa_id:<14}  {full_club_code:<7}  {best_time:<8}  {meet_name:<30}"
+                    f" {stroke:<6}  {full_name:<20}  {age_range:<8}  {sex:<1}  {usa_id:<14}  {full_club_code:<7}  {best_time:<8}  {meet_name:<30}"
                 )
         else:
             print("Not enough swimmers!")
@@ -450,12 +466,18 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
 
     # Calculate birthday
     b_range = swimmer.get_birthday_range()
-    if b_range == None:
-        b_range = f"-----------------------"
-    elif b_range[0] == b_range[1]:
+    if b_range[0] == b_range[1]:
         b_range = f"{b_range[0]}"
     else:
-        b_range = f"{b_range[0]} - {b_range[1]}"
+        b_range = f"{b_range[0]}-{b_range[1]}"
+
+    # Calculate age
+    a_range = swimmer.get_age_range(datetime.date.today())
+    min_age, max_age = a_range
+    if min_age == max_age:
+        a_range = f"{min_age}"
+    else:
+        a_range = f"{min_age}-{max_age}"
 
     # Calculate id
     long_id = swimmer.get_usa_id_long()
@@ -464,19 +486,22 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
 
     # Calcate club and lsc code
     club = swimmer.get_club()
-    if club is not None:
-        club_code = club.get_team_code()
-        lsc = club.get_lsc()
-        if lsc is not None:
-            lsc_code = lsc.value
-        else:
-            lsc_code = "--"
+    if club is None:
+        full_club_code = "-------"
+    elif club.get_lsc() is None:
+        full_club_code = club.get_team_code()
     else:
-        club_code = "----"
-        lsc_code = "--"
-    full_code = f"{lsc_code:<2}-{club_code:<4}"
+        lsc_code = club.get_lsc()
+        team_code = club.get_team_code()
+        full_club_code = f"{lsc_code}-{team_code}"
 
-    print(f"{full_name:<27}  {long_id:<14}  {full_code}  {b_range:<25}")
+    # Get swimmer sex
+    sex = str(swimmer.get_sex())
+
+    print(
+        f"{full_name:<27}  {a_range:<5}  {sex:<1}  {long_id:<14}  {full_club_code:<7}  "
+        + f"{b_range:<25}"
+    )
 
 
 def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
@@ -521,5 +546,5 @@ def display_error(message: str) -> None:
     """
     Display an error message to the user.
     """
-    assert type(message) == str
+    assert isinstance(message, str)
     print(f"Error: {message}")

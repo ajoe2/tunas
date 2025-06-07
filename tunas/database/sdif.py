@@ -465,6 +465,17 @@ class Session(enum.Enum):
 
     def __str__(self) -> str:
         return self.value
+    
+    def __eq__(self, value: Session) -> bool:
+        return self.name == value.name
+
+    def __lt__(self, value: Session) -> bool:
+        self_index = list(Session.__members__).index(self.name)
+        value_index = list(Session.__members__).index(value.name)
+        return self_index < value_index
+
+    def __gt__(self, value: Session) -> bool:
+        return value < self
 
 
 class Event(enum.Enum):
