@@ -78,6 +78,7 @@ class RelayGenerator:
         self.set_sex(sex)
         self.set_course(course)
         self.set_age_range(age_range)
+        self.set_excluded_swimmers(set())
 
     def set_database(self, db: database.Database) -> None:
         assert type(db) == database.Database
@@ -111,6 +112,14 @@ class RelayGenerator:
 
         self.age_range = age_range
 
+    def set_excluded_swimmers(
+        self, excluded_swimmers: set[database.swim.Swimmer]
+    ) -> None:
+        assert type(excluded_swimmers) == set
+        for s in excluded_swimmers:
+            assert type(s) == database.swim.Swimmer
+        self.excluded_swimmers = excluded_swimmers
+
     def get_database(self) -> database.Database:
         return self.db
 
@@ -131,6 +140,17 @@ class RelayGenerator:
 
     def get_age_range(self) -> tuple[int, int]:
         return self.age_range
+
+    def get_excluded_swimmers(self) -> set[database.swim.Swimmer]:
+        return self.excluded_swimmers
+
+    def exclude_swimmer(self, swimmer: database.swim.Swimmer):
+        assert type(swimmer) == database.swim.Swimmer
+        self.excluded_swimmers.add(swimmer)
+
+    def include_swimmer(self, swimmer: database.swim.Swimmer):
+        assert type(swimmer) == database.swim.Swimmer
+        self.excluded_swimmers.remove(swimmer)
 
     def generate_relays(
         self, event: database.sdif.Event
@@ -155,8 +175,10 @@ class RelayGenerator:
         for swimmer in eligible_swimmers:
             if swimmer.get_sex() != self.get_sex():
                 continue
+            if swimmer in self.get_excluded_swimmers():
+                continue
             s_min_age, s_max_age = swimmer.get_age_range(self.get_relay_date())
-            # If swimmer is the right age and has a meet result for the given leg 
+            # If swimmer is the right age and has a meet result for the given leg
             # event, add them to the list of eligible swimmers.
             if not s_min_age > max_age and not s_max_age < min_age:
                 le1, le2, le3, le4 = leg_events

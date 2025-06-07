@@ -112,7 +112,7 @@ def print_menu_and_process_input() -> bool:
         case "q" | "Q":
             return False
         case _:
-            print(f"Invalid selection: '{user_input}'.")
+            display_error(f"invalid selection '{user_input}'!")
             print()
             pass
     return True
@@ -128,7 +128,7 @@ def run_swimmer_mode():
         swimmer = DATABASE.find_swimmer_with_long_id(id)
         assert swimmer is not None
     except:
-        print("Swimmer not found!")
+        display_error("swimmer not found!")
     else:
         print(f"Swimmer found! Displaying time history for {swimmer.get_full_name()}")
         print()
@@ -151,7 +151,7 @@ def run_club_mode():
         club = DATABASE.find_club(code)
         assert club is not None
     except:
-        print(f"Could not find club with club code {code}")
+        display_error(f"could not find club with club code '{code}'!")
     else:
         print("Club found! Displaying swimmers...")
         print()
@@ -224,11 +224,34 @@ def run_relay_mode():
                 display_relays(relays, event)
             case "7":
                 print()
-                print("Not implemented yet!")
+                display_excluded_relay_swimmers()
+                id = input("ID of swimmer to exclude > ")
+                try:
+                    curr_club = RELAY_GENERATOR.get_club()
+                    excluded_swimmer = curr_club.find_swimmer_with_long_id(id)
+                    assert excluded_swimmer is not None
+                    full_name = excluded_swimmer.get_full_name()
+
+                    RELAY_GENERATOR.exclude_swimmer(excluded_swimmer)
+                    print(f"Success! Excluded {full_name} ({id})")
+                except:
+                    display_error(f"couldn't exclude swimmer with id '{id}'!")
                 print()
+
             case "8":
                 print()
-                print("Not implemented yet!")
+                display_excluded_relay_swimmers()
+                id = input("ID of swimmer to include > ")
+                try:
+                    curr_club = RELAY_GENERATOR.get_club()
+                    included_swimmer = curr_club.find_swimmer_with_long_id(id)
+                    assert included_swimmer is not None
+                    full_name = included_swimmer.get_full_name()
+
+                    RELAY_GENERATOR.include_swimmer(included_swimmer)
+                    print(f"Success! Included {full_name} ({id})")
+                except:
+                    display_error(f"couldn't include swimmer with id '{id}'!")
                 print()
             case "b" | "B":
                 print()
@@ -482,3 +505,21 @@ def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
         f"{event}  {str(final_time):<8}  {session}  {age_class:<2}  {meet_name:<30}  "
         + f"{full_code:<7}  {swim_date}"
     )
+
+
+def display_excluded_relay_swimmers() -> None:
+    """
+    Display excluded swimmers in relay generator.
+    """
+    print("Excluded swimmers:")
+    for swimmer in RELAY_GENERATOR.get_excluded_swimmers():
+        display_swimmer_information(swimmer)
+    print()
+
+
+def display_error(message: str) -> None:
+    """
+    Display an error message to the user.
+    """
+    assert type(message) == str
+    print(f"Error: {message}")

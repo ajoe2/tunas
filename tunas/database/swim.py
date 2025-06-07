@@ -209,6 +209,12 @@ class Club:
             if s.get_usa_id_short() == short_id:
                 return s
 
+    def find_swimmer_with_long_id(self, long_id: str) -> Optional[Swimmer]:
+        assert len(long_id) == 14
+        for s in self.get_swimmers():
+            if s.get_usa_id_long() == long_id:
+                return s
+
     def find_swimmer_with_birthday(
         self,
         first_name: str,
