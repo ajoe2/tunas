@@ -22,31 +22,41 @@ MEDLEY_RELAY_STROKES = [
 ]
 
 
+def get_relay_leg_events(relay_event: database.sdif.Event) -> list[database.sdif.Event]:
+    """
+    Return leg events for a given relay event.
+    """
+    assert (
+        relay_event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
+        or relay_event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
+    )
+
+    leg_dist = relay_event.get_distance() // 4
+    course = relay_event.get_course()
+    if relay_event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
+        leg_strokes = FREESTYLE_RELAY_STROKES
+    else:
+        leg_strokes = MEDLEY_RELAY_STROKES
+    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
+    return leg_events
+
+
 def get_relay_time(
-    relay: list[database.swim.Swimmer], event: database.sdif.Event
+    relay: list[database.swim.Swimmer],
+    event: database.sdif.Event,
 ) -> database.stime.Time:
     """
     Calculate relay time using swimmer and event information.
     """
     assert len(relay) == 4
 
-    # Get leg events
-    leg_dist = event.get_distance() // 4
-    course = event.get_course()
-    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
-        leg_strokes = FREESTYLE_RELAY_STROKES
-    else:
-        leg_strokes = MEDLEY_RELAY_STROKES
-    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
-
-    # Calculate time
+    leg_events = get_relay_leg_events(event)
     total_time = database.stime.Time()
     for i in range(4):
         swimmer = relay[i]
         mr = swimmer.get_best_meet_result(leg_events[i])
         assert mr is not None
         total_time += mr.get_final_time()
-
     return total_time
 
 
@@ -136,79 +146,69 @@ class RelayGenerator:
             event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
             or event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
         )
-        leg_distance: int
-        leg_strokes: list[database.sdif.Stroke]
-        leg_course: database.sdif.Course
-        leg_events: list[database.sdif.Event]
 
-        # Calculate individual leg events
-        leg_distance = event.get_distance() // 4
-        leg_course = event.get_course()
-        if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
-            leg_strokes = FREESTYLE_RELAY_STROKES
-        else:
-            leg_strokes = MEDLEY_RELAY_STROKES
-        leg_events = [
-            database.sdif.Event((leg_distance, leg_stroke, leg_course))
-            for leg_stroke in leg_strokes
-        ]
-
-        # Find potential swimmers for each leg
-        best_leg1_results: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
-        best_leg2_results: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
-        best_leg3_results: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
-        best_leg4_results: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
+        # Find valid swimmers for each leg
+        leg_events = get_relay_leg_events(event)
+        best_le1: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
+        best_le2: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
+        best_le3: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
+        best_le4: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         min_age, max_age = self.get_age_range()
-        for swimmer in self.get_club().get_swimmers():
+        eligible_swimmers = self.get_club().get_swimmers()
+
+        for swimmer in eligible_swimmers:
             if swimmer.get_sex() != self.get_sex():
                 continue
             s_min_age, s_max_age = swimmer.get_age_range(self.get_relay_date())
-            if not (s_min_age > max_age or s_max_age < min_age):
+            if not s_min_age > max_age and not s_max_age < min_age:
                 le1, le2, le3, le4 = leg_events
                 best_le1_mr = swimmer.get_best_meet_result(le1)
                 best_le2_mr = swimmer.get_best_meet_result(le2)
                 best_le3_mr = swimmer.get_best_meet_result(le3)
                 best_le4_mr = swimmer.get_best_meet_result(le4)
                 if best_le1_mr is not None:
-                    best_leg1_results.append((swimmer, best_le1_mr.get_final_time()))
+                    best_le1.append((swimmer, best_le1_mr.get_final_time()))
                 if best_le2_mr is not None:
-                    best_leg2_results.append((swimmer, best_le2_mr.get_final_time()))
+                    best_le2.append((swimmer, best_le2_mr.get_final_time()))
                 if best_le3_mr is not None:
-                    best_leg3_results.append((swimmer, best_le3_mr.get_final_time()))
+                    best_le3.append((swimmer, best_le3_mr.get_final_time()))
                 if best_le4_mr is not None:
-                    best_leg4_results.append((swimmer, best_le4_mr.get_final_time()))
+                    best_le4.append((swimmer, best_le4_mr.get_final_time()))
 
-        # Sort leg by fastest swimmers
-        best_leg1_results.sort(key=lambda x: x[1])
-        best_leg2_results.sort(key=lambda x: x[1])
-        best_leg3_results.sort(key=lambda x: x[1])
-        best_leg4_results.sort(key=lambda x: x[1])
+        # Sort each relay leg by fastest swimmers
+        best_le1.sort(key=lambda x: x[1])
+        best_le2.sort(key=lambda x: x[1])
+        best_le3.sort(key=lambda x: x[1])
+        best_le4.sort(key=lambda x: x[1])
 
         # Generate optimal relays
         generated_relays: list[list[database.swim.Swimmer]] = []
         remaining_relays: int = self.get_num_relays()
         while remaining_relays > 0:
-            # If a leg doesn't have valid swimmers, append an empty relay
+            # Check if there are still valid swimmers for each leg
             if (
-                len(best_leg1_results) == 0
-                or len(best_leg2_results) == 0
-                or len(best_leg3_results) == 0
-                or len(best_leg4_results) == 0
+                len(best_le1) == 0
+                or len(best_le2) == 0
+                or len(best_le3) == 0
+                or len(best_le4) == 0
             ):
                 generated_relays.append([])
                 remaining_relays -= 1
                 continue
 
             # Find top four swimmers for each leg
-            top_four_l1 = best_leg1_results[:4]
-            top_four_l2 = best_leg2_results[:4]
-            top_four_l3 = best_leg3_results[:4]
-            top_four_l4 = best_leg4_results[:4]
+            top_four_l1 = best_le1[:4]
+            top_four_l2 = best_le2[:4]
+            top_four_l3 = best_le3[:4]
+            top_four_l4 = best_le4[:4]
 
             # Find best combination of 4 unique swimmers
             best_combination = []
             for candidate_combination in itertools.product(
-                top_four_l1, top_four_l2, top_four_l3, top_four_l4
+                top_four_l1,
+                top_four_l2,
+                top_four_l3,
+                top_four_l4,
             ):
                 candidate_swimmers = [pair[0] for pair in candidate_combination]
                 if len(set(candidate_swimmers)) != 4:
@@ -232,18 +232,10 @@ class RelayGenerator:
 
             # Set new relay and remove swimmers from candidate lists
             new_relay = [pair[0] for pair in best_combination]
-            best_leg1_results = list(
-                filter(lambda x: x[0] not in new_relay, best_leg1_results)
-            )
-            best_leg2_results = list(
-                filter(lambda x: x[0] not in new_relay, best_leg2_results)
-            )
-            best_leg3_results = list(
-                filter(lambda x: x[0] not in new_relay, best_leg3_results)
-            )
-            best_leg4_results = list(
-                filter(lambda x: x[0] not in new_relay, best_leg4_results)
-            )
+            best_le1 = list(filter(lambda x: x[0] not in new_relay, best_le1))
+            best_le2 = list(filter(lambda x: x[0] not in new_relay, best_le2))
+            best_le3 = list(filter(lambda x: x[0] not in new_relay, best_le3))
+            best_le4 = list(filter(lambda x: x[0] not in new_relay, best_le4))
             generated_relays.append(new_relay)
             remaining_relays -= 1
 

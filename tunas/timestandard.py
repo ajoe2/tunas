@@ -1,5 +1,5 @@
 """
-Manages logic for time standard information
+Time standard information logic.
 """
 
 import os
@@ -7,12 +7,15 @@ import enum
 
 # Data path
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
-TIME_STANDARDS_PATH = os.path.join(
-    os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "timeStandards"
-)
+TUNAS_PROJECT_PATH = os.path.dirname(TUNAS_DIRECTORY_PATH)
+TIME_STANDARDS_PATH = os.path.join(TUNAS_PROJECT_PATH, "data", "timeStandards")
 
 
 class TimeStandard(enum.Enum):
+    """
+    Represent every possible time standard.
+    """
+
     B = "B"
     BB = "BB"
     A = "A"

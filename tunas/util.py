@@ -3,12 +3,14 @@ Utility functions for tunas application.
 """
 
 from typing import Optional
-from database import dutil
+
+import database
 
 
 def standardize_course(course_str: str) -> str:
     """
-    Standardize course data in D0 entry.
+    Given a numerical or alphabetic course string (ex. 'S' or '1'), return the
+    numerical representation.
     """
     alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
     if course_str in alpha_to_num_course.keys():
@@ -18,7 +20,7 @@ def standardize_course(course_str: str) -> str:
 
 def title_case(name: str) -> str:
     """
-    Convert name to title case
+    Convert name to title case.
     """
     name_components = name.split(" ")
     name = ""
@@ -26,12 +28,15 @@ def title_case(name: str) -> str:
         if c != "":
             c = c.lower()
             c = c[0].upper() + c[1:]
-            name = name + c + " "
+            name += c + " "
     name = name[:-1]
     return name
 
 
 def parse_full_name(full_name: str) -> tuple[str, Optional[str], str]:
+    """
+    Extract the first name, middle initial, and last name from full_name.
+    """
     if full_name[-1].isupper() and full_name[-2] == " ":
         middle_initial = full_name[-1]
         full_name = full_name[:-2].strip()
@@ -49,18 +54,21 @@ def is_old_id(
     middle_initial: Optional[str],
     usa_id: str,
 ) -> bool:
-    # Make sure usa_id is not malformed
+    """
+    Check if usa_id is in the old id format.
+    """
+    # usa_id should be 12 or 14 characters long
     assert len(usa_id) == 12 or len(usa_id) == 14
 
     # Check id format
-    if (
-        not usa_id[:6].isnumeric() or not usa_id[6:].replace("*", "").isalpha()
-    ):  # Doesn't follow old id format
+    part1, part2 = usa_id[:6], usa_id[6:]
+    if not part1.isnumeric() or not part2.replace("*", "").isalpha():
         return False
 
+    # Check month and day are reasonable
     month = int(usa_id[:2])
     day = int(usa_id[2:4])
-    if month < 1 or month > 12 or day < 1 or day > 31:  # Impossible birthday
+    if month < 1 or month > 12 or day < 1 or day > 31:
         return False
 
     # Recreate the last 8 characters of the USA swimming old ID
@@ -75,8 +83,8 @@ def is_old_id(
         first_name[:3].upper() + middle_initial + last_name[:4].upper()
     )[: len(alpha_id)]
 
-    # If name portion doesn't match, return
-    if dutil.hamming_distance(alpha_id, alpha_id_construct) > 2:
+    # Compare generated ID with usa_id
+    if database.dutil.hamming_distance(alpha_id, alpha_id_construct) > 2:
         return False
 
     return True
