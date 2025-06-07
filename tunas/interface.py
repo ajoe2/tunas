@@ -324,7 +324,6 @@ def run_relay_settings():
             case "3":
                 print()
                 print(SEX_MENU)
-                print()
                 selection = input("Selection > ")
                 if selection == "b" or selection == "B":
                     print()

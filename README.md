@@ -17,7 +17,7 @@ All the code is written using Python. To download Python, follow the instruction
 
 This project uses the `pandas` Python library. To download `pandas`, run
 ```sh
-    pip3 install pandas
+    pip install pandas
 ```
 after downloading Python.
 
@@ -26,7 +26,7 @@ after downloading Python.
 ```sh
     git clone https://github.com/ajoe2/tunas.git
 ```
-2. Run tunas
+2. Run the tunas application
 ```sh
     cd tunas
     python3 tunas
