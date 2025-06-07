@@ -29,7 +29,7 @@ Note: `pandas` can be downloaded via `pip`:
 2. Install Python and `pandas`
 3. Clone the repository
 ```sh
-    git clone https://github.com/ajoe2/swimdatabase.git
+    git clone https://github.com/ajoe2/tunas.git
 ```
 4. Run tunas
 ```sh
