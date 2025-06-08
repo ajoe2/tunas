@@ -66,7 +66,7 @@ class TimeStandard(enum.Enum):
     B = "B"
     BB = "BB"
     A = "A"
-    AGC = "Age Group Champs"
+    AGC = "Age Group Championships"
     AA = "AA"
     FW = "Far Westerns"
     AAA = "AAA"
@@ -76,6 +76,12 @@ class TimeStandard(enum.Enum):
     JNAT = "Junior Nationals"
     NAT = "Nationals"
     OT = "Olympic Trials"
+
+    def __str__(self) -> str:
+        return self.value
+
+    def short(self) -> str:
+        return self.name
 
 
 class TimeStandardInfo:
@@ -152,6 +158,9 @@ class TimeStandardInfo:
     def get_time_standard_df(
         self, standard: TimeStandard, age_group: dutil.AgeGroup
     ) -> Optional[pd.DataFrame]:
+        """
+        Get dataframe corresponding to time standard and age group.
+        """
         assert type(standard) == TimeStandard
         assert type(age_group) == dutil.AgeGroup
         try:
@@ -159,3 +168,10 @@ class TimeStandardInfo:
             return df
         except KeyError:
             return None
+
+    @classmethod
+    def get_age_groups(cls, standard: TimeStandard) -> list[dutil.AgeGroup]:
+        """
+        Get age groups for a particular time standard.
+        """
+        return TimeStandardInfo.age_group_types[standard]

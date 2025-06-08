@@ -16,6 +16,7 @@ MEET_DATA_PATH = os.path.join(os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "me
 # Global database and session objects
 DATABASE: database.Database
 RELAY_GENERATOR: relaygen.RelayGenerator
+TIME_STANDARD_INFO: database.timestandard.TimeStandardInfo
 
 # String constants
 TUNAS_LOGO = (
@@ -52,6 +53,28 @@ RELAY_SETTINGS_MENU = (
     + "6) Num relays\n"
     + "Back (b/B)\n"
 )
+TIME_STANDARD_MODE_MENU = (
+    "1) Age Group Champs\n"
+    + "2) Far Westerns\n"
+    + "3) Sectionals\n"
+    + "4) Futures\n"
+    + "5) Junior Nationals\n"
+    + "6) Nationals\n"
+    + "7) Olympic Trials\n"
+    + "Back (b/B)\n"
+)
+SINGLE_AGE_MENU = (
+    "1) 10 & under\n" + "2) 11\n" + "3) 12\n" + "4) 13\n" + "5) 14\n" + "Back (b/B)\n"
+)
+DOUBLE_AGE_MENU = (
+    "1) 10 & under\n"
+    + "2) 11-12\n"
+    + "3) 13-14\n"
+    + "4) 15-16\n"
+    + "5) 17-18\n"
+    + "Back (b/B)\n"
+)
+SENIOR_AGE_MENU = "1) 18 & under\n" + "2) 19 & over\n" + "Back (b/B)\n"
 SEX_MENU = "1) Female\n" + "2) Male\n" + "Back (b/B)\n"
 LINE_BREAK = "-------------------------------------------------------------\n"
 FINISHED_LOADING = "Finished processing files!"
@@ -81,9 +104,11 @@ def load_data():
     """
     global DATABASE
     global RELAY_GENERATOR
+    global TIME_STANDARD_INFO
 
     # Load database
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
+    TIME_STANDARD_INFO = DATABASE.get_time_standard_info()
 
     # Load relay generator with default club.
     scsc = DATABASE.find_club(DEFAULT_CLUB_CODE)
@@ -104,7 +129,7 @@ def print_menu_and_process_input() -> bool:
             run_swimmer_mode()
         case "2":
             print()
-            pass
+            run_time_standard_mode()
         case "3":
             print()
             run_club_mode()
@@ -123,7 +148,7 @@ def print_menu_and_process_input() -> bool:
     return True
 
 
-def run_swimmer_mode():
+def run_swimmer_mode() -> None:
     """
     Swimmer mode main logic
     """
@@ -144,6 +169,69 @@ def run_swimmer_mode():
         for mr in meet_results:
             display_ind_meet_result_info(mr)
     print()
+
+
+def run_time_standard_mode() -> None:
+    while True:
+        print(TIME_STANDARD_MODE_MENU)
+        selection = input("Selection > ")
+        match selection:
+            case "1":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.AGC)
+            case "2":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.FW)
+            case "3":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.SECT)
+            case "4":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.FUT)
+            case "5":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.JNAT)
+            case "6":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.NAT)
+            case "7":
+                print()
+                ts_mode_helper(database.timestandard.TimeStandard.OT)
+            case "B" | "b":
+                print()
+                break
+            case _:
+                display_error(f"invalid input '{selection}'!")
+                print()
+
+
+def ts_mode_helper(standard: database.timestandard.TimeStandard) -> None:
+    age_groups = TIME_STANDARD_INFO.get_age_groups(standard)
+    if age_groups == database.timestandard.SINGLE_AGE_GROUPS:
+        menu = SINGLE_AGE_MENU
+    elif age_groups == database.timestandard.DOUBLE_AGE_GROUPS:
+        menu = DOUBLE_AGE_MENU
+    else:
+        menu = SENIOR_AGE_MENU
+    while True:
+        print(f"{standard} options:")
+        print(menu)
+        selection = input("Selection > ")
+        if selection == "b" or selection == "B":
+            print()
+            break
+        try:
+            selection = int(selection)
+            assert selection in range(1, len(age_groups) + 1)
+        except:
+            display_error(f"invalid selection '{selection}'!")
+            print()
+        else:
+            age_group = age_groups[int(selection) - 1]
+            df = TIME_STANDARD_INFO.get_time_standard_df(standard, age_group)
+            print()
+            print(df)
+            print()
 
 
 def run_club_mode():

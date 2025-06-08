@@ -53,6 +53,9 @@ class Database:
     def get_meet_results(self) -> list[swim.MeetResult]:
         return self.meet_results
 
+    def get_time_standard_info(self) -> timestandard.TimeStandardInfo:
+        return self.time_standard_info
+
     def set_clubs(self, clubs: list[swim.Club]) -> None:
         assert type(clubs) == list
         for c in clubs:
