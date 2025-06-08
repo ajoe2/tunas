@@ -25,20 +25,21 @@ python3 -V
 ```
 which will display the downloaded Python version (ex. `Python 3.12.10`).
 
-Once you have installed Python, run
-```sh
-    pip install -r requirements.txt
-```
-to install the necessary dependencies.
-
 ### Installation and use
 1. Clone the repository
 ```sh
     git clone https://github.com/ajoe2/tunas.git
 ```
-2. To run the `tunas` CLI, execute `python3 tunas` from the `tunas` project directory:
+2. `cd` into the tunas project directory
 ```sh
     cd tunas
+```
+3. Install the necessary dependencies by running
+```sh
+    pip install -r requirements.txt
+```
+4. Execute `python3 tunas`
+```sh
     python3 tunas
 ```
 
