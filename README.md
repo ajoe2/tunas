@@ -1,10 +1,10 @@
 # Tunas: data analysis for competitive swimming
-`tunas` is a Python CLI for analyzing USA Swimming meet results. It can also be used as a library for data analysis.
+`tunas` is a Python CLI for analyzing USA Swimming meet results.
 
 ### Features
  - Individual time search
  - Club information
- - Time Standards
+ - Time standard information
  - Relay generation
 
 ### Built with
@@ -15,18 +15,28 @@
 ### Prerequisites
 All the code is written using Python. To download Python, follow the instructions [here](https://www.python.org/downloads/). The recommended version is Python 3.12.
 
-This project uses the `pandas` Python library. To download `pandas`, run
+To check that you have successfully installed Python, you can run
 ```sh
-    pip install pandas
+python3 --version
 ```
-after downloading Python.
+or 
+```sh
+python3 -V
+```
+which will display the downloaded Python version (ex. `Python 3.12.10`).
+
+Once you have installed Python, run
+```sh
+    pip install -r requirements.txt
+```
+to install the necessary dependencies.
 
 ### Installation and use
 1. Clone the repository
 ```sh
     git clone https://github.com/ajoe2/tunas.git
 ```
-2. Run the tunas application
+2. To run the `tunas` CLI, execute `python3 tunas` from the `tunas` project directory:
 ```sh
     cd tunas
     python3 tunas
