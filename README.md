@@ -25,8 +25,10 @@ python3 -V
 ```
 which will display the downloaded Python version (ex. `Python 3.12.10`).
 
+To clone the repository, you will need to use `git`. You can find instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it  if you haven't already.
+
 ### Installation and use
-1. Clone the repository
+1. Clone the repository.
 ```sh
     git clone https://github.com/ajoe2/tunas.git
 ```
