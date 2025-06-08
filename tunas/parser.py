@@ -569,7 +569,7 @@ class Cl2Processor:
 
         # Add prelim result to the current swimmer
         if prelim_time is not None:
-            event = database.sdif.Event((event_distance, event_stroke, prelim_course))
+            event = database.dutil.Event((event_distance, event_stroke, prelim_course))
             mr = database.swim.IndividualMeetResult(
                 self.current_meet,
                 organization,
@@ -610,7 +610,7 @@ class Cl2Processor:
 
         # Add swim off result to current swimmer
         if swim_off_time is not None:
-            event = database.sdif.Event((event_distance, event_stroke, swim_off_course))
+            event = database.dutil.Event((event_distance, event_stroke, swim_off_course))
             mr = database.swim.IndividualMeetResult(
                 self.current_meet,
                 organization,
@@ -652,7 +652,7 @@ class Cl2Processor:
         # Add finals time to swimmer object
         if finals_time is not None:
             try:
-                event = database.sdif.Event(
+                event = database.dutil.Event(
                     (event_distance, event_stroke, finals_course)
                 )
             except:

@@ -2,7 +2,7 @@
 Database backend for tunas application.
 """
 
-from . import swim, dutil, sdif, stime
+from . import swim, dutil, timestandard, sdif, stime
 from typing import Optional
 import datetime
 
@@ -23,6 +23,7 @@ class Database:
         self.set_swimmers(swimmers)
         self.set_meets(meets)
         self.set_meet_results(meet_results)
+        self.time_standard_info = timestandard.TimeStandardInfo()
 
     def add_club(self, club: swim.Club) -> None:
         assert type(club) == swim.Club
@@ -111,7 +112,7 @@ class Database:
             swimmer_first_name = swimmer.get_first_name()
             swimmer_last_name = swimmer.get_last_name()
             swimmer_middle_initial = swimmer.get_middle_initial()
-            
+
             # Find swimmer by generating old ids and comparing hamming distance
             swimmer_id = dutil.generate_old_id(
                 swimmer_first_name,

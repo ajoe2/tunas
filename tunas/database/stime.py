@@ -147,7 +147,7 @@ class Time:
         Keyword arguments:
         other_time -- Time object that is being compared against
         """
-        if other_time is None:
+        if other_time is None or type(other_time) != Time:
             return False
         return (
             self.get_minute() == other_time.get_minute()

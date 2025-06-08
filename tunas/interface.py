@@ -103,6 +103,7 @@ def print_menu_and_process_input() -> bool:
             print()
             run_swimmer_mode()
         case "2":
+            print()
             pass
         case "3":
             print()
@@ -185,7 +186,7 @@ def run_relay_mode():
                 dist = 200
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
-                event = database.sdif.Event((dist, stroke, course))
+                event = database.dutil.Event((dist, stroke, course))
                 relays = RELAY_GENERATOR.generate_relays(event)
 
                 print()
@@ -194,7 +195,7 @@ def run_relay_mode():
                 dist = 200
                 stroke = database.sdif.Stroke.MEDLEY_RELAY
                 course = RELAY_GENERATOR.get_course()
-                event = database.sdif.Event((dist, stroke, course))
+                event = database.dutil.Event((dist, stroke, course))
                 relays = RELAY_GENERATOR.generate_relays(event)
 
                 print()
@@ -203,7 +204,7 @@ def run_relay_mode():
                 dist = 400
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
-                event = database.sdif.Event((dist, stroke, course))
+                event = database.dutil.Event((dist, stroke, course))
                 relays = RELAY_GENERATOR.generate_relays(event)
 
                 print()
@@ -212,7 +213,7 @@ def run_relay_mode():
                 dist = 400
                 stroke = database.sdif.Stroke.MEDLEY_RELAY
                 course = RELAY_GENERATOR.get_course()
-                event = database.sdif.Event((dist, stroke, course))
+                event = database.dutil.Event((dist, stroke, course))
                 relays = RELAY_GENERATOR.generate_relays(event)
 
                 print()
@@ -221,7 +222,7 @@ def run_relay_mode():
                 dist = 800
                 stroke = database.sdif.Stroke.FREESTYLE_RELAY
                 course = RELAY_GENERATOR.get_course()
-                event = database.sdif.Event((dist, stroke, course))
+                event = database.dutil.Event((dist, stroke, course))
                 relays = RELAY_GENERATOR.generate_relays(event)
 
                 print()
@@ -400,7 +401,7 @@ def display_statistics():
 
 
 def display_relays(
-    relays: list[list[database.swim.Swimmer]], event: database.sdif.Event
+    relays: list[list[database.swim.Swimmer]], event: database.dutil.Event
 ):
     leg_dist = event.get_distance() // 4
     course = event.get_course()
@@ -410,7 +411,7 @@ def display_relays(
     else:
         relay_stroke = database.sdif.Stroke.MEDLEY_RELAY
         leg_strokes = relaygen.MEDLEY_RELAY_STROKES
-    leg_events = [database.sdif.Event((leg_dist, s, course)) for s in leg_strokes]
+    leg_events = [database.dutil.Event((leg_dist, s, course)) for s in leg_strokes]
 
     curr_relay_letter = "A"
     for relay in relays:

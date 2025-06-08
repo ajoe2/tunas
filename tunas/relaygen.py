@@ -22,7 +22,7 @@ MEDLEY_RELAY_STROKES = [
 ]
 
 
-def get_relay_leg_events(relay_event: database.sdif.Event) -> list[database.sdif.Event]:
+def get_relay_leg_events(relay_event: database.dutil.Event) -> list[database.dutil.Event]:
     """
     Return leg events for a given relay event.
     """
@@ -33,13 +33,13 @@ def get_relay_leg_events(relay_event: database.sdif.Event) -> list[database.sdif
     leg_dist = relay_event.get_distance() // 4
     course = relay_event.get_course()
     leg_strokes = FREESTYLE_RELAY_STROKES if is_free_relay else MEDLEY_RELAY_STROKES
-    leg_events = [database.sdif.Event((leg_dist, strk, course)) for strk in leg_strokes]
+    leg_events = [database.dutil.Event((leg_dist, strk, course)) for strk in leg_strokes]
     return leg_events
 
 
 def get_relay_time(
     relay: list[database.swim.Swimmer],
-    event: database.sdif.Event,
+    event: database.dutil.Event,
 ) -> database.stime.Time:
     """
     Calculate total relay time.
@@ -69,7 +69,7 @@ class RelayGenerator:
         num_relays: int = 2,
         sex: database.sdif.Sex = database.sdif.Sex.FEMALE,
         course: database.sdif.Course = database.sdif.Course.LCM,
-        age_range: tuple[int, int] = (7, 10),
+        age_range: tuple[int, int] = (1, 10),
     ) -> None:
         self.set_database(db)
         self.set_club(club)
@@ -153,7 +153,7 @@ class RelayGenerator:
         self.excluded_swimmers.remove(swimmer)
 
     def generate_relays(
-        self, event: database.sdif.Event
+        self, event: database.dutil.Event
     ) -> list[list[database.swim.Swimmer]]:
         """
         Generate relays based on the current settings.
