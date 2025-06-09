@@ -65,6 +65,19 @@ def is_old_id(
     if not part1.isnumeric() or not part2.replace("*", "").isalpha():
         return False
 
+    # Remove special characters from first and last name
+    new_first_name = ""
+    for c in first_name:
+        if c.isalpha():
+            new_first_name += c
+    first_name = new_first_name
+
+    new_last_name = ""
+    for c in last_name:
+        if c.isalpha():
+            new_last_name += c
+    last_name = new_last_name
+
     # Check month and day are reasonable
     month = int(usa_id[:2])
     day = int(usa_id[2:4])
