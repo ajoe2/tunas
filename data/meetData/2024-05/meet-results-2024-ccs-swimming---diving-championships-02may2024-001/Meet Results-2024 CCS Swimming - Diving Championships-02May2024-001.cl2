@@ -185,8 +185,6 @@ G09            Balbuena, Enzo              2032897     1 2  50C   24.45   50.36 
 D09        Beisel, Sophie              000000SOP*BEA           SRFF 1004 11 UNOV05022024 1:00.38Y 1:00.16Y                   2 8 0 0 28             04      NN10
 D3000000SOP*BEISSophie                                                                                                                                       N02
 G09            Beisel, Sophie              000000SOP*BE1 2  50C   28.35 1:00.16                                                                P             N95
-D09        Berkenwald, Solomon         000000SOL*BEA           SRMM   1H  2 UNOV05022024 8:44.60Y                    550.60      115     2 17.   2  0600    NN02
-D3000000SOL*BERKSolomon                                                                                                                                      N52
 D09        Caputo, Maddie              2032900     A           SOFF 2001  5 UNOV05022024 1:58.29Y 1:59.62Y                   2 7 0 0 28             01      NN09
 D32032900       Maddie                                                                                                                                       N30
 G09            Caputo, Maddie              2032900     1 4  50C   27.38   57.27 1:28.89 1:59.62                                                P             N26
@@ -4338,8 +4336,6 @@ D3072807EMMEFERREmmerson                                                        
 G09            Ferriera, Emmerson          072807EMMEFE1 4  50C   27.43   56.86 1:28.12 1:59.40                                                P             N09
 D09        Ferriera, Emmerson          072807EMMEFEA           JRFF 1001 13 UNOV05022024   54.68Y   55.80Y                   5 8 0 0 33             01      NN51
 G09            Ferriera, Emmerson          072807EMMEFE1 2  50C   26.75   55.80                                                                P             N57
-D09    JR  Heywood, Beckett            081207BEC*HEA   0812200716MM   1H  2 UNOV05022024 8:27.20Y                    405.45      119    10  7.   0  0600    NN71
-D3081207BEC*HEYWBeckett                                                                                                                                      N42
 D09    JR  Maiorana, Will V            112706WILVMAA   1127200617MM 2001  6 UNOV05022024 1:48.49Y 1:49.95Y                   1 5 0 0 40             01      NN81
 D3112706WILVMAIOWill                                                                                                                                         N61
 G09            Maiorana, Will V            112706WILVMA1 4  50C   24.99   53.21 1:21.83 1:49.95                                                P             N87

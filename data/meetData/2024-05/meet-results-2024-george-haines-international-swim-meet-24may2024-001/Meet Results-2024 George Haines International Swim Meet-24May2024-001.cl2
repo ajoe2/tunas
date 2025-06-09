@@ -3186,9 +3186,9 @@ G01PC          Balbuena, Luna V            110104LUNVBA1 4  50C   31.08 1:05.18 
 D01PC  SO  Balbuena, Luna V            110104LUNVBAA   1101200419FF 1002  9 UNOV05252024 1:08.92L 1:08.56L          1:09.15L 4 7 2 8 17 16       80002      NN23
 G01PC          Balbuena, Luna V            110104LUNVBA1 2  50C   33.48 1:08.56                                                                P             N76
 G01PC          Balbuena, Luna V            110104LUNVBA1 2  50C   33.69 1:09.15                                                                F             N76
-D01PC  JR  Dragoi, Andreea R           122802ANDRDRAROU1228200221FF  504  3 UNOV05252024   56.95Y   29.58L            29.69L 8 2 1 2 24 23       70004      NN63
+D01PC  JR  Dragoi, Andreea R           122802ANDRDRAROM1228200221FF  504  3 UNOV05252024   56.95Y   29.58L            29.69L 8 2 1 2 24 23       70004      NN63
 D3122802ANDRDRAG                                                                                                                                             N99
-D01PC  JR  Dragoi, Andreea R           122802ANDRDRAROU1228200221FF 2004 11 UNOV05252024 2:02.22Y 2:30.29L          2:29.92L 4 8 1 4 17 21       50004      NN34
+D01PC  JR  Dragoi, Andreea R           122802ANDRDRAROM1228200221FF 2004 11 UNOV05252024 2:02.22Y 2:30.29L          2:29.92L 4 8 1 4 17 21       50004      NN34
 G01PC          Dragoi, Andreea R           122802ANDRDR1 4  50C   31.53 1:08.82 1:49.43 2:30.29                                                P             N48
 G01PC          Dragoi, Andreea R           122802ANDRDR1 4  50C   32.03 1:10.03 1:50.33 2:29.92                                                F             N38
 D01PC  SO  e Silva, Lais G             040805LAIGESABRA0408200519FF  504  3 UNOV05252024   59.57Y   29.49L            29.48L 8 7 1 5 20 20       40004      NN52

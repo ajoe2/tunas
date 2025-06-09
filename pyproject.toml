@@ -1,0 +1,15 @@
+[project]
+name = "tunas"
+version = "1.1.0"
+dependencies = [
+  "numpy",
+  "openpyxl",
+  "pandas"
+]
+requires-python = ">=3.7"
+readme = "README.md"
+
+[tool.pytest.ini_options]
+pythonpath = [
+  ".", "tunas"
+]
