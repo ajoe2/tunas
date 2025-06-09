@@ -522,7 +522,8 @@ def display_statistics():
 
 
 def display_relays(
-    relays: list[list[database.swim.Swimmer]], event: database.dutil.Event
+    relays: list[list[database.swim.Swimmer]],
+    event: database.dutil.Event,
 ):
     leg_dist = event.get_distance() // 4
     course = event.get_course()
@@ -578,6 +579,18 @@ def display_relays(
                 mr = swimmer.get_best_meet_result(leg_event)
                 assert mr is not None
 
+                # Get time standard information
+                time_standards = TIME_STANDARD_INFO.get_qualified_standards(
+                    mr.get_final_time(),
+                    leg_event,
+                    RELAY_GENERATOR.get_age_range()[0],
+                    swimmer.get_sex(),
+                )
+                if len(time_standards) > 0:
+                    best_standard = time_standards[-1]
+                else:
+                    best_standard = None
+
                 # Pull data
                 full_name = swimmer.get_full_name()
                 usa_id = swimmer.get_usa_id_long()
@@ -599,9 +612,18 @@ def display_relays(
                 # Get swimmer sex
                 sex = str(swimmer.get_sex())
 
-                print(
-                    f" {stroke:<6}  {full_name:<20}  {age_range:<8}  {sex:<1}  {usa_id:<14}  {full_club_code:<7}  {best_time:<8}  {meet_name:<30}"
-                )
+                if best_standard is not None:
+                    print(
+                        f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
+                        + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
+                        + f"{best_standard.short():<4}  {meet_name:<30}"
+                    )
+                else:
+                    print(
+                        f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
+                        + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
+                        + f"{meet_name:<30}"
+                    )
         else:
             print("Not enough swimmers!")
         print()
