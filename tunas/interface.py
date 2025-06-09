@@ -455,12 +455,12 @@ def run_relay_settings():
         cur_num_relays = RELAY_GENERATOR.get_num_relays()
         query_settings = (
             f"Query settings:\n"
-            + f" * {"Club:":<12} {cur_club.get_lsc()}-{cur_club.get_team_code()}\n"
-            + f" * {"Age range:":<12} {cur_min_age}-{cur_max_age}\n"
-            + f" * {"Sex:":<12} {cur_sex.get_name()}\n"
-            + f" * {"Course:":<12} {cur_course}\n"
-            + f" * {"Date::":<12} {cur_date}\n"
-            + f" * {"Num relays:":<12} {cur_num_relays}\n"
+            + f" * {'Club:':<12} {cur_club.get_lsc()}-{cur_club.get_team_code()}\n"
+            + f" * {'Age range:':<12} {cur_min_age}-{cur_max_age}\n"
+            + f" * {'Sex:':<12} {cur_sex.get_name()}\n"
+            + f" * {'Course:':<12} {cur_course}\n"
+            + f" * {'Date::':<12} {cur_date}\n"
+            + f" * {'Num relays:':<12} {cur_num_relays}\n"
         )
 
         # Allow the user to change settings
