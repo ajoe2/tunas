@@ -33,6 +33,7 @@ MAIN_MENU = (
     + "5) Database statistics\n"
     + "Quit (q/Q)\n"
 )
+SWIMMER_MODE_MENU = "1) Full time history\n" + "2) Best times\n" + "Back (b/B)\n"
 RELAY_MENU = (
     "1) Settings\n"
     + "2) 4 x 50 Free\n"
@@ -153,22 +154,54 @@ def run_swimmer_mode() -> None:
     Swimmer mode main logic
     """
     print("Swimmer mode:")
-    id = input("Enter swimmer id > ")
-    try:
-        swimmer = DATABASE.find_swimmer_with_long_id(id)
-        assert swimmer is not None
-    except:
-        display_error("swimmer not found!")
-    else:
-        print(f"Swimmer found! Displaying time history for {swimmer.get_full_name()}")
-        print()
-        meet_results = swimmer.get_meet_results()
-        meet_results.sort(
-            key=lambda mr: (mr.get_event(), mr.get_date_of_swim(), mr.get_session())
-        )
-        for mr in meet_results:
-            display_ind_meet_result_info(mr)
-    print()
+    while True:
+        print(SWIMMER_MODE_MENU)
+        selection = input("Selection > ")
+        match selection:
+            case "1":
+                id = input("Enter swimmer id > ")
+                try:
+                    swimmer = DATABASE.find_swimmer_with_long_id(id)
+                    assert swimmer is not None
+                except:
+                    display_error("swimmer not found!")
+                else:
+                    name = swimmer.get_full_name()
+                    print(f"Swimmer found! Displaying time history for {name}")
+                    print()
+                    meet_results = swimmer.get_meet_results()
+                    meet_results.sort(
+                        key=lambda mr: (
+                            mr.get_event(),
+                            mr.get_date_of_swim(),
+                            mr.get_session(),
+                        )
+                    )
+                    for mr in meet_results:
+                        display_ind_meet_result_info(swimmer, mr)
+                print()
+            case "2":
+                id = input("Enter swimmer id > ")
+                try:
+                    swimmer = DATABASE.find_swimmer_with_long_id(id)
+                    assert swimmer is not None
+                except:
+                    display_error("swimmer not found!")
+                else:
+                    name = swimmer.get_full_name()
+                    print(f"Swimmer found! Displaying time history for {name}")
+                    print()
+                    for event in database.dutil.Event:
+                        best_mr = swimmer.get_best_meet_result(event)
+                        if best_mr is not None:
+                            display_ind_meet_result_info(swimmer, best_mr)
+                print()
+            case "b" | "B":
+                print()
+                break
+            case _:
+                display_error(f"invalid selection '{selection}'!")
+                print()
 
 
 def run_time_standard_mode() -> None:
@@ -503,13 +536,40 @@ def display_relays(
 
     curr_relay_letter = "A"
     for relay in relays:
+        # Calculate relay time
         if relay != []:
-            total_time = str(relaygen.get_relay_time(relay, event))
+            relay_time = relaygen.get_relay_time(relay, event)
+            total_time = str(relay_time)
         else:
+            relay_time = None
             total_time = "-"
-        print(
-            f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}]"
-        )
+
+        # Calculate time standard
+        if relay_time:
+            standards = TIME_STANDARD_INFO.get_qualified_standards(
+                relay_time,
+                event,
+                RELAY_GENERATOR.get_age_range()[0],
+                RELAY_GENERATOR.get_sex(),
+            )
+            if len(standards) > 0:
+                best_standard = standards[-1]
+            else:
+                best_standard = None
+        else:
+            best_standard = None
+
+        # Display relay information
+        if best_standard is not None:
+            print(
+                f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}] [{best_standard}]"
+            )
+        else:
+            print(
+                f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}]"
+            )
+
+        # Display information for each relay leg
         if relay != []:
             for i in range(4):
                 leg_event = leg_events[i]
@@ -592,7 +652,10 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
     )
 
 
-def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
+def display_ind_meet_result_info(
+    swimmer: database.swim.Swimmer,
+    mr: database.swim.IndividualMeetResult,
+):
     event = mr.get_event()
     final_time = mr.get_final_time()
     age_class = mr.get_swimmer_age_class()
@@ -614,10 +677,25 @@ def display_ind_meet_result_info(mr: database.swim.IndividualMeetResult):
         lsc_code = lsc_code.value
     full_code = f"{lsc_code:>2}-{team_code:<4}"
 
-    print(
-        f"{event}  {str(final_time):<8}  {session}  {age_class:<2}  {meet_name:<30}  "
-        + f"{full_code:<7}  {swim_date}"
+    # Calculate time standard
+    time_standards = TIME_STANDARD_INFO.get_qualified_standards(
+        final_time,
+        event,
+        swimmer.get_age_range(datetime.date.today())[0],
+        swimmer.get_sex(),
     )
+    if len(time_standards) == 0:
+        print(
+            f"{event}  {str(final_time):<8}  {session}  {age_class:<2}  {meet_name:<30}  "
+            + f"{full_code:<7}  {swim_date}"
+        )
+    else:
+        best_time_standard = time_standards[-1]
+        best_time_standard_str = best_time_standard.short()
+        print(
+            f"{event}  {str(final_time):<8}  {session}  {age_class:<2}  {meet_name:<30}  "
+            + f"{full_code:<7}  {swim_date}  [{best_time_standard_str}]"
+        )
 
 
 def display_excluded_relay_swimmers() -> None:

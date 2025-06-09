@@ -229,10 +229,14 @@ class TimeStandardInfo:
                 row_label = f"{dist} {stroke.short()}"
 
             # If time is less than qualifying time, add standard to qualified standards
-            qual_time = df.loc[row_label, column_label]
-            assert isinstance(qual_time, stime.Time)
-            if time <= qual_time:
-                qualified_standards.append(standard)
+            try:
+                qual_time = df.loc[row_label, column_label]
+                assert isinstance(qual_time, stime.Time)
+            except:
+                continue
+            else:
+                if time <= qual_time:
+                    qualified_standards.append(standard)
 
         return qualified_standards
 

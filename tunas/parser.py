@@ -187,7 +187,7 @@ class Cl2Processor:
             """
             Return true if line is an unattached club.
             """
-            if lsc_code_str == "UN":
+            if lsc_code_str == "UN" or team_code_str.upper() == "UN":
                 return True
             if "unattached" in full_name_str.lower():
                 return True
@@ -610,7 +610,9 @@ class Cl2Processor:
 
         # Add swim off result to current swimmer
         if swim_off_time is not None:
-            event = database.dutil.Event((event_distance, event_stroke, swim_off_course))
+            event = database.dutil.Event(
+                (event_distance, event_stroke, swim_off_course)
+            )
             mr = database.swim.IndividualMeetResult(
                 self.current_meet,
                 organization,
