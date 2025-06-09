@@ -13,7 +13,7 @@
 
 ## Getting started
 ### Prerequisites
-All the code is written using Python. To download Python, follow the instructions [here](https://www.python.org/downloads/). The recommended version is Python 3.12.
+All the code is written using Python. To download Python, follow the instructions [here](https://www.python.org/downloads/). Make sure you have Python version 3.12 or above.
 
 To check that you have successfully installed Python, you can run
 ```sh
