@@ -167,7 +167,34 @@ def run_swimmer_mode() -> None:
                     display_error("swimmer not found!")
                 else:
                     name = swimmer.get_full_name()
-                    print(f"Swimmer found! Displaying time history for {name}")
+                    id = swimmer.get_usa_id_long()
+                    if id is None:
+                        id = "--------------"
+                    club = swimmer.get_club()
+                    if club is not None and club.get_lsc() is not None:
+                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
+                    elif club is not None:
+                        club_code = club.get_team_code()
+                    else:
+                        club_code = "------"
+                    age_range = swimmer.get_age_range(datetime.date.today())
+                    birthday_range = swimmer.get_birthday_range()
+                    min_age, max_age = age_range
+                    min_birth, max_birth = birthday_range
+
+                    if min_age == max_age:
+                        age_range_str = str(min_age)
+                    else:
+                        age_range_str = f"({min_age}, {max_age})"
+
+                    if min_birth == max_birth:
+                        birth_range_str = str(min_birth)
+                    else:
+                        birth_range_str = f"({min_birth}, {max_birth})"
+
+                    print(
+                        f"Swimmer found! Displaying time history for: {name}  {id}  {club_code}  {age_range_str}  {birth_range_str}"
+                    )
                     print()
                     meet_results = swimmer.get_meet_results()
                     meet_results.sort(
@@ -189,7 +216,34 @@ def run_swimmer_mode() -> None:
                     display_error("swimmer not found!")
                 else:
                     name = swimmer.get_full_name()
-                    print(f"Swimmer found! Displaying time history for {name}")
+                    id = swimmer.get_usa_id_long()
+                    if id is None:
+                        id = "--------------"
+                    club = swimmer.get_club()
+                    if club is not None and club.get_lsc() is not None:
+                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
+                    elif club is not None:
+                        club_code = club.get_team_code()
+                    else:
+                        club_code = "------"
+                    age_range = swimmer.get_age_range(datetime.date.today())
+                    birthday_range = swimmer.get_birthday_range()
+                    min_age, max_age = age_range
+                    min_birth, max_birth = birthday_range
+
+                    if min_age == max_age:
+                        age_range_str = str(min_age)
+                    else:
+                        age_range_str = f"({min_age}, {max_age})"
+
+                    if min_birth == max_birth:
+                        birth_range_str = str(min_birth)
+                    else:
+                        birth_range_str = f"({min_birth}, {max_birth})"
+
+                    print(
+                        f"Swimmer found! Displaying time history for: {name}  {id}  {club_code}  {age_range_str}  {birth_range_str}"
+                    )
                     print()
                     for event in database.dutil.Event:
                         best_mr = swimmer.get_best_meet_result(event)
