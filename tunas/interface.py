@@ -287,7 +287,7 @@ def run_club_mode():
         swimmers.sort(key=lambda s: s.get_birthday_range()[0], reverse=True)
 
         # Print swimmer information
-        for swimmer in club.get_swimmers():
+        for swimmer in swimmers:
             display_swimmer_information(swimmer)
     print()
 

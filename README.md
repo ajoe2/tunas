@@ -25,7 +25,7 @@ python3 -V
 ```
 which will display the downloaded Python version (ex. `Python 3.12.10`).
 
-To clone the repository, you will need to use `git`. You can find instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it  if you haven't already.
+To clone the repository, you will need to use `git`. You can follow the instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it if you haven't already.
 
 ### Installation and use
 1. Clone the repository.
@@ -80,10 +80,10 @@ Selection > 1
 
 Query settings:
  * Club:        PC-SCSC
- * Age range:   7-10
+ * Age range:   1-10
  * Sex:         Female
- * Course:      SCY
- * Date::       2025-06-05
+ * Course:      LCM
+ * Date::       2025-06-08
  * Num relays:  2
 
 1) Club
@@ -108,17 +108,17 @@ Back (b/B)
 
 Selection > 3
 
-4x50 Medley Relay SCY: 'A' [2:16.16]
- Back    Nandika Singh         10        C826B07D9D4E41  PC-SCSC  37.11     Pacific Swimming 10 & Under SC
- Breast  Hannah Zhou           10        214A614D34DB44  PC-SCSC  35.99     Spring SCY Age Group Champions
- Fly     Evelyn L Xu           10        0C1A7BB2D8F642  PC-SCSC  30.91     Spring SCY Age Group Champions
- Free    Ellie Y Wang          8         D145A5E5619F4A  PC-SCSC  32.15     2025 Brian Malick Memorial Z1S
+4x50 Medley Relay LCM: 'A' [2:31.43] [AAAA]
+ Back    Irene Zhong           10        F  49AC52F6961843  PC-SCSC  37.11     2024 Long Course Far Western C
+ Breast  Hannah Zhou           10        F  214A614D34DB44  PC-SCSC  42.45     Zone 1 South May Firecracker 5
+ Fly     Evelyn L Xu           10        F  0C1A7BB2D8F642  PC-SCSC  35.84     Zone 1 South May Firecracker 5
+ Free    Lydia Xiao            10        F  DE68CFBFBCA24E  PC-SCSC  36.03     Zone 1 South May Firecracker 5
 
-4x50 Medley Relay SCY: 'B' [2:29.94]
- Back    Eloise M Kosiba       10        CDBF178D7A3148  PC-SCSC  38.76     Pacific Swimming 10 & Under SC
- Breast  Lydia Xiao            10        DE68CFBFBCA24E  PC-SCSC  40.41     2025 Pacific Swimming Zone All
- Fly     Chloe Chai            8         C62C0364984B46  PC-SCSC  37.60     Pacific Swimming 10 & Under SC
- Free    Grace Liu             8         311185068D104B  PC-SCSC  33.17     2025 Pacific Swimming Zone All
+4x50 Medley Relay LCM: 'B' [2:50.72] [AA]
+ Back    Grace Liu             8         F  311185068D104B  PC-SCSC  43.96     Zone 1 South May Firecracker 5
+ Breast  Chloe Chai            8         F  C62C0364984B46  PC-SCSC  48.84     Zone 1 South May Firecracker 5
+ Fly     Ellie Y Wang          8         F  D145A5E5619F4A  PC-SCSC  40.44     Zone 1 South May Firecracker 5
+ Free    Kensie A Gray         10        F  45400F9C07CE40  PC-SCSC  37.48     Zone 1 South May Firecracker 5
 
 1) Settings
 2) 4 x 50 Free
@@ -134,10 +134,10 @@ Selection > 1
 
 Query settings:
  * Club:        PC-SCSC
- * Age range:   7-10
+ * Age range:   1-10
  * Sex:         Female
- * Course:      SCY
- * Date::       2025-06-05
+ * Course:      LCM
+ * Date::       2025-06-08
  * Num relays:  2
 
 1) Club
@@ -152,16 +152,17 @@ Selection > 3
 
 1) Female
 2) Male
+Back (b/B)
 
 Selection > 2
 Success! New sex set to: Male
 
 Query settings:
  * Club:        PC-SCSC
- * Age range:   7-10
+ * Age range:   1-10
  * Sex:         Male
- * Course:      SCY
- * Date::       2025-06-05
+ * Course:      LCM
+ * Date::       2025-06-08
  * Num relays:  2
 
 1) Club
@@ -186,15 +187,15 @@ Back (b/B)
 
 Selection > 3
 
-4x50 Medley Relay SCY: 'A' [2:04.58]
- Back    Albert Y Xiao         10        4FDE9748521045  PC-SCSC  31.45     Pacific Swimming SC Far Wester
- Breast  Jeffrey Sun           10        08371C3623774C  PC-SCSC  33.17     Pacific Swimming SC Far Wester
- Fly     Anay S Datar          10        E534B8D6B1104F  PC-SCSC  31.23     Pacific Swimming SC Far Wester
- Free    Lucas W Zhou          10        38D321F7DDAF4A  PC-SCSC  28.73     2025 Pacific Swimming Zone All
+4x50 Medley Relay LCM: 'A' [2:28.67] [AAAA]
+ Back    Albert Y Xiao         10        M  4FDE9748521045  PC-SCSC  38.21     Zone 1 South May Firecracker 5
+ Breast  Jeffrey Sun           10        M  08371C3623774C  PC-SCSC  40.72     Zone 1 South May Firecracker 5
+ Fly     Anay S Datar          10        M  E534B8D6B1104F  PC-SCSC  36.17     2024 Long Course Far Western C
+ Free    Rubix V Szolusha      9         M  06CF768B99D541  PC-SCSC  33.57     Zone 1 South May Firecracker 5
 
-4x50 Medley Relay SCY: 'B' [2:18.25]
- Back    Rubix V Szolusha      9         06CF768B99D541  PC-SCSC  32.87     Pacific Swimming SC Far Wester
- Breast  Aurelius Y Lien       8         06150ED6FD1743  PC-SCSC  39.57     Pacific Swimming 10 & Under SC
- Fly     Ethan S Kang          10        9FDC4D64878B86  PC-SCSC  34.12     Santa Clara Swim Club Race to 
- Free    Yuri Evstigneev       10        EE03882BB7FC4F  PC-SCSC  31.69     Pacific Swimming 10 & Under SC
+4x50 Medley Relay LCM: 'B' [2:39.44] [AAAA]
+ Back    Aurelius Y Lien       8         M  06150ED6FD1743  PC-SCSC  40.21     Zone 1 South May Firecracker 5
+ Breast  Adam J Li             10        M  4616CAFDEB2347  PC-SCSC  47.90     Zone 1 South May Firecracker 5
+ Fly     Lucas W Zhou          10        M  38D321F7DDAF4A  PC-SCSC  36.68     Zone 1 South May Firecracker 5
+ Free    Lucas Guo             10        M  A05D75DB613044  PC-SCSC  34.65     Zone 1 South May Firecracker 5
 ```
