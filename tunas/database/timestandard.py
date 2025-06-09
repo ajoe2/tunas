@@ -8,7 +8,7 @@ import os
 import enum
 import pandas as pd
 
-from . import dutil, stime
+from . import dutil, stime, sdif
 
 
 # Paths
@@ -79,6 +79,20 @@ class TimeStandard(enum.Enum):
 
     def __str__(self) -> str:
         return self.value
+
+    def __eq__(self, value: TimeStandard) -> bool:
+        return self.name == value.name
+
+    def __lt__(self, value: TimeStandard) -> bool:
+        self_index = list(TimeStandard.__members__).index(self.name)
+        value_index = list(TimeStandard.__members__).index(value.name)
+        return self_index < value_index
+
+    def __gt__(self, value: TimeStandard) -> bool:
+        return value < self
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
     def short(self) -> str:
         return self.name
@@ -168,6 +182,59 @@ class TimeStandardInfo:
             return df
         except KeyError:
             return None
+
+    def get_qualified_standards(
+        self,
+        time: stime.Time,
+        event: dutil.Event,
+        age: int,
+        sex: sdif.Sex,
+    ) -> list[TimeStandard]:
+        """
+        Return a list of qualified time standards, sorted from slowest to fastest.
+        """
+        dist, course, stroke = (
+            event.get_distance(),
+            event.get_course(),
+            event.get_stroke(),
+        )
+        qualified_standards = []
+        for standard in TimeStandard:
+            # Get age group
+            age_groups = self.get_age_groups(standard)
+            age_group = None
+            for ag in age_groups:
+                if age in ag:
+                    age_group = ag
+                    break
+            if age_group is None:
+                continue
+
+            # Get corresponding dataframe
+            df = self.get_time_standard_df(standard, age_group)
+            if df is None:
+                continue
+
+            # Get column label
+            column_label = f"{course}-{sex}"
+
+            # Get row label
+            if stroke == sdif.Stroke.FREESTYLE and (dist == 400 or dist == 500):
+                row_label = f"400/500 FR"
+            elif stroke == sdif.Stroke.FREESTYLE and (dist == 800 or dist == 1000):
+                row_label = f"800/1000 FR"
+            elif stroke == sdif.Stroke.FREESTYLE and (dist == 1500 or dist == 1650):
+                row_label = f"1500/1650 FR"
+            else:
+                row_label = f"{dist} {stroke.short()}"
+
+            # If time is less than qualifying time, add standard to qualified standards
+            qual_time = df.loc[row_label, column_label]
+            assert isinstance(qual_time, stime.Time)
+            if time <= qual_time:
+                qualified_standards.append(standard)
+
+        return qualified_standards
 
     @classmethod
     def get_age_groups(cls, standard: TimeStandard) -> list[dutil.AgeGroup]:

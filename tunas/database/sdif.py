@@ -391,9 +391,9 @@ class Stroke(enum.Enum):
             case Stroke.INDIVIDUAL_MEDLEY:
                 return "IM"
             case Stroke.FREESTYLE_RELAY:
-                return "FR-R"
+                return "FR Relay"
             case Stroke.MEDLEY_RELAY:
-                return "IM-R"
+                return "IM Relay"
 
 
 class Course(enum.Enum):
