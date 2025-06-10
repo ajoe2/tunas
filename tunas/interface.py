@@ -348,7 +348,7 @@ def display_time_standard(standard: database.timestandard.TimeStandard) -> None:
         print()
 
 
-def run_club_mode():
+def run_club_mode() -> None:
     """
     Run club code.
     """
@@ -373,7 +373,7 @@ def run_club_mode():
     print()
 
 
-def run_relay_mode():
+def run_relay_mode() -> None:
     """
     Run relay mode.
     """
@@ -468,7 +468,7 @@ def run_relay_mode():
                 print()
 
 
-def run_relay_settings():
+def run_relay_settings() -> None:
     """
     Display relay generation settings and allow the user to make changes.
     """
@@ -593,7 +593,7 @@ def run_relay_settings():
                 print()
 
 
-def display_statistics():
+def display_statistics() -> None:
     print("Statistics:")
     print(f"Number of clubs: {len(DATABASE.get_clubs()):,}")
     print(f"Number of swimmers: {len(DATABASE.get_swimmers()):,}")
@@ -605,7 +605,7 @@ def display_statistics():
 def display_relays(
     relays: list[list[database.swim.Swimmer]],
     event: database.dutil.Event,
-):
+) -> None:
     leg_dist = event.get_distance() // 4
     course = event.get_course()
     if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
@@ -711,7 +711,7 @@ def display_relays(
         curr_relay_letter = chr(ord(curr_relay_letter) + 1)
 
 
-def display_swimmer_information(swimmer: database.swim.Swimmer):
+def display_swimmer_information(swimmer: database.swim.Swimmer) -> None:
     # Calculate full name
     full_name = swimmer.get_full_name()
 
@@ -758,7 +758,7 @@ def display_swimmer_information(swimmer: database.swim.Swimmer):
 def display_ind_meet_result_info(
     swimmer: database.swim.Swimmer,
     mr: database.swim.IndividualMeetResult,
-):
+) -> None:
     event = mr.get_event()
     final_time = mr.get_final_time()
     age_class = mr.get_swimmer_age_class()
