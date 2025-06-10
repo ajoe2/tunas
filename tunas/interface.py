@@ -274,31 +274,34 @@ def run_swimmer_mode() -> None:
 
 
 def run_time_standard_mode() -> None:
+    """
+    Run time standard mode.
+    """
     while True:
         print(TIME_STANDARD_MODE_MENU)
         selection = input("Selection > ")
         match selection:
             case "1":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.AGC)
+                display_time_standard(database.timestandard.TimeStandard.AGC)
             case "2":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.FW)
+                display_time_standard(database.timestandard.TimeStandard.FW)
             case "3":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.SECT)
+                display_time_standard(database.timestandard.TimeStandard.SECT)
             case "4":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.FUT)
+                display_time_standard(database.timestandard.TimeStandard.FUT)
             case "5":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.JNAT)
+                display_time_standard(database.timestandard.TimeStandard.JNAT)
             case "6":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.NAT)
+                display_time_standard(database.timestandard.TimeStandard.NAT)
             case "7":
                 print()
-                ts_mode_helper(database.timestandard.TimeStandard.OT)
+                display_time_standard(database.timestandard.TimeStandard.OT)
             case "B" | "b":
                 print()
                 break
@@ -307,33 +310,42 @@ def run_time_standard_mode() -> None:
                 print()
 
 
-def ts_mode_helper(standard: database.timestandard.TimeStandard) -> None:
+def display_time_standard(standard: database.timestandard.TimeStandard) -> None:
+    """
+    For given time standard, prompt for user input and display
+    corresponding dataframe.
+    """
     age_groups = TIME_STANDARD_INFO.get_age_groups(standard)
+
+    # Determine menu type
+    menu = f"{standard} options:\n"
     if age_groups == database.timestandard.SINGLE_AGE_GROUPS:
-        menu = SINGLE_AGE_MENU
+        menu += SINGLE_AGE_MENU
     elif age_groups == database.timestandard.DOUBLE_AGE_GROUPS:
-        menu = DOUBLE_AGE_MENU
+        menu += DOUBLE_AGE_MENU
     else:
-        menu = SENIOR_AGE_MENU
+        menu += SENIOR_AGE_MENU
+
     while True:
-        print(f"{standard} options:")
         print(menu)
         selection = input("Selection > ")
+
+        # Exit if user selected back
         if selection == "b" or selection == "B":
             print()
             break
+
+        # Retrieve and display dataframe
         try:
             selection = int(selection)
-            assert selection in range(1, len(age_groups) + 1)
-        except:
-            display_error(f"invalid selection '{selection}'!")
-            print()
-        else:
             age_group = age_groups[int(selection) - 1]
+            assert selection in range(1, len(age_groups) + 1)
             df = TIME_STANDARD_INFO.get_time_standard_df(standard, age_group)
             print()
             print(df)
-            print()
+        except:
+            display_error(f"invalid selection '{selection}'!")
+        print()
 
 
 def run_club_mode():
