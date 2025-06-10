@@ -9,7 +9,7 @@ import database
 import parser
 import relaygen
 
-# Important paths
+# Paths
 TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
 MEET_DATA_PATH = os.path.join(os.path.dirname(TUNAS_DIRECTORY_PATH), "data", "meetData")
 
@@ -18,13 +18,18 @@ DATABASE: database.Database
 RELAY_GENERATOR: relaygen.RelayGenerator
 TIME_STANDARD_INFO: database.timestandard.TimeStandardInfo
 
-# String constants
+# Startup & shutdown
 TUNAS_LOGO = (
     "#############################################################\n"
     + "##########           Tunas: Data Analysis          ##########\n"
     + "#############################################################\n"
     + "Version: 1.1.0\n"
 )
+LINE_BREAK = "-------------------------------------------------------------\n"
+FINISHED_LOADING = "Finished processing files!"
+PROGRAM_EXIT = "Program exited!"
+
+# Menu
 MAIN_MENU = (
     "1) Swimmer information\n"
     + "2) Time standards\n"
@@ -77,15 +82,12 @@ DOUBLE_AGE_MENU = (
 )
 SENIOR_AGE_MENU = "1) 18 & under\n" + "2) 19 & over\n" + "Back (b/B)\n"
 SEX_MENU = "1) Female\n" + "2) Male\n" + "Back (b/B)\n"
-LINE_BREAK = "-------------------------------------------------------------\n"
-FINISHED_LOADING = "Finished processing files!"
-PROGRAM_EXIT = "Program exited!"
 
-# Defaults
+# Other
 DEFAULT_CLUB_CODE = "SCSC"
 
 
-def run_tunas_application():
+def run_tunas_application() -> None:
     """
     Main logic for tunas application.
     """
@@ -99,19 +101,22 @@ def run_tunas_application():
     print(PROGRAM_EXIT)
 
 
-def load_data():
+def load_data() -> None:
     """
     Create and set global database variable.
     """
+    # Declare global variables
     global DATABASE
     global RELAY_GENERATOR
     global TIME_STANDARD_INFO
 
     # Load database
     DATABASE = parser.read_cl2(MEET_DATA_PATH)
+
+    # Load time standard information
     TIME_STANDARD_INFO = DATABASE.get_time_standard_info()
 
-    # Load relay generator with default club.
+    # Load relay generator
     scsc = DATABASE.find_club(DEFAULT_CLUB_CODE)
     assert scsc is not None  # SCSC should exist
     RELAY_GENERATOR = relaygen.RelayGenerator(DATABASE, scsc)
@@ -145,20 +150,19 @@ def print_menu_and_process_input() -> bool:
         case _:
             display_error(f"invalid selection '{user_input}'!")
             print()
-            pass
     return True
 
 
 def run_swimmer_mode() -> None:
     """
-    Swimmer mode main logic
+    Run swimmer mode. Display swimmer mode menu and handle user input.
     """
     print("Swimmer mode:")
     while True:
         print(SWIMMER_MODE_MENU)
         selection = input("Selection > ")
         match selection:
-            case "1":
+            case "1":  # Full time history
                 id = input("Enter swimmer id > ")
                 try:
                     swimmer = DATABASE.find_swimmer_with_long_id(id)
@@ -168,35 +172,40 @@ def run_swimmer_mode() -> None:
                 else:
                     name = swimmer.get_full_name()
                     id = swimmer.get_usa_id_long()
+                    club = swimmer.get_club()
+                    min_age, max_age = swimmer.get_age_range(datetime.date.today())
+                    min_birth, max_birth = swimmer.get_birthday_range()
+                    meet_results = swimmer.get_meet_results()
+
+                    # Handle missing information
                     if id is None:
                         id = "--------------"
-                    club = swimmer.get_club()
-                    if club is not None and club.get_lsc() is not None:
-                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
-                    elif club is not None:
+
+                    if club is None:
+                        club_code = "----"
+                    elif club.get_lsc() is None:
                         club_code = club.get_team_code()
                     else:
-                        club_code = "------"
-                    age_range = swimmer.get_age_range(datetime.date.today())
-                    birthday_range = swimmer.get_birthday_range()
-                    min_age, max_age = age_range
-                    min_birth, max_birth = birthday_range
+                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
 
+                    # Calculate age_range, birth_range strings
                     if min_age == max_age:
-                        age_range_str = str(min_age)
+                        age_range = str(min_age)
                     else:
-                        age_range_str = f"({min_age}, {max_age})"
+                        age_range = f"({min_age}, {max_age})"
 
                     if min_birth == max_birth:
-                        birth_range_str = str(min_birth)
+                        b_range = str(min_birth)
                     else:
-                        birth_range_str = f"({min_birth}, {max_birth})"
+                        b_range = f"({min_birth}, {max_birth})"
 
-                    print(
-                        f"Swimmer found! Displaying time history for: {name}  {id}  {club_code}  {age_range_str}  {birth_range_str}"
-                    )
+                    info_str = f"{name}  {id}  {club_code:>6}  {age_range}  {b_range}"
+
+                    # Display swimmer information
+                    print(f"Swimmer found! Displaying time history for: {info_str}")
                     print()
-                    meet_results = swimmer.get_meet_results()
+
+                    # Sort and display meet results
                     meet_results.sort(
                         key=lambda mr: (
                             mr.get_event(),
@@ -207,7 +216,7 @@ def run_swimmer_mode() -> None:
                     for mr in meet_results:
                         display_ind_meet_result_info(swimmer, mr)
                 print()
-            case "2":
+            case "2":  # Best times
                 id = input("Enter swimmer id > ")
                 try:
                     swimmer = DATABASE.find_swimmer_with_long_id(id)
@@ -217,34 +226,40 @@ def run_swimmer_mode() -> None:
                 else:
                     name = swimmer.get_full_name()
                     id = swimmer.get_usa_id_long()
+                    club = swimmer.get_club()
+                    min_age, max_age = swimmer.get_age_range(datetime.date.today())
+                    min_birth, max_birth = swimmer.get_birthday_range()
+                    meet_results = swimmer.get_meet_results()
+
+                    # Handle missing information
                     if id is None:
                         id = "--------------"
-                    club = swimmer.get_club()
-                    if club is not None and club.get_lsc() is not None:
-                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
-                    elif club is not None:
+
+                    if club is None:
+                        club_code = "----"
+                    elif club.get_lsc() is None:
                         club_code = club.get_team_code()
                     else:
-                        club_code = "------"
-                    age_range = swimmer.get_age_range(datetime.date.today())
-                    birthday_range = swimmer.get_birthday_range()
-                    min_age, max_age = age_range
-                    min_birth, max_birth = birthday_range
+                        club_code = f"{club.get_lsc()}-{club.get_team_code()}"
 
+                    # Calculate age_range, birth_range strings
                     if min_age == max_age:
-                        age_range_str = str(min_age)
+                        age_range = str(min_age)
                     else:
-                        age_range_str = f"({min_age}, {max_age})"
+                        age_range = f"({min_age}, {max_age})"
 
                     if min_birth == max_birth:
-                        birth_range_str = str(min_birth)
+                        b_range = str(min_birth)
                     else:
-                        birth_range_str = f"({min_birth}, {max_birth})"
+                        b_range = f"({min_birth}, {max_birth})"
 
-                    print(
-                        f"Swimmer found! Displaying time history for: {name}  {id}  {club_code}  {age_range_str}  {birth_range_str}"
-                    )
+                    info_str = f"{name}  {id}  {club_code:>6}  {age_range}  {b_range}"
+
+                    # Display swimmer information
+                    print(f"Swimmer found! Displaying best times for: {info_str}")
                     print()
+
+                    # Display best times
                     for event in database.dutil.Event:
                         best_mr = swimmer.get_best_meet_result(event)
                         if best_mr is not None:
