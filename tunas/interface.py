@@ -350,7 +350,7 @@ def display_time_standard(standard: database.timestandard.TimeStandard) -> None:
 
 def run_club_mode():
     """
-    Club mode main logic.
+    Run club code.
     """
     print("Club mode:")
     code = input("Enter club code (ex. SCSC) > ")
