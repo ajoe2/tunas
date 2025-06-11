@@ -1,4 +1,4 @@
-A01V3      02Meet Results                  Hy-Tek, Ltd         WMM 8.0Fe Hy-Tek, Ltd         866-456-511105262025                                    MM40    N42
+A01V3      02Meet Results                  Hy-Tek, Ltd         WMM 8.0Fe Hy-Tek, Ltd         866-456-511106062025                                    MM40    N42
 B11        2025 Intermountain Classic Lon841 N. Roop St                              Carson City         NV89701     USA 0523202505252025   0        L1400   N47
 C11PC      PCCARSCarson Tigersharks                                                                                                                          N95
 D01PC      Barrett, Siena              E41374B18DD8A           15FF 2005  9B15OV05242025                            3:03.15L     6 6    15  2.   2450500    NN49
@@ -36,7 +36,7 @@ D01PC      Di Loreto, Abigail          21E583A564D8A           11FF 1004 25 1112
 G01PC          Di Loreto, Abigail          21E583A564D81 2  50C   51.41 2:03.06                                                                F             N96
 D01PC      Di Loreto, Abigail          21E583A564D8A           11FF  503 33 111205242025 1:16.46L                   1:00.25L     3 1    30       44503      NN10
 D01PC      Di Loreto, Abigail          21E583A564D8A           11FF  501 37 111205242025   47.41L                     40.00L     4 6    29       24501      NN79
-D01PC      Di Loreto, Abigail          21E583A564D8A           11FF  504 67 111205252025                              50.26L     4 7    27       64504      NN19
+D01PC      Di Loreto, Abigail          21E583A564D8A           11FF  504 67 111205252025                              50.26L     4 7    28       64504      NN19
 D01PC      Di Loreto, Abigail          21E583A564D8A           11FF 1001 71 111205252025 1:46.57L                   1:29.79L     4 6    29       34501      NN40
 G01PC          Di Loreto, Abigail          21E583A564D81 2  50C   42.90 1:29.79                                                                F             N17
 D01PC      Di Loreto, Abigail          21E583A564D8A           11FF 2001 53 111205252025                            3:15.50L     4 5    21       44501      NN39
@@ -145,7 +145,7 @@ D3BF153650947E4E                                                                
 G01PC          Kanekoa, Kaila              BF153650947E1 2  50C   53.30 2:10.28                                                                F             N95
 D01PC      Kanekoa, Kaila              BF153650947EA           12FF  501 37 111205242025                              42.72L     6 5    38       54501      NN08
 D01PC      Kanekoa, Kaila              BF153650947EA           12FF  502 63 111205252025                              49.12L     4 1    29       54502      NN08
-D01PC      Kanekoa, Kaila              BF153650947EA           12FF  504 67 111205252025                              52.03L     5 4    28       54504      NN08
+D01PC      Kanekoa, Kaila              BF153650947EA           12FF  504 67 111205252025                              52.03L     5 4    29       54504      NN08
 D01PC      Kanekoa, Kaila              BF153650947EA           12FF 1001 71 111205252025                            1:42.38L     7 5    37       14501      NN38
 G01PC          Kanekoa, Kaila              BF153650947E1 2  50C   48.93 1:42.38                                                                F             N06
 D01PC      Kanekoa, Kaila              BF153650947EA           12FF 2001 53 111205252025                            3:37.77L     3 1    26       64501      NN38
@@ -1135,7 +1135,7 @@ D01PC      Welmerink, Claire           49A1B468B9C7A           12FF  503 33 1112
 D01PC      Welmerink, Claire           49A1B468B9C7A           12FF  501 37 111205242025   43.83L                     40.42L     3 8    31       84501      NN10
 D01PC      Welmerink, Claire           49A1B468B9C7A           12FF 1003 57 111205252025                            1:49.47L     5 4    14  3.   1450300    NN10
 G01PC          Welmerink, Claire           49A1B468B9C71 2  50C   50.97 1:49.47                                                                F             N47
-D01PC      Welmerink, Claire           49A1B468B9C7A           12FF  504 67 111205252025                              49.25L     5 7    25       44504      NN59
+D01PC      Welmerink, Claire           49A1B468B9C7A           12FF  504 67 111205252025                              49.25L     5 7    26       44504      NN59
 D01PC      Welmerink, Claire           49A1B468B9C7A           12FF 1001 71 111205252025                            1:28.27L     5 1    27       44501      NN79
 G01PC          Welmerink, Claire           49A1B468B9C71 2  50C   42.29 1:28.27                                                                F             N47
 D01PC      Welmerink, Claire           49A1B468B9C7A           12FF 2001 53 111205252025                            3:15.14L     3 3    20       34501      NN79
@@ -1367,7 +1367,7 @@ G01PC          Almlie, Samantha            EC3CAB8A30EC1 2  50C   43.39 1:30.84 
 D01PC      Almlie, Samantha            EC3CAB8A30ECA           11FF 1003 57 111205252025 2:15.91L                   1:58.63L     3 4    21       44503      NN50
 G01PC          Almlie, Samantha            EC3CAB8A30EC1 2  50C   55.34 1:58.63                                                                F             N27
 D01PC      Almlie, Samantha            EC3CAB8A30ECA           11FF  502 63 111205252025   43.37L                     41.23L     1 7    11  6.   6450200    NN20
-D01PC      Almlie, Samantha            EC3CAB8A30ECA           11FF  504 67 111205252025   44.53L                     41.08L     2 7    16  1.   6450400    NN30
+D01PC      Almlie, Samantha            EC3CAB8A30ECA           11FF  504 67 111205252025   44.53L                     41.08L     2 7    17  1.   6450400    NN30
 D01PC      Almlie, Samantha            EC3CAB8A30ECA           11FF 1001 71 111205252025 1:29.84L                   1:23.97L     3 3    22       64501      NN40
 G01PC          Almlie, Samantha            EC3CAB8A30EC1 2  50C   39.00 1:23.97                                                                F             N17
 D01PC      Artashesyan, Aram           B7B998293158A           13MM 4005  4A131405232025 6:43.85L                   6:21.56L     2 5     4 15.   3450500    NN21
@@ -1388,7 +1388,7 @@ G01PC          Artashesyan, Aram           B7B9982931581 2  50C   34.05 1:10.93 
 D01PC      Basilio, Alessandra B       ABF3F67E37B7A           12FF 1003 57 111205252025                            1:49.19L     3 2    13  4.   1450300    NN11
 D3ABF3F67E37B743Brielle                                                                                                                                      N12
 G01PC          Basilio, Alessandra B       ABF3F67E37B71 2  50C   51.31 1:49.19                                                                F             N48
-D01PC      Basilio, Alessandra B       ABF3F67E37B7A           12FF  504 67 111205252025                              41.12L     5 3    17       34504      NN50
+D01PC      Basilio, Alessandra B       ABF3F67E37B7A           12FF  504 67 111205252025                              41.12L     5 3    18       34504      NN50
 D01PC      Basilio, Alessandra B       ABF3F67E37B7A           12FF 1001 71 111205252025                            1:26.14L     5 2    25       34501      NN70
 G01PC          Basilio, Alessandra B       ABF3F67E37B71 2  50C   41.87 1:26.14                                                                F             N48
 D01PC      Basilio, Alessandra B       ABF3F67E37B7A           12FF 2001 53 111205252025                            3:11.58L     4 3    18       34501      NN70
@@ -1882,7 +1882,7 @@ G01PC          Neary, Claire               658E2D2F98CC1 2  50C   50.30 1:40.32 
 D01PC      Neary, Claire               658E2D2F98CCA           11FF 1003 57 111205252025 2:26.53L                   1:51.01L     3 3    15  2.   2450300    NN59
 G01PC          Neary, Claire               658E2D2F98CC1 2  50C   54.62 1:51.01                                                                F             N85
 D01PC      Neary, Claire               658E2D2F98CCA           11FF  502 63 111205252025                              41.91L     6 5    14  3.   1450200    NN38
-D01PC      Neary, Claire               658E2D2F98CCA           11FF  504 67 111205252025                              43.05L     3 1    21       34504      NN97
+D01PC      Neary, Claire               658E2D2F98CCA           11FF  504 67 111205252025                              43.05L     3 1    22       44504      NN97
 D01PC      Neary, Claire               658E2D2F98CCA           11FF 1001 71 111205252025 1:40.90L                   1:24.03L     4 3    23       14501      NN19
 G01PC          Neary, Claire               658E2D2F98CC1 2  50C   41.38 1:24.03                                                                F             N95
 D01PC      Neary, Heidi                E3974A1FC42EA            6FF  501 39AUN0805242025                                 NSL     5 3     0       04501      NN87
@@ -2056,7 +2056,7 @@ G01PC          Stecker, Sol                D8768E85EA631 2  50C   49.78 1:42.56 
 D01PC      Stecker, Sol                D8768E85EA63A           11FF 1003 57 111205252025                            1:55.56L     4 2    18       14503      NN08
 G01PC          Stecker, Sol                D8768E85EA631 2  50C   55.67 1:55.56                                                                F             N65
 D01PC      Stecker, Sol                D8768E85EA63A           11FF  502 63 111205252025   54.79L                     44.45L     3 3    22       34502      NN48
-D01PC      Stecker, Sol                D8768E85EA63A           11FF  504 67 111205252025 1:02.92L                     47.33L     3 6    24       44504      NN68
+D01PC      Stecker, Sol                D8768E85EA63A           11FF  504 67 111205252025 1:02.92L                     47.33L     3 6    25       54504      NN68
 D01PC      Stecker, Sol                D8768E85EA63A           11FF 1001 71 111205252025 2:10.00L                   1:33.07L     4 1    31       44501      NN78
 G01PC          Stecker, Sol                D8768E85EA631 2  50C   44.73 1:33.07                                                                F             N65
 D01PC      Steckline, Aiden            8B05122D7770A           12MM 1001 72 111205252025 1:37.40L                        NSL     2 4     0       04501      NN79
@@ -2341,7 +2341,7 @@ D01SN      Champagne, Giuliana         D567DBFDBDF8A           11FF 1003 57 1112
 D3D567DBFDBDF841                                                                                                                                             N89
 G01SN          Champagne, Giuliana         D567DBFDBDF81 2  50C   53.95 1:53.94                                                                F             N48
 D01SN      Champagne, Giuliana         D567DBFDBDF8A           11FF  502 63 111205252025                              52.21L     4 6    33       64502      NN40
-D01SN      Champagne, Giuliana         D567DBFDBDF8A           11FF  504 67 111205252025                              53.84L     4 8    31       84504      NN50
+D01SN      Champagne, Giuliana         D567DBFDBDF8A           11FF  504 67 111205252025                              53.84L     4 8    32       84504      NN50
 D01SN      Covaciu, Amanda             0EC0F1C73351A           15FF 4005  3B15OV05232025                            7:02.34L     2 5    10  7.   5450500    NN69
 D30EC0F1C7335149                                                                                                                                             N49
 G01SN          Covaciu, Amanda             0EC0F1C733511 8  50C   41.60 1:37.13 2:29.92 3:21.08 4:23.91 5:26.04 6:14.16 7:02.34                F             N80
@@ -2438,7 +2438,7 @@ D01SN      Duffus, Kennedy             30E22A00BA8FA           11FF  501 37 1112
 D01SN      Duffus, Kennedy             30E22A00BA8FA           11FF 1003 57 111205252025 2:04.98L                   2:03.39L     2 1    26       74503      NN10
 G01SN          Duffus, Kennedy             30E22A00BA8F1 2  50C   59.90 2:03.39                                                                F             N76
 D01SN      Duffus, Kennedy             30E22A00BA8FA           11FF  502 63 111205252025   55.01L                     53.92L     3 6    36       64502      NN59
-D01SN      Duffus, Kennedy             30E22A00BA8FA           11FF  504 67 111205252025                              54.86L     3 2    32       64504      NN88
+D01SN      Duffus, Kennedy             30E22A00BA8FA           11FF  504 67 111205252025                              54.86L     3 2    33       74504      NN88
 D01SN      Egan, Jack T                3E6C479B8B74A           18MM 2002 46B15OV05252025 2:25.64Y                   2:44.65L     2 7    16  1.   4450200    NN29
 D33E6C479B8B740B                                                                                                                                             N59
 G01SN          Egan, Jack T                3E6C479B8B741 4  50C   37.66 1:20.71 2:03.85 2:44.65                                                F             N36
@@ -2656,7 +2656,7 @@ D01SN      Hulet, Lillee               6963C7C30A10A           12FF 1003 57 1112
 D36963C7C30A1049                                                                                                                                             N39
 G01SN          Hulet, Lillee               6963C7C30A101 2  50C   53.84 1:57.02                                                                F             N85
 D01SN      Hulet, Lillee               6963C7C30A10A           12FF  502 63 111205252025                              43.52L     3 8    18       14502      NN87
-D01SN      Hulet, Lillee               6963C7C30A10A           12FF  504 67 111205252025                              46.27L     4 1    22       44504      NN87
+D01SN      Hulet, Lillee               6963C7C30A10A           12FF  504 67 111205252025                              46.27L     4 1    23       44504      NN87
 D01SN      Hulet, Lillee               6963C7C30A10A           12FF 1001 71 111205252025                            1:33.59L     5 8    32       54501      NN18
 G01SN          Hulet, Lillee               6963C7C30A101 2  50C   44.55 1:33.59                                                                F             N85
 D01SN      Kieckhefer, Lincoln         6AA4EDB7D9A1A           16MM 4005  4B15OV05232025 6:44.96L                   6:33.84L     2 3     8 11.   4450500    NN62
@@ -2737,7 +2737,7 @@ G01SN          Lykes, Ella                 7C3C0991657F1 2  50C   46.90 1:35.22 
 D01SN      Lykes, Ella                 7C3C0991657FA           11FF 1003 57 111205252025 2:06.68L                   1:57.27L     2 8    20       54503      NN48
 G01SN          Lykes, Ella                 7C3C0991657F1 2  50C   56.41 1:57.27                                                                F             N15
 D01SN      Lykes, Ella                 7C3C0991657FA           11FF  502 63 111205252025   48.49L                     44.00L     3 4    21       24502      NN87
-D01SN      Lykes, Ella                 7C3C0991657FA           11FF  504 67 111205252025   47.82L                     46.31L     2 1    23       74504      NN97
+D01SN      Lykes, Ella                 7C3C0991657FA           11FF  504 67 111205252025   47.82L                     46.31L     2 1    24       74504      NN97
 D01SN      Lykes, Ella                 7C3C0991657FA           11FF 1001 71 111205252025 1:32.92L                   1:32.40L     3 6    30       84501      NN38
 G01SN          Lykes, Ella                 7C3C0991657F1 2  50C   42.32 1:32.40                                                                F             N05
 D01SN      Martinez, Aliya             7A45EB997B0BA           17FF 2005  9B15OV05242025 2:52.74L                   2:52.40L     2 7    10  7.   4450500    NN01
@@ -2858,7 +2858,7 @@ D01SN      Ortega, Mia                 FF9D6DF07461A           12FF  503 33 1112
 D01SN      Ortega, Mia                 FF9D6DF07461A           12FF  501 37 111205242025                              36.27L     5 3    17       34501      NN27
 D01SN      Ortega, Mia                 FF9D6DF07461A           12FF 1003 57 111205252025 1:52.67L                   1:40.71L     1 8     6 13.   6450300    NN88
 G01SN          Ortega, Mia                 FF9D6DF074611 2  50C   48.17 1:40.71                                                                F             N25
-D01SN      Ortega, Mia                 FF9D6DF07461A           12FF  504 67 111205252025                              41.84L     4 6    20       34504      NN27
+D01SN      Ortega, Mia                 FF9D6DF07461A           12FF  504 67 111205252025                              41.84L     4 6    21       34504      NN37
 D01SN      Ortega, Mia                 FF9D6DF07461A           12FF 1001 71 111205252025 1:28.61L                   1:19.21L     3 5    13  4.   1450100    NN88
 G01SN          Ortega, Mia                 FF9D6DF074611 2  50C   38.51 1:19.21                                                                F             N25
 D01SN      Ortega, Mia                 FF9D6DF07461A           12FF 2001 53 111205252025 3:13.81L                   2:50.43L     2 3    11  6.   2450100    NN78
@@ -2898,7 +2898,7 @@ D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF  501 37 1112
 D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF 1002 41 111205242025 1:40.82L                   1:37.68L     2 2    21       64502      NN59
 G01SN          Puletau, Selu               1B6E7C2BC66C1 2  50C   45.62 1:37.68                                                                F             N26
 D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF  502 63 111205252025   43.81L                     40.35L     1 1     7 12.   4450200    NN39
-D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF  504 67 111205252025   52.24L                   4:03.69L     3 5    33       74504      NN39
+D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF  504 67 111205252025   52.24L                     40.69L     3 5    16       14504      NN09
 D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF 1001 71 111205252025 1:37.29L                   1:28.93L     3 8    28       74501      NN69
 G01SN          Puletau, Selu               1B6E7C2BC66C1 2  50C   40.72 1:28.93                                                                F             N26
 D01SN      Puletau, Selu               1B6E7C2BC66CA           11FF 2001 53 111205252025 3:58.88L                   3:19.42L     2 1    22       74501      NN59
@@ -2940,7 +2940,7 @@ D01SN      Reyes, Liam                 AE56DE1E228CA            9MM 1001 70B0910
 G01SN          Reyes, Liam                 AE56DE1E228C1 2  50C   47.24 1:34.59                                                                F             N35
 D01SN      Rogers, Cora                196DD574F628A           11FF  502 63 111205252025                              51.33L     6 4    32       34502      NN57
 D3196DD574F6284F                                                                                                                                             N59
-D01SN      Rogers, Cora                196DD574F628A           11FF  504 67 111205252025                              52.81L     4 4    30       74504      NN67
+D01SN      Rogers, Cora                196DD574F628A           11FF  504 67 111205252025                              52.81L     4 4    31       74504      NN67
 D01SN      Rogers, Cora                196DD574F628A           11FF 1001 71 111205252025                            1:44.13L     6 4    38       54501      NN87
 G01SN          Rogers, Cora                196DD574F6281 2  50C         1:44.13                                                                F             N05
 D01SN      Rogers, Cora                196DD574F628A           11FF 2001 53 111205252025                            3:37.53L     3 7    25       54501      NN97
@@ -3002,7 +3002,7 @@ D01SN      Scott, Mckenzie             F67F98B4786EA           11FF 1002 41 1112
 G01SN          Scott, Mckenzie             F67F98B4786E1 2  50C   46.28 1:36.26                                                                F             N96
 D01SN      Scott, Mckenzie             F67F98B4786EA           11FF 1003 57 111205252025 2:02.38L                   1:41.32L     2 2     7 12.   1450300    NN50
 G01SN          Scott, Mckenzie             F67F98B4786E1 2  50C   47.35 1:41.32                                                                F             N96
-D01SN      Scott, Mckenzie             F67F98B4786EA           11FF  504 67 111205252025   51.27L                     41.38L     3 4    18       14504      NN79
+D01SN      Scott, Mckenzie             F67F98B4786EA           11FF  504 67 111205252025   51.27L                     41.38L     3 4    19       24504      NN79
 D01SN      Scott, Mckenzie             F67F98B4786EA           11FF 1001 71 111205252025 1:36.56L                   1:20.56L     3 1    17       44501      NN20
 G01SN          Scott, Mckenzie             F67F98B4786E1 2  50C   38.56 1:20.56                                                                F             N96
 D01SN      Senthilkumar, Krishvanth    F8F1688FFDEFA           14MM 1003 16A131405242025                            1:45.19L     6 4    12  5.   4450300    NN83
@@ -3099,7 +3099,7 @@ D01PC      Donahue, Maeve              00EF6FFD7FD6A           11FF 2004 59 1112
 D300EF6FFD7FD648                                                                                                                                             N79
 G01PC          Donahue, Maeve              00EF6FFD7FD61 4  50C   49.62 1:52.72 2:57.83 4:01.07                                                F             N97
 D01PC      Donahue, Maeve              00EF6FFD7FD6A           11FF  502 63 111205252025                              45.05L     5 6    23       34502      NN48
-D01PC      Donahue, Maeve              00EF6FFD7FD6A           11FF  504 67 111205252025                              49.32L     4 2    26       54504      NN58
+D01PC      Donahue, Maeve              00EF6FFD7FD6A           11FF  504 67 111205252025                              49.32L     4 2    27       54504      NN58
 D01PC      Ksiazek, Philip             5232B489AA17A           12MM 1003 58 111205252025                            1:52.96L     1 2     5 14.   4450300    NN39
 D35232B489AA1744                                                                                                                                             N39
 G01PC          Ksiazek, Philip             5232B489AA171 2  50C   52.35 1:52.96                                                                F             N66
@@ -3110,7 +3110,7 @@ D01PC      Ksiazek, Philip             5232B489AA17A           12MM 2001 54 1112
 G01PC          Ksiazek, Philip             5232B489AA171 4  50C   37.90         2:15.10 3:01.81                                                F             N27
 D01PC      Roverud, Nadine             3777E8E3C0BCA           12FF  502 63 111205252025                              41.35L     5 3    12  5.   2450200    NN19
 D33777E8E3C0BC4A                                                                                                                                             N69
-D01PC      Roverud, Nadine             3777E8E3C0BCA           12FF  504 67 111205252025                              41.83L     3 8    19       24504      NN88
+D01PC      Roverud, Nadine             3777E8E3C0BCA           12FF  504 67 111205252025                              41.83L     3 8    20       34504      NN88
 D01PC      Roverud, Nadine             3777E8E3C0BCA           12FF 1001 71 111205252025                            1:16.67L     6 5    10  7.   2450100    NN49
 G01PC          Roverud, Nadine             3777E8E3C0BC1 2  50C         1:16.67                                                                F             N36
 D01PC      Roverud, Nadine             3777E8E3C0BCA           12FF 2001 53 111205252025                            2:47.43L     3 6     9  9.   1450100    NN49
@@ -3182,7 +3182,7 @@ D01SN      Boyer, Aria                 70DF96C8B33CU           11FF  501 37 1112
 D01SN      Boyer, Aria                 70DF96C8B33CU           11FF 1002 41 111205242025 1:55.46L                   1:56.77L     3 4    28       64502      NN68
 G01SN          Boyer, Aria                 70DF96C8B33C1 2  50C   58.39 1:56.77                                                                F             N35
 D01SN      Boyer, Aria                 70DF96C8B33CU           11FF  502 63 111205252025   53.94L                     52.92L     3 5    34       54502      NN18
-D01SN      Boyer, Aria                 70DF96C8B33CU           11FF  504 67 111205252025   56.87L                     52.45L     3 3    29       54504      NN28
+D01SN      Boyer, Aria                 70DF96C8B33CU           11FF  504 67 111205252025   56.87L                     52.45L     3 3    30       64504      NN18
 D01SN      Boyer, Aria                 70DF96C8B33CU           11FF 1001 71 111205252025 1:37.96L                   1:37.59L     4 5    35       64501      NN78
 G01SN          Boyer, Aria                 70DF96C8B33C1 2  50C   47.23 1:37.59                                                                F             N25
 D01SN      Boyer, Aria                 70DF96C8B33CU           11FF 2001 53 111205252025                            3:25.08L     4 6    23       54501      NN67
@@ -3322,4 +3322,4 @@ D01PC      Wood, Evie                  90C4D69EEE60A           20FF  501 11B15OV
 D390C4D69EEE6044                                                                                                                                             N69
 D01PC      Wood, Evie                  90C4D69EEE60A           20FF 1003 15B15OV05242025 1:16.39L                   1:21.54L     1 3     4 15.   4450300    NN98
 G01PC          Wood, Evie                  90C4D69EEE601 2  50C   38.23 1:21.54                                                                F             N84
-Z01Meet Res02Successful Build on 5/26/2025   1  1  18  18  1744   322    0     0  1210                                                                       N69
+Z01Meet Res02Successful Build on 6/6/2025    1  1  18  18  1744   322    0     0  1210                                                                       N59
