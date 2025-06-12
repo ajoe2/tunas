@@ -26,6 +26,9 @@ def title_case(name: str) -> str:
     """
     Convert name to title case.
     """
+    assert type(name) == str
+    assert name.isalpha()
+
     name_components = name.split(" ")
     name = ""
     for c in name_components:
@@ -41,6 +44,8 @@ def parse_full_name(full_name: str) -> tuple[str, Optional[str], str]:
     """
     Extract the first name, middle initial, and last name from full_name.
     """
+    assert type(full_name) == str
+
     if full_name[-1].isupper() and full_name[-2] == " ":
         middle_initial = full_name[-1]
         full_name = full_name[:-2].strip()
