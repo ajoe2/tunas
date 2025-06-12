@@ -53,3 +53,26 @@ def test_parse_full_name():
 
     assert (first_1, middle_1, last_1) == ("Billy Bob", "J", "Jr")
     assert (first_2, middle_2, last_2) == ("Totally", "R", "Swimmer")
+
+
+def test_standardize_course():
+    course1 = "S"
+    course2 = "Y"
+    course3 = "L"
+    course4 = "1"
+    course5 = "2"
+    course6 = "3"
+    course7 = "x"
+
+    assert util.standardize_course(course1) == '1'
+    assert util.standardize_course(course2) == '2'
+    assert util.standardize_course(course3) == '3'
+    assert util.standardize_course(course4) == '1'
+    assert util.standardize_course(course5) == '2'
+    assert util.standardize_course(course6) == '3'
+
+    try:
+        util.standardize_course(course7)
+        assert False
+    except:
+        assert True
