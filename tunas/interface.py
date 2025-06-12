@@ -72,6 +72,7 @@ TIME_STANDARD_MODE_MENU = (
 SINGLE_AGE_MENU = (
     "1) 10 & under\n" + "2) 11\n" + "3) 12\n" + "4) 13\n" + "5) 14\n" + "Back (b/B)\n"
 )
+COURSE_MENU = "1) SCY\n2) SCM\n3) LCM\n"
 DOUBLE_AGE_MENU = (
     "1) 10 & under\n"
     + "2) 11-12\n"
@@ -455,9 +456,9 @@ def run_relay_mode() -> None:
                     curr_club = RELAY_GENERATOR.get_club()
                     excluded_swimmer = curr_club.find_swimmer_with_long_id(id)
                     assert excluded_swimmer is not None
-                    full_name = excluded_swimmer.get_full_name()
-
                     RELAY_GENERATOR.exclude_swimmer(excluded_swimmer)
+
+                    full_name = excluded_swimmer.get_full_name()
                     print(f"Success! Excluded {full_name} ({id})")
                 except:
                     display_error(f"couldn't exclude swimmer with id '{id}'!")
@@ -471,9 +472,9 @@ def run_relay_mode() -> None:
                     curr_club = RELAY_GENERATOR.get_club()
                     included_swimmer = curr_club.find_swimmer_with_long_id(id)
                     assert included_swimmer is not None
-                    full_name = included_swimmer.get_full_name()
-
                     RELAY_GENERATOR.include_swimmer(included_swimmer)
+
+                    full_name = included_swimmer.get_full_name()
                     print(f"Success! Included {full_name} ({id})")
                 except:
                     display_error(f"couldn't include swimmer with id '{id}'!")
@@ -498,7 +499,7 @@ def run_relay_settings() -> None:
         cur_course = RELAY_GENERATOR.get_course()
         cur_date = RELAY_GENERATOR.get_relay_date()
         cur_num_relays = RELAY_GENERATOR.get_num_relays()
-        query_settings = (
+        current_settings = (
             f"Query settings:\n"
             + f" * {'Club:':<12} {cur_club.get_lsc()}-{cur_club.get_team_code()}\n"
             + f" * {'Age range:':<12} {cur_min_age}-{cur_max_age}\n"
@@ -509,7 +510,7 @@ def run_relay_settings() -> None:
         )
 
         # Allow the user to change settings
-        print(query_settings)
+        print(current_settings)
         print(RELAY_SETTINGS_MENU)
         selection = input("Selection > ")
         match selection:
@@ -561,7 +562,9 @@ def run_relay_settings() -> None:
                 print(f"Success! New sex set to: {new_sex.get_name()}")
                 print()
             case "4":
-                selection = input("\n1) SCY\n2) SCM\n3) LCM\n\nSelection > ")
+                print()
+                print(COURSE_MENU)
+                selection = input("Selection > ")
                 if not selection in ["1", "2", "3"]:
                     display_error(f"invalid selection '{selection}'!")
                     print()
@@ -594,10 +597,7 @@ def run_relay_settings() -> None:
                     new_num = int(new_num)
                     assert new_num > 0
                 except:
-                    display_error(
-                        f"invalid selection! Make sure the input is an integer greater "
-                        + f"than zero."
-                    )
+                    display_error(f"invalid selection!")
                     print()
                     continue
                 RELAY_GENERATOR.set_num_relays(new_num)
@@ -612,6 +612,9 @@ def run_relay_settings() -> None:
 
 
 def display_statistics() -> None:
+    """
+    Display database statistics.
+    """
     print("Statistics:")
     print(f"Number of clubs: {len(DATABASE.get_clubs()):,}")
     print(f"Number of swimmers: {len(DATABASE.get_swimmers()):,}")
@@ -624,6 +627,10 @@ def display_relays(
     relays: list[list[database.swim.Swimmer]],
     event: database.dutil.Event,
 ) -> None:
+    """
+    Display each relay in relays.
+    """
+    # Calculate leg events
     leg_dist = event.get_distance() // 4
     course = event.get_course()
     if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
@@ -634,7 +641,7 @@ def display_relays(
         leg_strokes = relaygen.MEDLEY_RELAY_STROKES
     leg_events = [database.dutil.Event((leg_dist, s, course)) for s in leg_strokes]
 
-    curr_relay_letter = "A"
+    relay_letter = "A"
     for relay in relays:
         # Calculate relay time
         if relay != []:
@@ -645,6 +652,7 @@ def display_relays(
             total_time = "-"
 
         # Calculate time standard
+        standards = []
         if relay_time:
             standards = TIME_STANDARD_INFO.get_qualified_standards(
                 relay_time,
@@ -652,84 +660,89 @@ def display_relays(
                 RELAY_GENERATOR.get_age_range()[0],
                 RELAY_GENERATOR.get_sex(),
             )
-            if len(standards) > 0:
-                best_standard = standards[-1]
-            else:
-                best_standard = None
+        if len(standards) > 0:
+            best_standard = standards[-1]
         else:
             best_standard = None
 
         # Display relay information
+        relay_name = f"4x{leg_dist} {relay_stroke} {course}"
         if best_standard is not None:
-            print(
-                f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}] [{best_standard}]"
-            )
+            print(f"{relay_name}: '{relay_letter}' [{total_time}] [{best_standard}]")
         else:
-            print(
-                f"4x{leg_dist} {relay_stroke} {course}: '{curr_relay_letter}' [{total_time}]"
-            )
+            print(f"{relay_name}: '{relay_letter}' [{total_time}]")
+
+        # If empty relay, display message and continue
+        if relay == []:
+            print("Not enough swimmers!")
+            print()
+            relay_letter = chr(ord(relay_letter) + 1)
+            continue
 
         # Display information for each relay leg
-        if relay != []:
-            for i in range(4):
-                leg_event = leg_events[i]
-                swimmer = relay[i]
-                club = RELAY_GENERATOR.get_club()
-                mr = swimmer.get_best_meet_result(leg_event)
-                assert mr is not None
+        for i in range(4):
+            leg_event = leg_events[i]
+            swimmer = relay[i]
+            club = RELAY_GENERATOR.get_club()
+            mr = swimmer.get_best_meet_result(leg_event)
 
-                # Get time standard information
-                time_standards = TIME_STANDARD_INFO.get_qualified_standards(
-                    mr.get_final_time(),
-                    leg_event,
-                    RELAY_GENERATOR.get_age_range()[0],
-                    swimmer.get_sex(),
+            # Swimmer should have a valid meet result
+            assert mr is not None
+
+            # Pull data
+            full_name = swimmer.get_full_name()
+            usa_id = swimmer.get_usa_id_long()
+            stroke = str(leg_event.get_stroke())
+            meet_name = mr.get_meet().get_name()
+            best_time = str(mr.get_final_time())
+
+            # Get time standard information
+            time_standards = TIME_STANDARD_INFO.get_qualified_standards(
+                mr.get_final_time(),
+                leg_event,
+                RELAY_GENERATOR.get_age_range()[0],
+                swimmer.get_sex(),
+            )
+            if len(time_standards) > 0:
+                best_standard = time_standards[-1]
+            else:
+                best_standard = None
+
+            # Get full club code
+            if club.get_lsc() is not None:
+                full_club_code = f"{club.get_lsc()}-{club.get_team_code()}"
+            else:
+                full_club_code = club.get_team_code()
+
+            # Condense age range if possible
+            age_range = swimmer.get_age_range(RELAY_GENERATOR.get_relay_date())
+            if age_range[0] == age_range[1]:
+                age_range = age_range[0]
+
+            # Get swimmer sex
+            sex = str(swimmer.get_sex())
+
+            # Display relay leg
+            if best_standard is not None:
+                print(
+                    f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
+                    + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
+                    + f"{best_standard.short():<4}  {meet_name:<30}"
                 )
-                if len(time_standards) > 0:
-                    best_standard = time_standards[-1]
-                else:
-                    best_standard = None
-
-                # Pull data
-                full_name = swimmer.get_full_name()
-                usa_id = swimmer.get_usa_id_long()
-                stroke = str(leg_event.get_stroke())
-                meet_name = mr.get_meet().get_name()
-                best_time = str(mr.get_final_time())
-
-                # Get full club code
-                if club.get_lsc() is not None:
-                    full_club_code = f"{club.get_lsc()}-{club.get_team_code()}"
-                else:
-                    full_club_code = club.get_team_code()
-
-                # Condense age range if possible
-                age_range = swimmer.get_age_range(RELAY_GENERATOR.get_relay_date())
-                if age_range[0] == age_range[1]:
-                    age_range = age_range[0]
-
-                # Get swimmer sex
-                sex = str(swimmer.get_sex())
-
-                if best_standard is not None:
-                    print(
-                        f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
-                        + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
-                        + f"{best_standard.short():<4}  {meet_name:<30}"
-                    )
-                else:
-                    print(
-                        f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
-                        + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
-                        + f"{meet_name:<30}"
-                    )
-        else:
-            print("Not enough swimmers!")
+            else:
+                print(
+                    f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
+                    + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
+                    + f"{meet_name:<30}"
+                )
         print()
-        curr_relay_letter = chr(ord(curr_relay_letter) + 1)
+        relay_letter = chr(ord(relay_letter) + 1)
 
 
 def display_swimmer_information(swimmer: database.swim.Swimmer) -> None:
+    """
+    Display swimmer information
+    """
     # Calculate full name
     full_name = swimmer.get_full_name()
 
@@ -777,6 +790,9 @@ def display_ind_meet_result_info(
     swimmer: database.swim.Swimmer,
     mr: database.swim.IndividualMeetResult,
 ) -> None:
+    """
+    Display individual meet result information.
+    """
     event = mr.get_event()
     final_time = mr.get_final_time()
     age_class = mr.get_swimmer_age_class()
