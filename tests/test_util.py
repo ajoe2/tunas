@@ -31,11 +31,18 @@ def test_is_old_id():
     last_5 = "Joe"
     id5 = "ASD03SD991SDFA"
 
+    first_6 = "Ty"
+    middle_6 = "W"
+    last_6 = "Lee"
+    id6 = "011873TY**LEE*"
+
     assert util.is_old_id(first_1, last_1, middle_1, id1) == True
     assert util.is_old_id(first_2, last_2, middle_2, id2) == True
     assert util.is_old_id(first_3, last_3, middle_3, id3) == True
     assert util.is_old_id(first_4, last_4, middle_4, id4) == True
     assert util.is_old_id(first_5, last_5, middle_5, id5) == False
+    assert util.is_old_id(first_6, last_6, middle_6, id6) == True
+
 
 def test_parse_full_name():
     full_name_1 = "Jr, Billy Bob J"
