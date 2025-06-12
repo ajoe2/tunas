@@ -36,3 +36,13 @@ def test_is_old_id():
     assert util.is_old_id(first_3, last_3, middle_3, id3) == True
     assert util.is_old_id(first_4, last_4, middle_4, id4) == True
     assert util.is_old_id(first_5, last_5, middle_5, id5) == False
+
+def test_parse_full_name():
+    full_name_1 = "Jr, Billy Bob J"
+    full_name_2 = "SwImMEr, tOTally R"
+
+    first_1, middle_1, last_1 = util.parse_full_name(full_name_1)
+    first_2, middle_2, last_2 = util.parse_full_name(full_name_2)
+
+    assert (first_1, middle_1, last_1) == ("Billy Bob", "J", "Jr")
+    assert (first_2, middle_2, last_2) == ("Totally", "R", "Swimmer")
