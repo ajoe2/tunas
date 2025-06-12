@@ -22,7 +22,9 @@ MEDLEY_RELAY_STROKES = [
 ]
 
 
-def get_relay_leg_events(relay_event: database.dutil.Event) -> list[database.dutil.Event]:
+def get_relay_leg_events(
+    relay_event: database.dutil.Event,
+) -> list[database.dutil.Event]:
     """
     Return leg events for a given relay event.
     """
@@ -33,7 +35,9 @@ def get_relay_leg_events(relay_event: database.dutil.Event) -> list[database.dut
     leg_dist = relay_event.get_distance() // 4
     course = relay_event.get_course()
     leg_strokes = FREESTYLE_RELAY_STROKES if is_free_relay else MEDLEY_RELAY_STROKES
-    leg_events = [database.dutil.Event((leg_dist, strk, course)) for strk in leg_strokes]
+    leg_events = [
+        database.dutil.Event((leg_dist, strk, course)) for strk in leg_strokes
+    ]
     return leg_events
 
 
@@ -145,10 +149,18 @@ class RelayGenerator:
         return self.excluded_swimmers
 
     def exclude_swimmer(self, swimmer: database.swim.Swimmer):
+        """
+        Exclude swimmer from generated relays. If swimmer was already
+        excluded, this does nothing.
+        """
         assert type(swimmer) == database.swim.Swimmer
         self.excluded_swimmers.add(swimmer)
 
     def include_swimmer(self, swimmer: database.swim.Swimmer):
+        """
+        Include swimmer in generated relays. If swimmer was not originally
+        excluded, this raises an error.
+        """
         assert type(swimmer) == database.swim.Swimmer
         self.excluded_swimmers.remove(swimmer)
 
@@ -156,7 +168,7 @@ class RelayGenerator:
         self, event: database.dutil.Event
     ) -> list[list[database.swim.Swimmer]]:
         """
-        Generate relays based on the current settings.
+        Generate relays for given event.
         """
         is_free_relay = event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY
         is_medley_relay = event.get_stroke() == database.sdif.Stroke.MEDLEY_RELAY
@@ -173,11 +185,15 @@ class RelayGenerator:
         best_le3: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le4: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         for swimmer in eligible_swimmers:
+            # Continue if swimmer is wrong sex or should be excluded
             if swimmer.get_sex() != self.get_sex():
                 continue
             if swimmer in self.get_excluded_swimmers():
                 continue
+
+            # Get swimmer min/max age.
             s_min_age, s_max_age = swimmer.get_age_range(self.get_relay_date())
+
             # If swimmer is the right age and has a meet result for the given leg
             # event, add them to the list of eligible swimmers.
             if not s_min_age > max_age and not s_max_age < min_age:
@@ -202,15 +218,15 @@ class RelayGenerator:
         best_le4.sort(key=lambda x: x[1])
 
         # Generate optimal relays
-        generated_relays: list[list[database.swim.Swimmer]] = []
-        remaining_relays: int = self.get_num_relays()
+        generated_relays = []
+        remaining_relays = self.get_num_relays()
         while remaining_relays > 0:
-            if (
-                len(best_le1) == 0
-                or len(best_le2) == 0
-                or len(best_le3) == 0
-                or len(best_le4) == 0
-            ):
+            # Check if we have enough swimmers
+            empty_le1 = len(best_le1) == 0
+            empty_le2 = len(best_le2) == 0
+            empty_le3 = len(best_le3) == 0
+            empty_le4 = len(best_le4) == 0
+            if empty_le1 or empty_le2 or empty_le3 or empty_le4:
                 generated_relays.append([])
                 remaining_relays -= 1
                 continue
@@ -249,12 +265,14 @@ class RelayGenerator:
                     if candidate_comb_time < best_comb_time:
                         best_combination = candidate_combination
 
-            # Set new relay and remove swimmers from candidate lists
+            # Remove swimmers from list of available swimmers
             new_relay = [pair[0] for pair in best_combination]
             best_le1 = list(filter(lambda x: x[0] not in new_relay, best_le1))
             best_le2 = list(filter(lambda x: x[0] not in new_relay, best_le2))
             best_le3 = list(filter(lambda x: x[0] not in new_relay, best_le3))
             best_le4 = list(filter(lambda x: x[0] not in new_relay, best_le4))
+
+            # Add new relay to generated relays
             generated_relays.append(new_relay)
             remaining_relays -= 1
 

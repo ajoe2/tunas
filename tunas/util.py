@@ -13,6 +13,10 @@ def standardize_course(course_str: str) -> str:
     alphabetic or numeric.
     """
     alpha_to_num_course = {"S": "1", "Y": "2", "L": "3"}
+    assert (
+        course_str in alpha_to_num_course.keys()
+        or course_str in alpha_to_num_course.values()
+    )
     if course_str in alpha_to_num_course.keys():
         course_str = alpha_to_num_course[course_str]
     return course_str
