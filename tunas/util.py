@@ -27,8 +27,6 @@ def title_case(name: str) -> str:
     Convert name to title case.
     """
     assert type(name) == str
-    assert name.isalpha()
-
     name_components = name.split(" ")
     name = ""
     for c in name_components:
