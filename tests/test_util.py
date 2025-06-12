@@ -5,7 +5,7 @@ Test file for util.py
 from tunas import util
 
 
-def test_id_checker():
+def test_is_old_id():
     first_1 = "Cy"
     middle_1 = "V"
     last_1 = "Young"
