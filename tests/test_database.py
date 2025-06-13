@@ -3,6 +3,7 @@ Tests for database package
 """
 
 import datetime
+import pytest
 
 from tunas import database
 
@@ -148,31 +149,19 @@ class TestTime:
         assert t == database.stime.Time(1, 52, 65)
 
     def test_create_time_from_string_error1(self):
-        try:
+        with pytest.raises(Exception):
             t_str = "]fw*Ds1"  # Garbage
-            t = database.stime.create_time_from_str(t_str)
-            success = True
-        except:
-            success = False
-        assert not success
+            database.stime.create_time_from_str(t_str)
 
     def test_create_time_from_string_error2(self):
-        try:
+        with pytest.raises(Exception):
             t_str = "1:99.99"  # Invalid minutes
-            t = database.stime.create_time_from_str(t_str)
-            success = True
-        except:
-            success = False
-        assert not success
+            database.stime.create_time_from_str(t_str)
 
     def test_create_time_from_string_error3(self):
-        try:
+        with pytest.raises(Exception):
             t_str = "1:59.999"  # Invalid hundredths
-            t = database.stime.create_time_from_str(t_str)
-            success = True
-        except:
-            success = False
-        assert not success
+            database.stime.create_time_from_str(t_str)
 
 
 class TestUtil:
