@@ -76,3 +76,8 @@ def test_standardize_course():
         assert False
     except:
         assert True
+
+
+def test_title_case():
+    name1 = "bilLY BoB Joe jr"
+    assert util.title_case(name1) == "Billy Bob Joe Jr"
