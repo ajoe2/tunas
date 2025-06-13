@@ -3,6 +3,7 @@ Tests for database package
 """
 
 import datetime
+import pytest
 
 from tunas import database
 
@@ -118,37 +119,71 @@ def test_database_basic():
     ) == (15, 16)
 
 
-def test_create_time_from_string_basic1():
-    t_str = "1:52.65"
-    t = database.stime.create_time_from_str(t_str)
-    assert t == database.stime.Time(1, 52, 65)
+class TestTime:
+    """
+    Time tests in stime.py.
+    """
 
+    def test_time_basic(self):
+        t1 = database.stime.Time(2, 0, 0)
+        t2 = database.stime.Time(1, 30, 94)
+        t3 = database.stime.Time(0, 32, 1)
 
-def test_create_time_from_string_error1():
-    try:
-        t_str = "]fw*Ds1"  # Garbage
+        assert t1 > t2
+        assert not t1 < t2
+        assert not t1 == t2
+
+        assert str(t1) == "2:00.00"
+        assert str(t2) == "1:30.94"
+        assert str(t3) == "32.01"
+
+        t4 = t1 - t2
+        assert t4 == database.stime.Time(0, 29, 6)
+
+        t5 = t1 + t2
+        assert t5 == database.stime.Time(3, 30, 94)
+
+    def test_create_time_from_string_basic1(self):
+        t_str = "1:52.65"
         t = database.stime.create_time_from_str(t_str)
-        success = True
-    except:
-        success = False
-    assert not success
+        assert t == database.stime.Time(1, 52, 65)
+
+    def test_create_time_from_string_error1(self):
+        with pytest.raises(Exception):
+            t_str = "]fw*Ds1"  # Garbage
+            database.stime.create_time_from_str(t_str)
+
+    def test_create_time_from_string_error2(self):
+        with pytest.raises(Exception):
+            t_str = "1:99.99"  # Invalid minutes
+            database.stime.create_time_from_str(t_str)
+
+    def test_create_time_from_string_error3(self):
+        with pytest.raises(Exception):
+            t_str = "1:59.999"  # Invalid hundredths
+            database.stime.create_time_from_str(t_str)
 
 
-def test_create_time_from_string_error2():
-    try:
-        t_str = "1:99.99"  # Invalid minutes
-        t = database.stime.create_time_from_str(t_str)
-        success = True
-    except:
-        success = False
-    assert not success
+class TestUtil:
+    """
+    Utility tests in dutil.py.
+    """
 
+    def test_event_basic(self):
+        e1 = database.dutil.Event.BACK_100_LCM
+        assert e1.get_course() == database.sdif.Course.LCM
+        assert e1.get_distance() == 100
+        assert e1.get_stroke() == database.sdif.Stroke.BACKSTROKE
 
-def test_create_time_from_string_error3():
-    try:
-        t_str = "1:59.999"  # Invalid hundredths
-        t = database.stime.create_time_from_str(t_str)
-        success = True
-    except:
-        success = False
-    assert not success
+    def test_calculate_age_basic(self):
+        birthday1 = datetime.date(2010, 1, 1)
+        on_date1 = datetime.date(2025, 8, 14)
+        assert database.dutil.calculate_age(birthday1, on_date1) == 15
+
+        birthday2 = datetime.date(2010, 2, 4)
+        on_date2 = datetime.date(2025, 2, 3)
+        assert database.dutil.calculate_age(birthday2, on_date2) == 14
+
+        birthday3 = datetime.date(2010, 2, 4)
+        on_date3 = datetime.date(2025, 2, 4)
+        assert database.dutil.calculate_age(birthday3, on_date3) == 15
