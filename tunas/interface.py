@@ -281,10 +281,6 @@ def display_best_times(swimmer: database.swim.Swimmer) -> None:
     print(f"Swimmer found! Displaying best times for: {info_str}")
     print()
 
-    # Display meet results
-    for mr in meet_results:
-        display_ind_meet_result_info(swimmer, mr)
-
     # Display best times
     for event in database.dutil.Event:
         best_mr = swimmer.get_best_meet_result(event)
