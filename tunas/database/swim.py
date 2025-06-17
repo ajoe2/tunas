@@ -512,7 +512,9 @@ class Swimmer:
             new_club.add_swimmer(self)
             self.set_club(new_club)
 
-    def get_best_meet_result(self, event: dutil.Event) -> Optional[IndividualMeetResult]:
+    def get_best_meet_result(
+        self, event: dutil.Event
+    ) -> Optional[IndividualMeetResult]:
         """
         Return meet result with fastest time for event
         """
