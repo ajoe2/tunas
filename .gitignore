@@ -1,4 +1,7 @@
+# Python files
 __pycache__/
 .pytest_cache/
-*.DS_Store
 venv/
+
+# MacOS metadata files
+*.DS_Store
