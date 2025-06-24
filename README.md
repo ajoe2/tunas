@@ -13,7 +13,7 @@
 
 ## Getting started
 ### Prerequisites
-All the code is written using Python. To download Python, follow the instructions [here](https://www.python.org/downloads/). Make sure you have Python version 3.12 or above.
+All the code is written using Python. To download Python, follow the instructions [here](https://www.python.org/downloads/). Make sure you have Python version 3.12 or later.
 
 To check that you have successfully installed Python, you can run
 ```sh
@@ -25,18 +25,18 @@ python3 -V
 ```
 which will display the downloaded Python version (ex. `Python 3.12.10`).
 
-To clone the repository, you will need to use `git`. You can follow the instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) to install it if you haven't already.
+To clone the repository, you will need `git`. To install it, follow the instructions [here](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
 ### Installation and use
 1. Clone the repository.
 ```sh
     git clone https://github.com/ajoe2/tunas.git
 ```
-2. `cd` into the tunas project directory
+2. `cd` into the project directory
 ```sh
     cd tunas
 ```
-3. Install the necessary dependencies by running
+3. Install necessary dependencies by running
 ```sh
     pip install -r requirements.txt
 ```
