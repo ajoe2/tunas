@@ -82,7 +82,7 @@ DOUBLE_AGE_MENU = (
     + "Back (b/B)\n"
 )
 SENIOR_AGE_MENU = "1) 18 & under\n" + "2) 19 & over\n" + "Back (b/B)\n"
-SEX_MENU = "1) Female\n" + "2) Male\n" + "Back (b/B)\n"
+SEX_MENU = "1) Female\n" + "2) Male\n" + "3) Mixed\n" + "Back (b/B)\n"
 
 # Other
 DEFAULT_CLUB_CODE = "SCSC"
@@ -546,14 +546,16 @@ def run_relay_settings() -> None:
                 if selection == "b" or selection == "B":
                     print()
                     continue
-                if not (selection == "1" or selection == "2"):
+                if not (selection in ["1", "2", "3"]):
                     display_error(f"invalid selection '{selection}'!")
                     print()
                     continue
                 if selection == "1":
                     new_sex = database.sdif.Sex.FEMALE
-                else:
+                elif selection == "2":
                     new_sex = database.sdif.Sex.MALE
+                else:
+                    new_sex = database.sdif.Sex.MIXED
                 RELAY_GENERATOR.set_sex(new_sex)
                 print(f"Success! New sex set to: {new_sex.get_name()}")
                 print()

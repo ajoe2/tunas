@@ -184,9 +184,11 @@ class RelayGenerator:
         best_le2: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le3: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
         best_le4: list[tuple[database.swim.Swimmer, database.stime.Time]] = []
+
         for swimmer in eligible_swimmers:
             # Continue if swimmer is wrong sex or should be excluded
-            if swimmer.get_sex() != self.get_sex():
+            relay_sex = self.get_sex()
+            if relay_sex != database.sdif.Sex.MIXED and swimmer.get_sex() != relay_sex:
                 continue
             if swimmer in self.get_excluded_swimmers():
                 continue
@@ -231,11 +233,66 @@ class RelayGenerator:
                 remaining_relays -= 1
                 continue
 
-            # Get top four swimmers for each leg
-            top_four_l1 = best_le1[:4]
-            top_four_l2 = best_le2[:4]
-            top_four_l3 = best_le3[:4]
-            top_four_l4 = best_le4[:4]
+            # If relay is mixed, find the top 2 swimmers for each sex.
+            # Otherwise, just take the top 4 for each leg. 
+            if relay_sex == database.sdif.Sex.MIXED:
+                top_four_l1 = []
+                num_male, num_female = 0, 0
+                for swimmer, time in best_le1:
+                    if len(top_four_l1) == 4:
+                        break
+                    swimmer_sex = swimmer.get_sex()
+                    if swimmer_sex == database.sdif.Sex.MALE and num_male < 2:
+                        num_male += 1
+                        top_four_l1.append((swimmer, time))
+                    if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
+                        num_female += 1
+                        top_four_l1.append((swimmer, time))
+                print(top_four_l1)
+                top_four_l2 = []
+                num_male, num_female = 0, 0
+                for swimmer, time in best_le2:
+                    if len(top_four_l2) == 4:
+                        break
+                    swimmer_sex = swimmer.get_sex()
+                    if swimmer_sex == database.sdif.Sex.MALE and num_male < 2:
+                        num_male += 1
+                        top_four_l2.append((swimmer, time))
+                    if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
+                        num_female += 1
+                        top_four_l2.append((swimmer, time))
+                print(top_four_l2)
+                top_four_l3 = []
+                num_male, num_female = 0, 0
+                for swimmer, time in best_le3:
+                    if len(top_four_l3) == 4:
+                        break
+                    swimmer_sex = swimmer.get_sex()
+                    if swimmer_sex == database.sdif.Sex.MALE and num_male < 2:
+                        num_male += 1
+                        top_four_l3.append((swimmer, time))
+                    if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
+                        num_female += 1
+                        top_four_l3.append((swimmer, time))
+                print(top_four_l3)
+                top_four_l4 = []
+                num_male, num_female = 0, 0
+                for swimmer, time in best_le4:
+                    if len(top_four_l4) == 4:
+                        break
+                    swimmer_sex = swimmer.get_sex()
+                    if swimmer_sex == database.sdif.Sex.MALE and num_male < 2:
+                        num_male += 1
+                        top_four_l4.append((swimmer, time))
+                    if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
+                        num_female += 1
+                        top_four_l4.append((swimmer, time))
+                print(top_four_l4)
+            else:
+                top_four_l1 = best_le1[:4]
+                top_four_l2 = best_le2[:4]
+                top_four_l3 = best_le3[:4]
+                top_four_l4 = best_le4[:4]
 
             # Find best combination of 4 unique swimmers
             best_combination = []
@@ -248,7 +305,17 @@ class RelayGenerator:
                 candidate_swimmers = [pair[0] for pair in candidate_combination]
                 if len(set(candidate_swimmers)) != 4:
                     continue
-                elif best_combination == []:
+                if relay_sex == database.sdif.Sex.MIXED:
+                    # Only consider relays with 2 males and 2 females.
+                    num_male, num_female = 0, 0
+                    for swimmer, time in candidate_combination:
+                        if swimmer.get_sex() == database.sdif.Sex.MALE:
+                            num_male += 1
+                        else:
+                            num_female += 1
+                    if not (num_male == 2 and num_female == 2):
+                        continue
+                if best_combination == []:
                     best_combination = candidate_combination
                 else:
                     # Calculate best_combination time
@@ -264,6 +331,11 @@ class RelayGenerator:
                     # Update best combination if candidate has quicker time
                     if candidate_comb_time < best_comb_time:
                         best_combination = candidate_combination
+
+            if best_combination == []:
+                generated_relays.append([])
+                remaining_relays -= 1
+                continue
 
             # Remove swimmers from list of available swimmers
             new_relay = [pair[0] for pair in best_combination]
