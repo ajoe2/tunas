@@ -248,7 +248,6 @@ class RelayGenerator:
                     if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
                         num_female += 1
                         top_four_l1.append((swimmer, time))
-                print(top_four_l1)
                 top_four_l2 = []
                 num_male, num_female = 0, 0
                 for swimmer, time in best_le2:
@@ -261,7 +260,6 @@ class RelayGenerator:
                     if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
                         num_female += 1
                         top_four_l2.append((swimmer, time))
-                print(top_four_l2)
                 top_four_l3 = []
                 num_male, num_female = 0, 0
                 for swimmer, time in best_le3:
@@ -274,7 +272,6 @@ class RelayGenerator:
                     if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
                         num_female += 1
                         top_four_l3.append((swimmer, time))
-                print(top_four_l3)
                 top_four_l4 = []
                 num_male, num_female = 0, 0
                 for swimmer, time in best_le4:
@@ -287,7 +284,6 @@ class RelayGenerator:
                     if swimmer_sex == database.sdif.Sex.FEMALE and num_female < 2:
                         num_female += 1
                         top_four_l4.append((swimmer, time))
-                print(top_four_l4)
             else:
                 top_four_l1 = best_le1[:4]
                 top_four_l2 = best_le2[:4]
