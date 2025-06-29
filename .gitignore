@@ -3,5 +3,8 @@ __pycache__/
 .pytest_cache/
 venv/
 
+# Manual meet results
+data/meetData/manual_times.cl2
+
 # MacOS metadata files
 *.DS_Store

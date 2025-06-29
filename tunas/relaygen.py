@@ -234,7 +234,7 @@ class RelayGenerator:
                 continue
 
             # If relay is mixed, find the top 2 swimmers for each sex.
-            # Otherwise, just take the top 4 for each leg. 
+            # Otherwise, just take the top 4 for each leg.
             if relay_sex == database.sdif.Sex.MIXED:
                 top_four_l1 = []
                 num_male, num_female = 0, 0

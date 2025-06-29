@@ -1,4 +1,0 @@
-A01V3      02Meet Results                  Hy-Tek, Ltd         WMM 8.0Fa Hy-Tek, Ltd         866-456-511106302024                                    MM40    N42
-B11        <<<Manual Times>>>            888 Fake Dr                                 Imagination         CA99999     USA 0712202407022024   0        L1400   N64
-C11PC      PCSCSCSanta Clara Swim Club                                                                                                                       N95
-Z01Meet Res02Successful Build on 7/01/2024   1  1  12  12  2047   433    0     0     0                                                                       N39
