@@ -51,7 +51,7 @@ class Cl2Processor:
         assert os.path.isfile(path)
         assert path.endswith(".cl2")
 
-        with open(path, "r") as file:
+        with open(path, encoding="utf-8", errors="replace") as file:
             for line in file:
                 header = line[:2]
                 match header:
