@@ -56,18 +56,13 @@ def download_zip_files(path: str) -> None:
     os.mkdir(download_directory)
 
     # Write zip files to directory
-    try:
-        for link in get_pacswim_results_zip_links():
-            response = requests.get(link)
-            file_basename = os.path.basename(link)
-            with open(
-                os.path.join(download_directory, file_basename), mode="wb"
-            ) as file:
-                file.write(response.content)
-    except:
-        print(
-            "Uh oh! Unable to download zip files. Check network connection and try again!"
-        )
+    for link in get_pacswim_results_zip_links():
+        response = requests.get(link)
+        file_basename = os.path.basename(link)
+        with open(
+            os.path.join(download_directory, file_basename), mode="wb"
+        ) as file:
+            file.write(response.content)
 
 
 def download_meet_result_data(path: str) -> None:
@@ -89,12 +84,13 @@ def download_meet_result_data(path: str) -> None:
     try:
         download_zip_files(path)
     except:
-        print("Unable to download zip files. Check network connection and try again!")
+        print("Error downloading zip files. Check network connection and try again!")
         return
     else:
         print("Success! Zip files downloaded.")
 
     # Open zip files into pacswim directory
+    print("Opening zip files...")
     for file in os.listdir(zip_dir_path):
         dir_name = file[:-4]
         file_path = os.path.join(zip_dir_path, file)
@@ -104,5 +100,5 @@ def download_meet_result_data(path: str) -> None:
             with zipfile.ZipFile(file_path, "r") as zip:
                 zip.extractall(dir_path)
         except zipfile.BadZipFile as error:
-            print(file_path, "-", error)
-
+            pass
+    print(f"Success! Zip files have been opened and moved into {os.path.join(path, "pacswim")}")
