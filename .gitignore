@@ -3,8 +3,10 @@ __pycache__/
 .pytest_cache/
 venv/
 
-# Manual meet results
+# Meet results
 data/meetData/manual_times.cl2
+data/meetData/pacswim/*
+data/meetData/pacswim-zip/*
 
 # MacOS metadata files
 *.DS_Store

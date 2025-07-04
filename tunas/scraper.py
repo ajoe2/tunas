@@ -14,10 +14,6 @@ from bs4 import BeautifulSoup
 import zipfile
 
 
-TUNAS_DIRECTORY_PATH = os.path.dirname(os.path.realpath(__file__))
-DATA2_PATH = os.path.join(os.path.dirname(TUNAS_DIRECTORY_PATH), "data2")
-
-
 def get_pacswim_results_zip_links() -> list[str]:
     """
     Scrape and return the zip file links from the pacswim results page.
@@ -59,9 +55,7 @@ def download_zip_files(path: str) -> None:
     for link in get_pacswim_results_zip_links():
         response = requests.get(link)
         file_basename = os.path.basename(link)
-        with open(
-            os.path.join(download_directory, file_basename), mode="wb"
-        ) as file:
+        with open(os.path.join(download_directory, file_basename), mode="wb") as file:
             file.write(response.content)
 
 
@@ -99,6 +93,6 @@ def download_meet_result_data(path: str) -> None:
             os.mkdir(dir_path)
             with zipfile.ZipFile(file_path, "r") as zip:
                 zip.extractall(dir_path)
-        except zipfile.BadZipFile as error:
+        except zipfile.BadZipFile:
             pass
-    print(f"Success! Zip files have been opened and moved into {os.path.join(path, "pacswim")}")
+    print(f"Success! Zip files have been opened and moved into {data_dir_path}")
