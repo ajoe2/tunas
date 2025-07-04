@@ -51,7 +51,7 @@ class Cl2Processor:
         assert os.path.isfile(path)
         assert path.endswith(".cl2")
 
-        with open(path, "r") as file:
+        with open(path, encoding="utf-8", errors="replace") as file:
             for line in file:
                 header = line[:2]
                 match header:
@@ -334,8 +334,15 @@ class Cl2Processor:
         finals_place_str = line[135:138].strip()
         points_scored_str = line[138:142].strip()
 
-        # Ignore entries without a valid short id
-        if len(swimmer_short_id_str) != 12:
+        # Ignore invalid entries
+        invalid_short_id = len(swimmer_short_id_str) != 12
+        invalid_stroke = event_stroke_str not in database.sdif.Stroke
+        if invalid_short_id or invalid_stroke:
+            self.current_swimmer = None
+            return
+
+        # Ignore entries with invalid stroke
+        if event_stroke_str not in database.sdif.Stroke:
             self.current_swimmer = None
             return
 
@@ -396,7 +403,7 @@ class Cl2Processor:
             event_max_age = 1000
         else:
             event_max_age = int(event_age_code_str[2:4])
-        if citizen_code_str == "":
+        if citizen_code_str == "" or citizen_code_str not in database.sdif.Country:
             citizen_code = None
         else:
             citizen_code = database.sdif.Country(citizen_code_str)

@@ -45,6 +45,21 @@ To clone the repository, you will need `git`. To install it, follow the instruct
     python3 tunas
 ```
 
+Note: `tunas` can be run with options
+```sh
+    python3 tunas [options]
+```
+
+Options:
+ - `-r` Run the `tunas` application
+ - `-u` download data from pacswim.org
+ 
+For example, to run `tunas` without redownloading data from pacific swimming, use
+```sh
+    python3 tunas -r
+```
+
+
 ### Example output
 ```
 #############################################################
