@@ -2,6 +2,7 @@
 Tunas application entry point.
 """
 import os
+import sys
 import argparse
 
 import interface
@@ -17,12 +18,18 @@ def main():
     parser.add_argument('-r', action='store_true', help="run tunas application")
     args = parser.parse_args()
 
+    # If no flags, download meet results and run application
+    if len(sys.argv) == 1:
+        scraper.download_meet_result_data(MEET_DATA_PATH)
+        print()
+        interface.run_tunas_application()
+
     # If -u flag is specified, download meet result data
     if args.u:
         scraper.download_meet_result_data(MEET_DATA_PATH)
     
     # If -r flag is specified or no flags specified, run tunas application
-    if args.r or (not args.u and not args.r):
+    if args.r:
         print()
         interface.run_tunas_application()
 
