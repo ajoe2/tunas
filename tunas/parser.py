@@ -337,7 +337,8 @@ class Cl2Processor:
         # Ignore invalid entries
         invalid_short_id = len(swimmer_short_id_str) != 12
         invalid_stroke = event_stroke_str not in database.sdif.Stroke
-        if invalid_short_id or invalid_stroke:
+        invalid_line_length = len(line) != 161
+        if invalid_short_id or invalid_stroke or invalid_line_length:
             self.current_swimmer = None
             return
 
@@ -347,7 +348,11 @@ class Cl2Processor:
             return
 
         # Parse full name, sex, id, and age_class
-        first_name, middle_initial, last_name = util.parse_full_name(full_name_str)
+        try:
+            first_name, middle_initial, last_name = util.parse_full_name(full_name_str)
+        except:
+            self.current_swimmer = None
+            return
         swimmer_sex = database.sdif.Sex(swimmer_sex_str)
         usa_id_short = swimmer_short_id_str
         age_class = age_class_str
@@ -412,7 +417,12 @@ class Cl2Processor:
             seed_course = None
         else:
             seed_time = database.stime.create_time_from_str(seed_time_str)
-            seed_course = database.sdif.Course(util.standardize_course(seed_course_str))
+            try:
+                seed_course = database.sdif.Course(
+                    util.standardize_course(seed_course_str)
+                )
+            except AssertionError:
+                seed_course = None
         if prelim_time_str == "" or prelim_time_str in ignored_results:
             prelim_time = None
             prelim_course = None
