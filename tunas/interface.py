@@ -720,10 +720,16 @@ def display_relays(
             # Get swimmer sex
             sex = str(swimmer.get_sex())
 
+            # Get age range string
+            if type(age_range) == tuple:
+                age_range_str = f"({age_range[0]}, {age_range[1]})"
+            else:
+                age_range_str = str(age_range)
+
             # Display relay leg
             if best_standard is not None:
                 print(
-                    f" {stroke:<6}  {full_name:<20}  {age_range:>8}  {sex:<1}  "
+                    f" {stroke:<6}  {full_name:<20}  {age_range_str:>8}  {sex:<1}  "
                     + f"{usa_id:<14}  {full_club_code:<7}  {best_time:>8}  "
                     + f"{best_standard.short():<4}  {meet_name:<30}"
                 )
