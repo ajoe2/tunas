@@ -631,13 +631,8 @@ def display_relays(
     # Calculate leg events
     leg_dist = event.get_distance() // 4
     course = event.get_course()
-    if event.get_stroke() == database.sdif.Stroke.FREESTYLE_RELAY:
-        relay_stroke = database.sdif.Stroke.FREESTYLE_RELAY
-        leg_strokes = relaygen.FREESTYLE_RELAY_STROKES
-    else:
-        relay_stroke = database.sdif.Stroke.MEDLEY_RELAY
-        leg_strokes = relaygen.MEDLEY_RELAY_STROKES
-    leg_events = [database.dutil.Event((leg_dist, s, course)) for s in leg_strokes]
+    relay_stroke = event.get_stroke()
+    leg_events = relaygen.get_relay_leg_events(event)
 
     relay_letter = "A"
     for relay in relays:
