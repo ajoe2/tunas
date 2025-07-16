@@ -693,7 +693,7 @@ def display_relays(
             time_standards = TIME_STANDARD_INFO.get_qualified_standards(
                 mr.get_final_time(),
                 leg_event,
-                RELAY_GENERATOR.get_age_range()[0],
+                swimmer.get_age_range(RELAY_GENERATOR.get_relay_date())[0],
                 swimmer.get_sex(),
             )
             if len(time_standards) > 0:
