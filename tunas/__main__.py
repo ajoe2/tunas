@@ -17,21 +17,33 @@ def main():
     parser.add_argument('-u', action='store_true', help="download meet result files from pacswim")
     parser.add_argument('-r', action='store_true', help="run tunas application")
     args = parser.parse_args()
+    no_flags = len(sys.argv) == 1 # No flags set
 
-    # If no flags, download meet results and run application
-    if len(sys.argv) == 1:
-        scraper.download_meet_result_data(MEET_DATA_PATH)
-        print()
-        interface.run_tunas_application()
+    # Apply settings
+    download_data = True if no_flags or args.u else False
+    run_application = True if no_flags or args.r else False
 
-    # If -u flag is specified, download meet result data
-    if args.u:
-        scraper.download_meet_result_data(MEET_DATA_PATH)
-    
-    # If -r flag is specified or no flags specified, run tunas application
-    if args.r:
+    if download_data:
+        try:
+            scraper.download_meet_result_data(MEET_DATA_PATH)
+        except Exception:
+            print("Error downloading meet result data. Check network connection and try again.")
+            return
+        except KeyboardInterrupt:
+            print()
+            print("Exited gracefully.")
+            return
+
+    if run_application:
         print()
-        interface.run_tunas_application()
+        try:
+            interface.run_tunas_application()
+        except Exception:
+            print("Something went wrong. Please restart the application.")
+        except KeyboardInterrupt:
+            print()
+            print("Exited gracefully.")
+            return
 
 
 if __name__ == "__main__":
