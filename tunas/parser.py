@@ -24,6 +24,10 @@ def read_cl2(file_path: str) -> database.Database:
             if f.endswith(".cl2"):
                 full_file_path = os.path.join(root, f)
                 paths.append(full_file_path)
+    
+    # Add file_path if it points to a file
+    if file_path.endswith(".cl2"):
+        paths.append(file_path)
 
     # Load cl2 files into database
     print("Loading files...")
