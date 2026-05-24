@@ -1,12 +1,12 @@
-# `tunas.parser` — reading `.cl2` files
+# Parsing & errors
 
-The parser turns one or more `.cl2` files into a list of self-contained [`Meet`](models.md#meet) objects. It is exposed as a single top-level function:
+The parser is exposed as a single top-level function that parses `.cl2` files into structured [`Meet`](models.md) objects:
 
 ```python
 from tunas import read_cl2
 ```
 
-`read_cl2` parses inputs into a tuple: `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from data-quality issues and storing warnings on the report.
+`read_cl2` returns `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
 
 ## `read_cl2`
 
@@ -33,13 +33,13 @@ def read_cl2(
 
 ### Parallel parsing
 
-By default files are parsed one at a time. Pass `max_workers > 1` to parse a directory or list of files concurrently on a thread pool:
+Pass `max_workers > 1` to parse a directory or list of files concurrently using a thread pool:
 
 ```python
 meets, report = read_cl2("season_archive/", max_workers=8)
 ```
 
-The result is byte-for-byte identical to the sequential parse regardless of thread scheduling: each file is parsed by its own independent engine, and the per-file `Meet` lists and `ParseReport`s are merged back in source order. Because the per-record parsing holds the GIL, the speed-up comes mainly from overlapping file I/O, so it scales best across **many** files. A single text stream is always parsed inline (`max_workers` has no effect). In `strict` mode the earliest failing file's `ParseError` is raised.
+Results are deterministically merged in source order, matching sequential execution. The speed-up is largest when parsing many files due to overlapping file I/O. In `strict` mode, the earliest encountered `ParseError` is raised.
 
 ### Source types
 
@@ -73,26 +73,40 @@ except ParseError as exc:
 
 ### M1 — fatal (always raises)
 
-Missing or unparseable structural fields indicate a broken record and always raise `ParseError`. These include: the record-type constant, swimmer/team names, swimmer sex, meet name and start date, relay team code and letter, and the split sequence number / distance / type (`G0`).
+Missing or unparseable structural fields indicate a broken record and always raise
+`ParseError`. These include: the record-type constant, swimmer/team names, swimmer
+sex, meet name and start date, relay team code and letter, and the split sequence
+number / distance / type (`G0`).
 
 ### Unresolvable events — skipped (not fatal)
 
-A swim's **event fields** (event sex, distance, stroke, age) are *not* treated as fatal M1. If they are missing-but-partial, carry an unknown code, or do not map to a known [`Event`](event.md) (e.g. a diving event with a non-swim stroke, or an impossible combination like `25 m` long course), the **record is skipped** with a `SKIPPED` warning in lenient mode and raises in strict mode. A single odd or invalid `D0`/`E0` never aborts an otherwise-valid file. (A `D0` with *all* event fields blank is a relay-only swimmer — see the `#` marker below — not an error.)
+A swim's **event fields** (event sex, distance, stroke, age) are *not* treated as
+fatal M1. If they are missing-but-partial, carry an unknown code, or do not map to a
+known [`Event`][tunas.event.Event] (e.g. a diving event with a non-swim
+stroke, or an impossible combination like `25 m` long course), the **record is
+skipped** with a `SKIPPED` warning in lenient mode and raises in strict mode. A
+single odd or invalid `D0`/`E0` never aborts an otherwise-valid file. (A `D0` with
+*all* event fields blank is a relay-only swimmer — see the `#` marker below — not an
+error.)
 
 ### M2 — recoverable (kept as `None`)
 
-Data-quality fields skip corrupt/blank values with a `ParseWarning` (severity `RECOVERED`) and set the field to `None` in lenient mode. In strict mode, these raise `ParseError`.
+Data-quality fields skip corrupt/blank values with a `ParseWarning` (severity
+`RECOVERED`) and set the field to `None` in lenient mode. In strict mode, these
+raise `ParseError`.
 - **Swimmer ID (USS#):** Identity uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is skipped (severity `SKIPPED`). An `F0` record lacking both is kept with `swimmer=None` (severity `RECOVERED`).
 
 ### Conditional markers
 
 - **`*` (Conditional Course):** Course bytes (SDIF COURSE Code 013) are required only if time is present. Missing courses warn and set `course=None`. A course byte of `"X"` denotes a **disqualification**; the swim is kept with `status=DQ` and preserves its recorded `time`. The event course falls back to other sessions, seed course, or the `B1` default.
 - **`**` (Championship Place/Points):** Required only at championship meets. Missing values are kept as `None` with a warning.
-- **`#` (Relay-Only Swimmers):** Swimmer records with *all* event parameters blank create a `Swimmer` without generating an `IndividualSwim`. Partial or invalid event parameters are not fatal — the record is skipped (see [Unresolvable events](#unresolvable-events--skipped-not-fatal)).
+- **`#` (Relay-Only Swimmers):** Swimmer records with *all* event parameters blank create a `Swimmer` without generating an `IndividualSwim`. Partial or invalid event parameters are not fatal — the record is skipped (see [Unresolvable events](#unresolvable-events-skipped-not-fatal)).
 
 ### Result outcomes (NT / NS / DNF / DQ / SCR)
 
-outcome codes in time fields are kept as official results with `status` set to the code and `time=None`. Combined with course `"X"`, all swims are preserved for analysis.
+outcome codes in time fields are kept as official results with `status` set to the
+code and `time=None`. Combined with course `"X"`, all swims are preserved for
+analysis.
 
 ### Other parsing behaviors
 
@@ -121,85 +135,71 @@ outcome codes in time fields are kept as official results with `status` set to t
 | Unknown record type | skip record + warn | raise `ParseError` |
 | Z0 count ≠ parsed total | warn (`COUNT_MISMATCH`) | raise `ParseError` |
 
-## `ParseReport`
+## Diagnostics
 
-Exposes metrics for the entire `read_cl2` execution.
+Lenient parsing never silently loses data: every problem is recorded as a
+[`ParseWarning`][tunas.ParseWarning] on the [`ParseReport`][tunas.ParseReport]
+returned alongside the meets.
 
-```python
-@dataclass
-class ParseReport:
-    warnings: list[ParseWarning] = field(default_factory=list)
-    files_read: int = 0
-    meets_parsed: int = 0
-    swimmers_parsed: int = 0
-    individual_swims_parsed: int = 0
-    relays_parsed: int = 0
-    splits_parsed: int = 0
-    records_skipped: int = 0     # Dropped records
-    fields_recovered: int = 0    # Nulled M2 fields (excludes COUNT_MISMATCH)
+`ParseReport` carries the full `warnings` list plus running counts — `files_read`,
+`meets_parsed`, `swimmers_parsed`, `individual_swims_parsed`, `relays_parsed`,
+`splits_parsed`, `records_skipped`, `fields_recovered` — and a `warnings_for(...)`
+filter. Each `ParseWarning` pins down one issue: `source`, `line_no`,
+`record_type`, `field`, `column`, `mandatory`, `severity`, `kind`, `reason`, and the
+truncated `raw_line`. See the [API reference](reference.md#parsing-and-diagnostics)
+for the exact fields and methods.
 
-    @property
-    def has_warnings(self) -> bool: ...
+Every warning is tagged with a **severity** and a **kind**:
 
-    @property
-    def by_severity(self) -> dict[Severity, list[ParseWarning]]: ...
+| `Severity` | Meaning |
+|---|---|
+| `FATAL` | Structural (M1) violation; carried by the raised `ParseError`. |
+| `SKIPPED` | The record was dropped entirely. |
+| `RECOVERED` | A field was set to `None` and the record kept. |
 
-    def warnings_for(
-        self,
-        *,
-        record_type: str | None = None,
-        field: str | None = None,
-        severity: Severity | None = None,
-        kind: IssueKind | None = None,
-    ) -> list[ParseWarning]: ...
-```
-
-## `ParseWarning`
-
-A structured diagnostic record.
+| `IssueKind` | Meaning |
+|---|---|
+| `MISSING` | Blank mandatory field. |
+| `MALFORMED` | Unparseable value (date / time / int). |
+| `UNKNOWN_CODE` | Invalid code-table value or unresolvable event. |
+| `BAD_LENGTH` | Over-long / unusable line. |
+| `ORPHANED` | No anchor record found. |
+| `UNKNOWN_RECORD` | Unmodeled record header. |
+| `COUNT_MISMATCH` | `Z0` declared count ≠ parsed total. |
 
 ```python
-@dataclass(frozen=True)
-class ParseWarning:
-    source: str               # File path or "<stream>"
-    line_no: int              # 1-indexed
-    record_type: str | None   # e.g., "D0"
-    field: str | None         # e.g., "id_short"
-    column: str | None        # e.g., "40/12"
-    mandatory: str | None     # "M1" | "M2" | "M1#" | "*" | "**" | None
-    severity: Severity        
-    kind: IssueKind           
-    reason: str               
-    raw_line: str             # Truncated to 200 chars
+meets, report = read_cl2("messy_data/")
+for w in report.warnings:
+    print(f"{w.source}:{w.line_no} ({w.record_type}) [{w.severity.value}]: {w.reason}")
 ```
 
-### `Severity`
+## Exceptions
 
-```python
-class Severity(enum.Enum):
-    FATAL     = "fatal"      # Structural (M1) violation; raises ParseError
-    SKIPPED   = "skipped"    # Record dropped entirely
-    RECOVERED = "recovered"  # Field set to None, record kept
-```
+All library errors subclass [`TunasError`][tunas.exceptions.TunasError], so a single
+`except TunasError` catches everything tunas raises.
 
-### `IssueKind`
+- **`ParseError`** — raised on a fatal M1 violation, or on the first warning when
+  `strict=True`. Its `.warning` attribute is the underlying `ParseWarning`:
 
-```python
-class IssueKind(enum.Enum):
-    MISSING        = "missing"        # Blank mandatory field
-    MALFORMED      = "malformed"      # Unparseable value (date/time/int)
-    UNKNOWN_CODE   = "unknown_code"   # Invalid code table value
-    BAD_LENGTH     = "bad_length"     # Over-long line
-    ORPHANED       = "orphaned"       # No anchor record found
-    UNKNOWN_RECORD = "unknown_record" # Unmodeled record header
-    COUNT_MISMATCH = "count_mismatch" # Z0 count mismatch
-```
+  ```python
+  try:
+      meets, _ = read_cl2(path, strict=True)
+  except ParseError as exc:
+      w = exc.warning
+      print(f"{w.source}:{w.line_no} {w.record_type}.{w.field}: {w.reason}")
+  ```
+
+- **`StandardsError`** — raised by the [time-standards](reference.md#time-standards)
+  lookups if the bundled data is missing or inconsistent.
+
+To collect every problem instead of failing fast, parse leniently and inspect
+`report.warnings` afterwards (see [Recipes](cookbook.md)).
 
 ## Mandatory-field reference
 
 Detailed structural contracts enforced by the parser:
 
-**`A0` — File description → [`SourceFile`](models.md#sourcefile)**
+**`A0` — File description → [`SourceFile`][tunas.models.SourceFile]**
 - *Captures:* FILE code (`file_type`), SDIF version, software name/version, contact name/phone, creation date, submitting LSC. Malformed fields warn.
 
 **`B1` — Meet (Anchor)**

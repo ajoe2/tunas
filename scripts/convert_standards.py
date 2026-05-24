@@ -1,15 +1,4 @@
-"""Dev-only: convert USA Swimming motivational-standard .xlsx sheets to bundled JSON.
-
-Reads the six B–AAAA workbooks (each with per-age-group sheets) from the source
-directory and writes ``src/tunas/_data/standards-2025-2028.json``. NOT shipped in
-the wheel; run manually when standards change:
-
-    uv run python scripts/convert_standards.py <SOURCE_DIR>
-    TUNAS_STANDARDS_SRC=<SOURCE_DIR> uv run python scripts/convert_standards.py
-
-``SOURCE_DIR`` is the directory holding the B–AAAA ``.xlsx`` workbooks; provide it
-as the first argument or via the ``TUNAS_STANDARDS_SRC`` environment variable.
-"""
+"""Convert USA Swimming motivational standard .xlsx sheets to bundled JSON."""
 
 from __future__ import annotations
 

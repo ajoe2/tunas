@@ -1,10 +1,4 @@
-"""Fixed-width field extraction for SDIF records.
-
-``Record`` slices a padded 160-character line by 1-indexed ``start/length``.
-The free functions interpret raw field text into typed values, returning a
-``(tag, value)`` pair so the engine can dispose of blanks, malformed values, and
-unknown codes per the M1/M2 error model.
-"""
+"""Fixed-width field extraction for SDIF records."""
 
 from __future__ import annotations
 
@@ -55,7 +49,7 @@ _AGE_OPEN_HIGH = "OV"
 
 
 class Record:
-    """A single padded SDIF line, sliced by 1-indexed ``start/length``."""
+    """A padded SDIF line sliced by 1-indexed start/length."""
 
     __slots__ = ("line", "line_no", "source", "type")
 
@@ -66,16 +60,16 @@ class Record:
         self.type = line[0:2]
 
     def raw(self, start: int, length: int) -> str:
-        """Raw (unstripped) slice for a 1-indexed ``start/length`` field."""
+        """Raw unstripped slice for a 1-indexed start/length field."""
         return self.line[start - 1 : start - 1 + length]
 
     def text(self, start: int, length: int) -> str | None:
-        """Stripped ALPHA field, or ``None`` if blank."""
+        """Stripped ALPHA field, or None if blank."""
         return self.raw(start, length).strip() or None
 
 
 def course_value(raw: str) -> tuple[str, Course | None]:
-    """Returns ``("blank"|"ok"|"dq"|"unknown", Course|None)``."""
+    """Resolve a course value."""
     v = raw.strip().upper()
     if not v:
         return "blank", None
@@ -88,7 +82,7 @@ def course_value(raw: str) -> tuple[str, Course | None]:
 
 
 def time_value(raw: str) -> tuple[str, Time | ResultStatus | None]:
-    """Returns ``("blank"|"time"|"status"|"bad", Time|ResultStatus|None)``."""
+    """Resolve a swim time value."""
     v = raw.strip()
     if not v:
         return "blank", None
@@ -102,7 +96,7 @@ def time_value(raw: str) -> tuple[str, Time | ResultStatus | None]:
 
 
 def date_value(raw: str) -> tuple[str, datetime.date | None]:
-    """Parse an ``MMDDYYYY`` date. Returns ``("blank"|"date"|"bad", date|None)``."""
+    """Parse an MMDDYYYY date."""
     v = raw.strip()
     if not v:
         return "blank", None
@@ -116,7 +110,7 @@ def date_value(raw: str) -> tuple[str, datetime.date | None]:
 
 
 def int_value(raw: str) -> tuple[str, int | None]:
-    """Returns ``("blank"|"int"|"bad", int|None)``."""
+    """Parse an integer value."""
     v = raw.strip()
     if not v:
         return "blank", None
@@ -127,7 +121,7 @@ def int_value(raw: str) -> tuple[str, int | None]:
 
 
 def decimal_value(raw: str) -> tuple[str, float | None]:
-    """Returns ``("blank"|"dec"|"bad", float|None)``."""
+    """Parse a float value."""
     v = raw.strip()
     if not v:
         return "blank", None
@@ -138,7 +132,7 @@ def decimal_value(raw: str) -> tuple[str, float | None]:
 
 
 def code_value[E: StrEnum](raw: str, enum_cls: type[E]) -> tuple[str, E | None]:
-    """Resolve a code-table value. Returns ``("blank"|"ok"|"unknown", member|None)``."""
+    """Resolve an SDIF code-table enum value."""
     v = raw.strip()
     if not v:
         return "blank", None
@@ -149,11 +143,7 @@ def code_value[E: StrEnum](raw: str, enum_cls: type[E]) -> tuple[str, E | None]:
 
 
 def event_age_value(raw: str) -> tuple[str, int | None, int | None]:
-    """Parse EVENT AGE Code 025 (4 bytes).
-
-    Returns ``("blank"|"ok"|"bad", min_age, max_age)``. ``"UN"``/``"OV"`` open
-    ends map to ``None``.
-    """
+    """Parse a 4-byte EVENT AGE Code 025 (UN/OV map to None)."""
     v = raw.strip()
     if not v:
         return "blank", None, None

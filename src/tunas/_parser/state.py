@@ -1,4 +1,4 @@
-"""Per-meet parser state (dict-indexed for O(1) lookups, reset at each B1)."""
+"""Per-meet parser state (reset at each B1 record)."""
 
 from __future__ import annotations
 
@@ -13,11 +13,7 @@ __all__ = ["PendingIndividual", "ParserState"]
 
 @dataclass
 class PendingIndividual:
-    """A D0 swimmer whose identity isn't resolvable yet (blank id_short).
-
-    Held until a following D3 supplies an ``id_long``, or discarded (skipped) at
-    the next non-continuation record.
-    """
+    """A D0 swimmer with an unresolved identity (blank id_short), pending a D3 record."""
 
     swimmer: Swimmer
     results: list[IndividualSwim]
@@ -27,7 +23,7 @@ class PendingIndividual:
 
 @dataclass
 class ParserState:
-    """Mutable state for the meet currently being assembled."""
+    """Mutable assembly state for the current meet."""
 
     meet: Meet
     clubs_by_key: dict[tuple[str, LSC | None], Club] = field(default_factory=dict)

@@ -1,4 +1,4 @@
-"""USA Swimming motivational time standards (B through AAAA), bundled offline."""
+"""USA Swimming motivational time standards (B through AAAA) bundled offline."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ _DATA_FILE = "standards-2025-2028.json"
 
 
 class TimeStandard(IntEnum):
-    """USA Swimming motivational standards, ordered slowest (B) to fastest (AAAA)."""
+    """USA Swimming motivational standards ordered slowest (B) to fastest (AAAA)."""
 
     B = 1
     BB = 2
@@ -28,11 +28,11 @@ class TimeStandard(IntEnum):
     AAAA = 6
 
     def display(self) -> str:
+        """Human-readable standard name (e.g., "AAAA")."""
         return self.name
 
 
-# USA Swimming single-year age groups, as (inclusive upper bound, label) ordered
-# youngest first. Ages above the last bound fall into _OLDEST_AGE_GROUP.
+# Single-year age groups as (inclusive upper bound, label) ordered youngest first.
 _AGE_GROUPS: tuple[tuple[int, str], ...] = (
     (10, "10_U"),
     (12, "11_12"),
@@ -51,7 +51,7 @@ def _age_group(age: int) -> str:
 
 @functools.cache
 def _load_index() -> dict[tuple[str, str, str, str], int]:
-    """Load the bundled JSON into ``{(standard, age_group, sex, event): centiseconds}``."""
+    """Load bundled JSON into `{(standard, age_group, sex, event): centiseconds}` dict."""
     try:
         raw = (
             importlib.resources.files("tunas._data")
@@ -82,7 +82,7 @@ def _cutoff(standard: TimeStandard, event: Event, age: int, sex: Sex) -> int | N
 
 
 def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard | None:
-    """The fastest standard ``time`` achieves for the event/age/sex, or ``None``."""
+    """Fastest standard achieved for event/age/sex, or None."""
     _check_sex(sex)
     best: TimeStandard | None = None
     for standard in TimeStandard:
@@ -93,7 +93,7 @@ def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard 
 
 
 def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStandard]:
-    """Every standard ``time`` qualifies for, ordered slowest first."""
+    """All standards qualified for, ordered slowest first."""
     _check_sex(sex)
     return [
         standard
@@ -104,7 +104,7 @@ def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStan
 
 
 def standard_time(standard: TimeStandard, event: Event, age: int, sex: Sex) -> Time | None:
-    """The cutoff time required to achieve ``standard``, or ``None`` if undefined."""
+    """Cutoff time required to achieve standard, or None if undefined."""
     _check_sex(sex)
     cutoff = _cutoff(standard, event, age, sex)
     return Time(cutoff) if cutoff is not None else None

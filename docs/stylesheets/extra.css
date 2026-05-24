@@ -1,0 +1,126 @@
+/*
+ * Modern, clean theme for the tunas docs.
+ *
+ * One brand blue (#2563eb) ties everything together: it's the color of the
+ * logo and of every link, accent and selected/active element. The header is
+ * kept neutral — white in light mode, deep navy in dark mode — so the blue
+ * logo stays crisp against it instead of camouflaging into a blue bar.
+ */
+
+:root {
+  /* The single brand blue: logo ink == links == accents == active states. */
+  --md-primary-fg-color:        #2563eb;
+  --md-primary-fg-color--light: #3b82f6;
+  --md-primary-fg-color--dark:  #1d4ed8;
+  --md-accent-fg-color:         #1d4ed8;
+
+  /* Subtle radius shared across cards, code blocks and admonitions. */
+  --tunas-radius: 0.7rem;
+
+  /* Cards sit flush with the page in light mode, with a soft blue-grey lift. */
+  --tunas-card-bg:     var(--md-default-bg-color);
+  --tunas-card-shadow: 0 0.5rem 1.5rem rgba(37, 99, 235, 0.12);
+
+  /* Neutral header surface + foreground for light mode. */
+  --tunas-header-bg: #ffffff;
+  --tunas-header-fg: #1c2330;
+  --tunas-hairline:  rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="slate"] {
+  /* Same brand blue; it stays legible against the dark navy surfaces. */
+  --md-primary-fg-color:        #2563eb;
+  --md-primary-fg-color--light: #3b82f6;
+  --md-primary-fg-color--dark:  #60a5fa;
+  --md-accent-fg-color:         #60a5fa;
+
+  /* Deep blue-navy surfaces with a clear page / card / code hierarchy. */
+  --md-default-bg-color:           #0d1426;
+  --md-default-fg-color:           rgba(236, 243, 255, 0.95);
+  --md-default-fg-color--light:    rgba(236, 243, 255, 0.72);
+  --md-default-fg-color--lighter:  rgba(236, 243, 255, 0.42);
+  --md-default-fg-color--lightest: rgba(236, 243, 255, 0.14);
+
+  /* Code blocks sit one layer above the page for legible contrast. */
+  --md-code-bg-color: #161f38;
+  --md-code-fg-color: #d6e2f5;
+
+  --md-footer-bg-color: #0a0f1f;
+
+  --tunas-card-bg:     #161f38;
+  --tunas-card-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.45);
+
+  --tunas-header-bg: #0a0f1f;
+  --tunas-header-fg: rgba(236, 243, 255, 0.95);
+  --tunas-hairline:  rgba(255, 255, 255, 0.08);
+}
+
+/*
+ * Neutral, modern header + tabs. Material would otherwise paint these with the
+ * brand color; we keep them on a calm surface so the blue logo and the active
+ * states do the talking.
+ */
+.md-header,
+.md-tabs {
+  background-color: var(--tunas-header-bg);
+  color: var(--tunas-header-fg);
+  box-shadow: 0 0 0.2rem rgba(0, 0, 0, 0.05), 0 0.2rem 0.4rem rgba(0, 0, 0, 0.05);
+}
+
+.md-tabs {
+  border-bottom: 1px solid var(--tunas-hairline);
+}
+
+/* Active top-level tab uses the brand blue underline. */
+.md-tabs__link--active {
+  color: var(--md-primary-fg-color);
+  opacity: 1;
+}
+
+/* Tighten heading rhythm and let Inter breathe a little. */
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Rounded code blocks. */
+.md-typeset pre > code,
+.md-typeset .highlight > pre > code {
+  border-radius: var(--tunas-radius);
+}
+
+/* Grid cards: rounded, elevated, with a gentle hover lift. */
+.md-typeset .grid.cards > ul > li,
+.md-typeset .grid > .card {
+  background-color: var(--tunas-card-bg);
+  border-radius: var(--tunas-radius);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.md-typeset .grid.cards > ul > li:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: var(--tunas-card-shadow);
+  transform: translateY(-2px);
+}
+
+/* Rounded admonitions to match the cards. */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: var(--tunas-radius);
+}
+
+/* Centered logo hero on the landing page. */
+.md-typeset .tunas-hero {
+  text-align: center;
+  margin: 1rem 0 2rem;
+}
+
+.md-typeset .tunas-hero img {
+  width: min(340px, 70%);
+  height: auto;
+}

@@ -1,8 +1,4 @@
-"""``read_cl2`` — read ``.cl2`` (SDIF v3) files into ``Meet`` objects.
-
-Also the public home of the parse-diagnostic types (re-exported from
-:mod:`tunas._parser.diagnostics`).
-"""
+"""Public entry point for reading `.cl2` files into `Meet` objects."""
 
 from __future__ import annotations
 
@@ -33,19 +29,14 @@ def read_cl2(
     errors: str = "replace",
     max_workers: int = 1,
 ) -> tuple[list[Meet], ParseReport]:
-    """Parse one or more ``.cl2`` files into ``(list[Meet], ParseReport)``.
+    """Parse `.cl2` files into `(list[Meet], ParseReport)`.
 
-    ``source`` may be a file path, a directory (walked recursively for ``*.cl2``),
-    an iterable of paths, or an open text stream. Parsing is lenient by default;
-    pass ``strict=True`` to raise :class:`~tunas.exceptions.ParseError` on the
-    first problem. M1 structural violations always raise.
+    `source` can be a file path, a directory (walked recursively for `*.cl2`), an iterable
+    of paths, or a text stream. Parsing is lenient by default; `strict=True` raises ParseError
+    on the first problem. M1 structural violations always raise.
 
-    With ``max_workers > 1`` the files are parsed concurrently on a thread pool —
-    one file per task — and the per-file results are merged back **in source
-    order**, so the output is identical to the sequential default
-    (``max_workers=1``), regardless of thread scheduling. Threads mainly overlap
-    file I/O (parsing itself holds the GIL), so the speed-up is largest on many
-    files. A single text stream is always parsed inline.
+    `max_workers > 1` parses files concurrently on a thread pool (one file per thread).
+    Results are merged back in source order deterministically.
     """
     if max_workers < 1:
         raise ValueError(f"max_workers must be >= 1, got {max_workers}")
@@ -84,11 +75,7 @@ def read_cl2(
 def _resolve_paths(
     source: str | os.PathLike[str] | Iterable[str | os.PathLike[str]],
 ) -> list[Path]:
-    """Expand ``source`` to the ordered list of files to parse.
-
-    A directory is walked recursively for ``*.cl2`` (sorted); a single path is
-    returned as-is; an iterable of paths is taken in iteration order.
-    """
+    """Expand `source` into an ordered list of file paths to parse."""
     if isinstance(source, (str, os.PathLike)):
         path = Path(os.fspath(source))
         if path.is_dir():

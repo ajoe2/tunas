@@ -1,7 +1,4 @@
-"""Structured parse diagnostics: ``Severity``, ``IssueKind``, ``ParseWarning``, ``ParseReport``.
-
-Re-exported publicly from :mod:`tunas.parser`.
-"""
+"""Structured parse diagnostics (Severity, IssueKind, ParseWarning, ParseReport)."""
 
 from __future__ import annotations
 
@@ -12,12 +9,16 @@ __all__ = ["Severity", "IssueKind", "ParseWarning", "ParseReport"]
 
 
 class Severity(enum.Enum):
+    """How a parse issue was handled."""
+
     FATAL = "fatal"  # Structural (M1) violation; carried only by the raised ParseError
     SKIPPED = "skipped"  # Record dropped entirely
     RECOVERED = "recovered"  # Field set to None, record kept
 
 
 class IssueKind(enum.Enum):
+    """What kind of data problem a warning describes."""
+
     MISSING = "missing"  # Blank mandatory field
     MALFORMED = "malformed"  # Unparseable value (date/time/int)
     UNKNOWN_CODE = "unknown_code"  # Invalid code-table value or unresolvable event
@@ -58,11 +59,7 @@ class ParseReport:
     fields_recovered: int = 0  # nulled M2 fields (excludes COUNT_MISMATCH)
 
     def merge(self, other: ParseReport) -> None:
-        """Fold ``other`` into this report: append its warnings and sum all counts.
-
-        Used to combine the independent per-file reports produced by a parallel
-        parse back into a single report (see :func:`tunas.read_cl2`).
-        """
+        """Fold another report into this report: append warnings and sum all counts."""
         self.warnings.extend(other.warnings)
         for f in fields(self):
             if f.name != "warnings":
@@ -70,10 +67,12 @@ class ParseReport:
 
     @property
     def has_warnings(self) -> bool:
+        """True if any warnings were collected."""
         return bool(self.warnings)
 
     @property
     def by_severity(self) -> dict[Severity, list[ParseWarning]]:
+        """Warnings grouped by Severity."""
         out: dict[Severity, list[ParseWarning]] = {s: [] for s in Severity}
         for w in self.warnings:
             out[w.severity].append(w)
@@ -87,7 +86,7 @@ class ParseReport:
         severity: Severity | None = None,
         kind: IssueKind | None = None,
     ) -> list[ParseWarning]:
-        """Warnings filtered by any combination of attributes."""
+        """Warnings filtered by attributes."""
         return [
             w
             for w in self.warnings

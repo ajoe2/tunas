@@ -1,4 +1,4 @@
-"""The :class:`Event` enum — a swimming event as (distance, stroke, course)."""
+"""Swimming event representation as (distance, stroke, course)."""
 
 from __future__ import annotations
 
@@ -27,11 +27,10 @@ _FREE_LEG_STROKES = (_FREE, _FREE, _FREE, _FREE)
 
 @total_ordering
 class Event(Enum):
-    """A unique swimming event. Value is ``(distance, stroke, course)``.
+    """A unique swimming event represented by a `(distance, stroke, course)` tuple.
 
-    Members are named ``<STROKE>_<DISTANCE>_<COURSE>`` for individual events and
-    ``<STROKE>_<DISTANCE>_RELAY_<COURSE>`` for relays. Compare members by
-    declaration order; prefer attribute filters over ordinal comparisons.
+    Members are named `<STROKE>_<DISTANCE>_<COURSE>` for individual events and
+    `<STROKE>_<DISTANCE>_RELAY_<COURSE>` for relays. Supports declaration-order comparison.
     """
 
     # --- Individual, short course yards (SCY) ---
@@ -124,37 +123,40 @@ class Event(Enum):
 
     @property
     def distance(self) -> int:
-        """Total event distance in yards/meters (e.g. ``400`` for a 400 relay)."""
+        """Total event distance in yards/meters."""
         return self.value[0]
 
     @property
     def stroke(self) -> Stroke:
+        """The event stroke."""
         return self.value[1]
 
     @property
     def course(self) -> Course:
+        """The event course (SCY, SCM, or LCM)."""
         return self.value[2]
 
     # --- Lookup ---
 
     @classmethod
     def find(cls, distance: int, stroke: Stroke, course: Course) -> Event | None:
-        """Resolve an event by its components, or ``None`` if none matches."""
+        """Resolve an event by components, or None if none matches."""
         return _BY_COMPONENTS.get((distance, stroke, course))
 
     # --- Relay helpers ---
 
     def is_relay(self) -> bool:
+        """True if this is a relay event (freestyle or medley relay)."""
         return self.stroke in (_FREE_R, _MEDLEY_R)
 
     def leg_distance(self) -> int:
-        """Per-leg distance (``distance // 4``). Raises for individual events."""
+        """Per-leg distance (distance // 4). Raises ValueError for individual events."""
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")
         return self.distance // 4
 
     def leg_strokes(self) -> list[Stroke]:
-        """The four leg strokes in order. Raises for individual events."""
+        """The four leg strokes in order. Raises ValueError for individual events."""
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")
         if self.stroke is _MEDLEY_R:
@@ -162,7 +164,7 @@ class Event(Enum):
         return list(_FREE_LEG_STROKES)
 
     def leg_event(self, order: int) -> Event:
-        """The individual :class:`Event` swum on leg ``order`` (1-4).
+        """The individual Event swum on leg `order` (1-4).
 
         >>> Event.MEDLEY_400_RELAY_SCY.leg_event(2)
         <Event.BREAST_100_SCY: ...>

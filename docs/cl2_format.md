@@ -1,8 +1,8 @@
 # The `.cl2` / SDIF v3 file format
 
-`.cl2` files contain USA Swimming meet results formatted in **Standard Data Interchange Format version 3** (SDIF v3). Defined by USA Swimming in 1998, SDIF v3 is still actively used by Hy-Tek Meet Manager and other systems.
+`.cl2` files contain USA Swimming meet results formatted in **Standard Data Interchange Format version 3** (SDIF v3), actively used by systems like Hy-Tek Meet Manager.
 
-`tunas` parses every record type in the meet-results portion of the spec. (Qualifying-time records `J0`/`J1`/`J2` are recognized but not modeled; they surface as warnings.)
+`tunas` parses every record type in the meet-results portion of the spec. (Qualifying-time records `J0`/`J1`/`J2` surface as warnings.)
 
 ## High-level structure
 

@@ -1,10 +1,9 @@
-"""The tunas domain model.
+"""Tunas domain model.
 
-Aggregates (``Meet``, ``Club``, ``Swimmer``, ``MeetResult`` and subclasses,
-``RelaySwim``) are slotted, keyword-only dataclasses with identity equality
-(``eq=False``) so the parser can wire a cyclic object graph in a single pass
-without deduplication or hashing cost. Value types (``Time``, ``Split``,
-``SwimmerContact``, ...) are frozen and hashable.
+Aggregates (Meet, Club, Swimmer, MeetResult subclasses, RelaySwim) are slotted,
+keyword-only dataclasses with identity equality (eq=False) to support efficient
+single-pass parsing. Value types (Time, Split, SwimmerContact, SwimmerRegistration,
+MeetHost, SourceFile, ClubEntryCounts) are frozen and hashable.
 """
 
 from __future__ import annotations
@@ -77,16 +76,16 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Split:
-    """One split entry from a G0 record."""
+    """A split entry from a G0 record."""
 
-    distance: int  # Cumulative distance from the start (50, 100, 150, ...)
-    time: Time | None  # None if the split slot was present but unparseable
+    distance: int  # Cumulative distance from start (50, 100, 150, etc.)
+    time: Time | None  # None if split was present but unparseable
     split_type: SplitType
 
 
 @dataclass(frozen=True)
 class SwimmerContact:
-    """Contact details from D1/D2. **Contains PII.** Reached via ``Swimmer.contact``."""
+    """Contact details from D1/D2 (contains PII)."""
 
     address: str | None = None
     city: str | None = None
@@ -101,7 +100,7 @@ class SwimmerContact:
 
 @dataclass(frozen=True)
 class SwimmerRegistration:
-    """Registration/demographic details from D1/D2/D3. **Contains sensitive PII.**"""
+    """Registration and demographic details from D1/D2/D3 (contains sensitive PII)."""
 
     member_status: MemberStatus | None = None
     registration_date: datetime.date | None = None
@@ -116,7 +115,7 @@ class SwimmerRegistration:
 
 @dataclass(frozen=True)
 class MeetHost:
-    """Meet host details from B2. Reached via ``Meet.host``."""
+    """Meet host details from B2."""
 
     name: str | None = None
     address_one: str | None = None
@@ -130,7 +129,7 @@ class MeetHost:
 
 @dataclass(frozen=True)
 class SourceFile:
-    """File-level metadata from A0/Z0. Shared by all meets in one file."""
+    """File-level metadata from A0/Z0, shared by all meets in the file."""
 
     path: str | None = None
     file_type: FileType | None = None
@@ -146,7 +145,7 @@ class SourceFile:
 
 @dataclass(frozen=True)
 class ClubEntryCounts:
-    """The five entry counts from a C2 record. Reached via ``Club.entry_counts``."""
+    """Entry counts from a C2 record."""
 
     num_individual_swims: int | None = None
     num_athletes: int | None = None
@@ -161,13 +160,11 @@ class ClubEntryCounts:
 
 
 class Swim(ABC):
-    """Abstract base for one swimmer's swim — ``IndividualSwim`` or ``RelaySwim``.
+    """Abstract base class for a swimmer's swim (IndividualSwim or RelaySwim).
 
-    Declares no instance fields, so it can be mixed into the slotted
-    ``MeetResult`` dataclass without a slot-layout conflict. It is the common
-    type behind ``Swimmer.swims``; both subclasses expose a uniform interface
-    (``swimmer``, ``time``, ``status``, ``session``, ``event``, ``date``,
-    ``meet``, ``course``, ``swimmer_age_class``, ``splits``, ``is_relay_leg``).
+    Declares no instance fields to prevent slotted layout conflicts. Both subclasses
+    expose a uniform interface (swimmer, time, status, session, event, date, meet,
+    course, swimmer_age_class, splits, is_relay_leg).
     """
 
     __slots__ = ()
@@ -175,7 +172,7 @@ class Swim(ABC):
     @property
     @abstractmethod
     def is_relay_leg(self) -> bool:
-        """``True`` for a ``RelaySwim``, ``False`` for an ``IndividualSwim``."""
+        """True for a RelaySwim, False for an IndividualSwim."""
 
 
 # --------------------------------------------------------------------------- #
@@ -185,7 +182,7 @@ class Swim(ABC):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class MeetResult:
-    """Shared base for a row in ``Meet.results`` (``IndividualSwim`` or ``Relay``)."""
+    """Base class for a meet result row (IndividualSwim or Relay)."""
 
     meet: Meet
     club: Club | None
@@ -211,7 +208,7 @@ class MeetResult:
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class IndividualSwim(MeetResult, Swim):
-    """The result of an individual event — both a meet result and a swim."""
+    """Result of an individual swim event."""
 
     swimmer: Swimmer
     swimmer_age_class: str | None = None
@@ -220,16 +217,18 @@ class IndividualSwim(MeetResult, Swim):
 
     @property
     def is_relay_leg(self) -> bool:
+        """Always False."""
         return False
 
     @property
     def course(self) -> Course | None:
+        """Swim course (derived from the event)."""
         return self.event.course
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Relay(MeetResult):
-    """A squad relay result (not a ``Swim`` — its legs are)."""
+    """Squad relay result (the legs are RelaySwims)."""
 
     relay_letter: str
     total_age: int | None = None
@@ -239,7 +238,7 @@ class Relay(MeetResult):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class RelaySwim(Swim):
-    """One swimmer's leg (or roster slot) on a relay, in one session."""
+    """A swimmer's relay leg or roster slot."""
 
     swimmer: Swimmer | None
     relay: Relay
@@ -254,33 +253,36 @@ class RelaySwim(Swim):
 
     @property
     def is_relay_leg(self) -> bool:
+        """Always True."""
         return True
 
     @property
     def event(self) -> Event | None:
-        """The individual event swum on this leg (e.g. ``FREE_100_SCY``)."""
+        """Individual event swum on this leg (e.g., FREE_100_SCY)."""
         relay_event = self.relay.event
         if relay_event is None or self.order is None:
             return None
         leg_number = _LEG_NUMBERS.get(self.order)
         if leg_number is not None:
             return relay_event.leg_event(leg_number)
-        # ALTERNATE (no fixed leg): a free relay's legs are all the same event,
-        # so its event is still well-defined; a medley alternate's is not.
+        # Free relay alternates swum event is well-defined; medley alternates are not.
         if relay_event.stroke is Stroke.FREESTYLE_RELAY:
             return relay_event.leg_event(1)
         return None
 
     @property
     def date(self) -> datetime.date | None:
+        """Date of the swim (parent relay date)."""
         return self.relay.date
 
     @property
     def meet(self) -> Meet:
+        """Meet this leg belongs to."""
         return self.relay.meet
 
     @property
     def session(self) -> Session:
+        """Session of the swim."""
         return self.relay.session
 
 
@@ -291,7 +293,7 @@ class RelaySwim(Swim):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Swimmer:
-    """A swimmer scoped to one meet, identified by member ID within it."""
+    """A swimmer scoped to one meet."""
 
     meet: Meet
     first_name: str
@@ -306,36 +308,33 @@ class Swimmer:
     contact: SwimmerContact | None = None
     registration: SwimmerRegistration | None = None
     club: Club | None = None
-    # Individual swims + counting relay legs. Typed as the concrete union (their
-    # common base is Swim) so attribute access on elements is precise.
     swims: list[IndividualSwim | RelaySwim] = field(default_factory=list)
 
     @property
     def individual_swims(self) -> list[IndividualSwim]:
+        """Swimmer's individual swims."""
         return [s for s in self.swims if isinstance(s, IndividualSwim)]
 
     @property
     def relay_swims(self) -> list[RelaySwim]:
+        """Swimmer's counting relay legs (excluding alternates)."""
         return [s for s in self.swims if isinstance(s, RelaySwim)]
 
     @property
     def full_name(self) -> str:
+        """Combined first, middle initial, and last name."""
         if self.middle_initial:
             return f"{self.first_name} {self.middle_initial} {self.last_name}"
         return f"{self.first_name} {self.last_name}"
 
     def swims_in(self, event: Event) -> list[IndividualSwim | RelaySwim]:
-        """This swimmer's swims for an individual event, in source order (all outcomes).
-
-        Matches flat-start individual swims and relay legs whose individual leg
-        event equals ``event``.
-        """
+        """Swims for an individual event in source order."""
         return [s for s in self.swims if s.event == event]
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Club:
-    """A club scoped to one meet, keyed by ``(team_code, lsc)``."""
+    """A club scoped to one meet, keyed by `(team_code, lsc)`."""
 
     meet: Meet
     organization: Organization
@@ -359,16 +358,18 @@ class Club:
 
     @property
     def individual_swims(self) -> list[IndividualSwim]:
+        """Club's individual-event results at the meet."""
         return [r for r in self.results if isinstance(r, IndividualSwim)]
 
     @property
     def relays(self) -> list[Relay]:
+        """Club's relay results at the meet."""
         return [r for r in self.results if isinstance(r, Relay)]
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Meet:
-    """One meet's data, from a single SDIF file's B1 block."""
+    """A single meet parsed from an SDIF file's B1 block."""
 
     organization: Organization
     name: str
@@ -391,16 +392,18 @@ class Meet:
 
     @property
     def individual_swims(self) -> list[IndividualSwim]:
+        """All individual-event results at the meet."""
         return [r for r in self.results if isinstance(r, IndividualSwim)]
 
     @property
     def relays(self) -> list[Relay]:
+        """All relay results at the meet."""
         return [r for r in self.results if isinstance(r, Relay)]
 
     def individual_swims_for(self, event: Event) -> list[IndividualSwim]:
-        """Individual swims for an event, in source order."""
+        """Individual swims for an event in source order."""
         return [r for r in self.individual_swims if r.event == event]
 
     def relays_for(self, event: Event) -> list[Relay]:
-        """Relays for an event, in source order."""
+        """Relays for an event in source order."""
         return [r for r in self.relays if r.event == event]

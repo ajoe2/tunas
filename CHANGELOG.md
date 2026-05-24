@@ -1,8 +1,6 @@
 # Changelog
 
-All notable changes to `tunas` will be documented in this file. The format is
-based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
-project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
 ## [0.1.0] — Unreleased
 
@@ -18,6 +16,11 @@ Initial release of the `tunas` library, providing a parser and domain model for 
 - **Structured Error Model:** Structural (M1) violations raise `ParseError`. Data quality (M2) violations emit warnings or raise in `strict` mode. `ParseReport` provides query helpers (`by_severity`, `warnings_for`) and aggregates counts.
 - **Time Standards:** Offline lookup helpers (`qualifies_for`, `standard_time`, `all_qualified`) using bundled 2025–2028 motivational standards.
 - **Type-hinted:** Fully type-hinted and marked `py.typed`.
+
+### Documentation
+- **Hosted docs site:** Published a MkDocs Material site at <https://ajoe2.github.io/tunas/>, deployed automatically on release.
+- **Guide:** Getting started, parsing & error handling, the data model, a recipe cookbook, and the SDIF/`.cl2` file-format reference.
+- **Complete API reference:** Generated from source docstrings and type hints, so it always matches the installed version; docstrings now cover every public class, function, property, and enum.
 
 ### Internal
 - Refactored the parse engine and supporting modules for readability with **no change** to the public API or parse output: unified the duplicated per-session result parsing, replaced magic column offsets with named `SessionColumns` layouts, centralized record-orphan handling, and named the remaining magic constants (split layout, Z0 count checks, affiliation flags).

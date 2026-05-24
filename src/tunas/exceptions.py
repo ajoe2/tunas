@@ -1,4 +1,4 @@
-"""The :class:`TunasError` exception hierarchy."""
+"""Exception hierarchy for the tunas library."""
 
 from __future__ import annotations
 
@@ -11,14 +11,13 @@ __all__ = ["TunasError", "ParseError", "StandardsError"]
 
 
 class TunasError(Exception):
-    """Base class for all exceptions raised by tunas."""
+    """Base exception for all tunas library errors."""
 
 
 class ParseError(TunasError):
-    """Raised on a fatal (M1) structural violation, or on any warning in strict mode.
+    """Raised on a fatal structural violation, or on warnings in strict mode.
 
-    The originating :class:`~tunas.parser.ParseWarning` is attached as
-    ``warning`` for diagnostics.
+    The originating ParseWarning is attached as `warning`.
     """
 
     def __init__(self, warning: ParseWarning) -> None:
@@ -32,4 +31,4 @@ class ParseError(TunasError):
 
 
 class StandardsError(TunasError):
-    """Raised when bundled time-standards data is missing, unreadable, or inconsistent."""
+    """Raised when bundled time-standards data is missing or inconsistent."""

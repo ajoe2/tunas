@@ -1,4 +1,4 @@
-"""The :class:`Time` value type — a swim time stored with centisecond precision."""
+"""Immutable swim time value type with centisecond precision."""
 
 from __future__ import annotations
 
@@ -9,11 +9,12 @@ __all__ = ["Time"]
 
 @dataclass(order=True, frozen=True, slots=True)
 class Time:
-    """An immutable, hashable swim time.
+    """An immutable, hashable swim time with centisecond precision.
 
-    Stored internally as a single non-negative ``centiseconds`` integer (an
-    unbounded ``int``, so open-water marathon times are safe). Faster times
-    compare *less than* slower times.
+    Stored internally as a non-negative centiseconds integer (unbounded int).
+    Faster times compare as less than slower times. String formatting uses `[M:]SS.HH`
+    (e.g., "1:04.87" or "23.45"), which round-trips with `parse`. Supports addition
+    and subtraction (subtraction raising ValueError if the result is negative).
     """
 
     centiseconds: int
@@ -24,9 +25,9 @@ class Time:
 
     @classmethod
     def parse(cls, s: str) -> Time:
-        """Parse a ``[MM:]SS.HH`` swim-time string.
+        """Parse a `[MM:]SS.HH` swim-time string.
 
-        Whitespace is stripped. Empty or malformed strings raise ``ValueError``.
+        Strips whitespace. Raises ValueError for empty or malformed strings.
 
         >>> Time.parse("1:23.45")
         Time(centiseconds=8345)
@@ -57,18 +58,22 @@ class Time:
 
     @property
     def minute(self) -> int:
+        """Whole-minute component (`centiseconds // 6000`)."""
         return self.centiseconds // 6000
 
     @property
     def second(self) -> int:
+        """Seconds within the minute (0-59)."""
         return (self.centiseconds // 100) % 60
 
     @property
     def hundredth(self) -> int:
+        """Hundredths-of-a-second component (0-99)."""
         return self.centiseconds % 100
 
     @property
     def total_seconds(self) -> float:
+        """The whole time expressed as seconds (`centiseconds / 100`)."""
         return self.centiseconds / 100
 
     def __str__(self) -> str:

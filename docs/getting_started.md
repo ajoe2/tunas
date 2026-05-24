@@ -1,6 +1,6 @@
 # Getting started
 
-This guide covers installation and basic usage of `tunas`.
+Install `tunas` and parse your first meet results file.
 
 ## Install
 
@@ -31,75 +31,65 @@ for meet in meets:
         print(f"{meet.name}: {swimmer.full_name} {swim.session.value} {outcome}")
 ```
 
-Every `tunas` program follows this pattern: parse input into self-contained [`Meet`](models.md) objects, then traverse the data graph.
+Every `tunas` program parses input into self-contained [`Meet`](models.md) objects and traverses the resulting data graph.
 
-## Walking through the example
+## Walkthrough
 
 ### 1. Parsing
 
-```python
-meets, report = read_cl2("results/")
-```
+`read_cl2` parses a file path, directory, list of paths, or text stream, returning `(list[Meet], ParseReport)`.
 
-`read_cl2` accepts a file path, directory, list of paths, or text file-like object, returning `(list[Meet], ParseReport)`.
-
-By default, parsing is lenient: malformed records are skipped and collected as warnings. Pass `strict=True` to fail fast on the first error.
+Parsing is lenient by default. Malformed records are skipped or recovered and listed as warnings on the report:
 
 ```python
 for w in report.warnings:
-    print(f"{w.source}:{w.line_no} ({w.record_type}): {w.reason}")
+    print(f"{w.source}:{w.line_no}: {w.reason}")
 ```
 
-Meets are independent. Swimmers and clubs are scoped to each meet; the same swimmer in two different meets is parsed as two distinct `Swimmer` objects.
+Use `strict=True` to fail fast and raise `ParseError` on the first warning instead.
 
-### 2. Finding a swimmer in a meet
+### 2. Finding a Swimmer
 
-Filter `Meet.swimmers` to locate a specific athlete:
+Swimmers are grouped within each meet by member ID (`id_short` falling back to `id_long`):
 
 ```python
-swimmer = next((s for s in meet.swimmers
-                if s.id_short == "ABC123456789"), None)
+swimmer = next((s for s in meet.swimmers if s.id_short == "ABC123456789"), None)
 ```
 
-Swimmers within a meet are grouped by member ID (`id_short` falling back to `id_long`). Names are not guaranteed to be unique. See [models.md](models.md) for details.
+### 3. Querying Swims
 
-### 3. A swimmer's swims in an event
+`swimmer.swims_in(event)` returns all flat-start individual swims and relay legs for the given event, including prelims, finals, scratches, and DQs:
 
 ```python
 swims = swimmer.swims_in(Event.FLY_200_LCM)
 ```
 
-`Event` covers all USA Swimming events across courses (SCY, SCM, LCM) — see [event.md](event.md). `swimmer.swims_in(event)` returns all swims (including prelims, finals, DQs, and scratches). Both `IndividualSwim` and `RelaySwim` share a uniform interface (`time`, `status`, `event`, `date`, `meet`, `swimmer`).
+Both `IndividualSwim` and `RelaySwim` share a uniform `Swim` interface (`time`, `status`, `event`, `date`, `meet`, `swimmer`).
 
-Get the fastest swim:
-```python
-fastest = min((s for s in swims if s.time), key=lambda s: s.time, default=None)
-```
+### 4. Time Standards
 
-### 4. Time standards
+USA Swimming motivational cuts (B through AAAA) are bundled locally:
 
 ```python
 std = qualifies_for(swim.time, swim.event, age, swimmer.sex)
 ```
 
-`qualifies_for` checks the highest USA Swimming motivational standard achieved. Standards are bundled locally (no internet access required). See [standards.md](standards.md).
-
 ## What's in the box
 
 | Concept | Class | Where to read more |
 |---|---|---|
-| Reading a file | `read_cl2` | [parsing.md](parsing.md) |
-| A meet | `Meet` | [models.md](models.md) |
-| A swimmer | `Swimmer` | [models.md](models.md) |
-| A club | `Club` | [models.md](models.md) |
-| One swimmer's swim | `Swim` (base of the next two) | [models.md](models.md#swim) |
-| An individual swim | `IndividualSwim` | [models.md](models.md) |
-| A relay (+ its legs / alternates) | `Relay`, `RelaySwim` | [models.md](models.md) |
-| Splits | `Split` | [models.md](models.md) |
-| A time | `Time` | [time.md](time.md) |
-| An event | `Event` | [event.md](event.md) |
-| Strokes, courses, etc. | `Stroke`, `Course`, ... | [enums.md](enums.md) |
-| Time standards | `qualifies_for`, `standard_time`, `TimeStandard` | [standards.md](standards.md) |
+| Reading a file | [`read_cl2`][tunas.read_cl2] | [parsing.md](parsing.md) |
+| A meet | [`Meet`][tunas.models.Meet] | [models.md](models.md) |
+| A swimmer | [`Swimmer`][tunas.models.Swimmer] | [models.md](models.md) |
+| A club | [`Club`][tunas.models.Club] | [models.md](models.md) |
+| One swimmer's swim | [`Swim`][tunas.models.Swim] (base of the next two) | [models.md](models.md) |
+| An individual swim | [`IndividualSwim`][tunas.models.IndividualSwim] | [models.md](models.md) |
+| A relay (+ its legs / alternates) | [`Relay`][tunas.models.Relay], [`RelaySwim`][tunas.models.RelaySwim] | [models.md](models.md) |
+| Splits | [`Split`][tunas.models.Split] | [models.md](models.md) |
+| A time | [`Time`][tunas.time.Time] | [reference.md](reference.md#events-and-time) |
+| An event | [`Event`][tunas.event.Event] | [reference.md](reference.md#events-and-time) |
+| Strokes, courses, etc. | [`Stroke`][tunas.enums.Stroke], [`Course`][tunas.enums.Course], ... | [reference.md](reference.md#enumerations) |
+| Time standards | [`qualifies_for`][tunas.standards.qualifies_for], [`standard_time`][tunas.standards.standard_time], [`TimeStandard`][tunas.standards.TimeStandard] | [reference.md](reference.md#time-standards) |
 
 ## Where to go next
 

@@ -1,4 +1,4 @@
-"""Parse the SDIF NAME field (``Last, First MI``)."""
+"""SDIF name parsing helper."""
 
 from __future__ import annotations
 
@@ -6,11 +6,7 @@ __all__ = ["parse_name"]
 
 
 def parse_name(raw: str) -> tuple[str, str, str | None]:
-    """Split a NAME field into ``(last_name, first_name, middle_initial)``.
-
-    SDIF format is ``last name, first name [middle initial]``. A field with no
-    comma is treated as an all-last-name value (``first_name`` empty).
-    """
+    """Split a NAME field into `(last_name, first_name, middle_initial)`."""
     text = raw.strip()
     if "," not in text:
         return text, "", None

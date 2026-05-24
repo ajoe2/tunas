@@ -1,9 +1,4 @@
-"""The SDIF parse engine: one handler per record type, wired by ``_Engine``.
-
-The engine reads padded lines, dispatches by 2-char header, and assembles the
-object graph under the M1/M2 + lose-no-information error model documented in
-``docs/parsing.md``.
-"""
+"""SDIF parse engine that dispatches record types and assembles the object graph."""
 
 from __future__ import annotations
 

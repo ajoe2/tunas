@@ -19,6 +19,9 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
+# MkDocs build output
+site/
+
 # Editor / OS
 .DS_Store
 .idea/

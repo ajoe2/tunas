@@ -53,6 +53,8 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "openpyxl>=3.1",
+    "mkdocs-material>=9.7.6",
+    "mkdocstrings[python]>=1.0.4",
 ]
 
 [tool.pytest.ini_options]

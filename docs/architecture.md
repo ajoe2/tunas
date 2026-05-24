@@ -1,10 +1,10 @@
 # Architecture
 
-This document describes how `tunas` is organized and the design decisions behind its public API.
+This document describes the organization of `tunas` and the design decisions behind its public API.
 
 ## Description
 
-`tunas` is a data-access library for USA Swimming meet results. It parses `.cl2` files (Hy-Tek SDIF v3) into clean, well-typed Python objects and bundles USA Swimming time standards for offline qualifying-time lookups.
+`tunas` is a data-access library for USA Swimming meet results. It parses `.cl2` files (Hy-Tek SDIF v3) into structured Python objects and bundles offline motivational time standards.
 
 ### Scope
 
@@ -75,7 +75,13 @@ The parser wires all graph references (e.g., `Meet.results`, `Swimmer.swims`, an
 
 ### Zero setup time standards
 
-Motivational standards are bundled as JSON and lazily loaded into an O(1) index on first use.
+Motivational standards are bundled as JSON (`src/tunas/_data/standards-2025-2028.json`)
+and lazily loaded into an O(1) index keyed by `(standard, age_group, sex, event)` on
+first use; subsequent lookups hit the per-process cache. Each row is flat —
+`standard`, `age_group`, `sex`, `event`, and `cutoff_centiseconds` — and duplicate
+rows raise `StandardsError` on load. USA Swimming revises the cuts every four years,
+so refreshing them is just a matter of upgrading the package; no setup or network
+access is required.
 
 ### Lightweight runtime footprint
 

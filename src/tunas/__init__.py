@@ -1,7 +1,6 @@
-"""tunas — USA Swimming meet result (.cl2 / SDIF v3) parser library.
+"""tunas: A Python library for parsing USA Swimming meet result files (.cl2 / Hy-Tek SDIF v3).
 
-Parses Hy-Tek SDIF v3 ``.cl2`` files into a clean, well-typed domain model and
-bundles USA Swimming motivational time standards for offline lookups.
+Parses meet results into structured domain models and queries offline motivational time standards.
 """
 
 from __future__ import annotations

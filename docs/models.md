@@ -1,10 +1,10 @@
-# `tunas.models` — the domain model
+# Data model
 
-This document describes the dataclasses in the `tunas` domain model: their fields, properties, methods, identity rules, and relationships. All classes are importable from the top-level `tunas` package.
+`read_cl2` returns a list of self-contained [`Meet`][tunas.models.Meet] objects. This page explains the object graph and its scoping rules. For field-by-field reference, see the [API Reference](reference.md#domain-model).
 
 ## Object graph
 
-**Inheritance:**
+**Inheritance** — two small base types sit above the concrete results:
 
 ```
 Swim (one swimmer's swim)           MeetResult (a row in Meet.results)
@@ -12,20 +12,20 @@ Swim (one swimmer's swim)           MeetResult (a row in Meet.results)
 └── RelaySwim                       └── Relay
 ```
 
-**Containment:**
+**Containment** — each `Meet` owns its results, swimmers, and clubs:
 
 ```
-list[Meet]                                ← read_cl2 returns one Meet per cl2 file
+list[Meet]                                ← one Meet per .cl2 file
 └── Meet
     ├── results   : list[MeetResult]      ← IndividualSwim or Relay
     │   ├── IndividualSwim
     │   │   └── swimmer  : Swimmer
     │   └── Relay
-    │       ├── legs       : list[RelaySwim]    ← the ≤4 swum legs (order LEG_1–LEG_4)
+    │       ├── legs       : list[RelaySwim]    ← the ≤4 swum legs (LEG_1–LEG_4)
     │       │   └── RelaySwim
     │       │       ├── swimmer : Swimmer
-    │       │       └── relay   : Relay         ← Back-reference
-    │       └── alternates : list[RelaySwim]    ← rostered but did not swim (order ALTERNATE)
+    │       │       └── relay   : Relay         ← back-reference
+    │       └── alternates : list[RelaySwim]    ← rostered but did not swim
     ├── swimmers  : list[Swimmer]
     │   └── Swimmer
     │       ├── swims    : list[IndividualSwim | RelaySwim]   ← common base: Swim
@@ -36,399 +36,66 @@ list[Meet]                                ← read_cl2 returns one Meet per cl2 
             └── swimmers : list[Swimmer]
 ```
 
-- **`Swim`:** Abstract base interface for a single swimmer's swim, subclassed by `IndividualSwim` and `RelaySwim`. Provides a uniform interface (`swimmer`, `time`, `event`, `date`, `meet`, `splits`, `status`) and shares `Swimmer.swims`.
-- **`MeetResult`:** Shared base for results in `Meet.results`, subclassed by `IndividualSwim` and `Relay`. Shares event and place context. Holds no `swimmer` or `splits`.
+The parser wires every reference (including back-references like `RelaySwim.relay`)
+in a single pass, so traversals are plain attribute reads.
 
-Meets are independent; each `Meet` owns its swimmers and clubs. Aggregate classes are mutable to support single-pass parser graph wiring, but use slots (`slots=True`) and keyword-only construction (`kw_only=True`).
+## Two ways to look at a result
 
-Aggregates also use identity equality (`eq=False`, so `==` is `is`) to avoid stack overflows from cyclic graph references (`meet ⇄ results`) and because the parser does not deduplicate objects.
+The same row can be viewed through two lenses, which is why there are two base
+classes:
 
-## `Swim`
+- **[`MeetResult`][tunas.models.MeetResult]** is a *row in `Meet.results`* — an
+  [`IndividualSwim`][tunas.models.IndividualSwim] or a [`Relay`][tunas.models.Relay].
+  It holds the shared event/place/time context but no `swimmer` or `splits`.
+- **[`Swim`][tunas.models.Swim]** is *one swimmer's swim* — an `IndividualSwim` or a
+  [`RelaySwim`][tunas.models.RelaySwim]. It is
+  the common type behind `Swimmer.swims`, giving both kinds a uniform interface
+  (`swimmer`, `time`, `status`, `session`, `event`, `date`, `meet`, `course`,
+  `splits`, `is_relay_leg`).
 
-Abstract base interface for a single swimmer's swim (subclassed by `IndividualSwim` and `RelaySwim`). It has no stored fields, avoiding multiple inheritance layout conflicts.
+An `IndividualSwim` is *both* — it appears in `Meet.results` and in its swimmer's
+`swims`. A `Relay` is only a `MeetResult` (a squad, not a swim); its individual
+legs are the `RelaySwim`s.
 
-| Member | Type | Meaning |
-|---|---|---|
-| `swimmer` | `Swimmer` | The swimmer who made this swim. |
-| `time` | `Time \| None` | The swim time (`None` for a non-time outcome). |
-| `status` | `ResultStatus` | `OK` for an official time, else `NT`/`NS`/`DNF`/`DQ`/`SCR`. |
-| `session` | `Session` | `PRELIMS`, `FINALS`, or `SWIM_OFFS`. |
-| `event` | `Event \| None` | Leg individual event (e.g. `FREE_100_SCY` for a 400 relay leg) or individual swim event. `None` only for a medley-relay alternate. |
-| `date` | `datetime.date \| None` | Date of the swim. |
-| `meet` | `Meet` | Back-reference to the meet. |
-| `course` | `Course \| None` | Course of the swim. |
-| `swimmer_age_class` | `str \| None` | Age/class as printed. |
-| `splits` | `list[Split]` | Splits in distance order (empty if none). |
-| `is_relay_leg` | `bool` | `True` for a `RelaySwim`, `False` for an `IndividualSwim`. |
+## Relay legs and their events
 
-`Swim` itself declares only the abstract `is_relay_leg`; the remaining members are provided by the two concrete subclasses (as fields or delegating properties). It serves as the common base for `isinstance` checks and as the documented interface. Collections of swims (e.g. `Swimmer.swims`) are typed as the concrete union `IndividualSwim | RelaySwim` so that attribute access on their elements is precise.
+A `Relay` carries its swimmers as `RelaySwim` legs. Swimmers who raced are in
+`legs` (ordered `LEG_1`–`LEG_4`); rostered swimmers who did not race are in
+`alternates` and are **excluded** from `Swimmer.swims`. Splits live on the
+individual legs (`RelaySwim.splits`), not on the squad.
 
-## `MeetResult`
-
-Shared base dataclass representing a row in `Meet.results`.
-
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class MeetResult:
-    meet: Meet
-    club: Club | None
-    organization: Organization
-    session: Session
-    event: Event
-    event_min_age: int | None
-    event_max_age: int | None
-    event_number: str | None = None
-    event_sex: Sex
-    status: ResultStatus
-    time: Time | None
-    date: datetime.date | None
-    heat: int | None = None
-    lane: int | None = None
-    rank: int | None = None
-    points: float | None = None
-    seed_time: Time | None = None
-    seed_course: Course | None = None
-    event_min_time_class: EventTimeClass | None = None
-    event_max_time_class: EventTimeClass | None = None
-```
-
-### Fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `meet` | `Meet` | Back-reference. Always set. |
-| `club` | `Club \| None` | `None` for unattached swimmers. |
-| `organization` | `Organization` | Usually `Organization.USS`. |
-| `session` | `Session` | `PRELIMS`, `FINALS`, or `SWIM_OFFS`. |
-| `event` | `Event` | The event swum. |
-| `event_min_age`, `event_max_age` | `int \| None` | Event age limits. `None` if open-ended (`"UN"` or `"OV"`). |
-| `event_number` | `str \| None` | Event program number (e.g., `"501"`). |
-| `event_sex` | `Sex` | Competition sex classification of the event. |
-| `status` | `ResultStatus` | Swim outcome: `OK`, `NT`, `NS`, `DNF`, `DQ`, or `SCR`. |
-| `time` | `Time \| None` | Recorded time (non-`None` iff `status == OK`, or course `X` DQ). |
-| `date` | `datetime.date \| None` | Date of the swim. |
-| `heat`, `lane` | `int \| None` | Pool assignment. |
-| `rank` | `int \| None` | Place awarded (e.g. `1` for first, `None` if DQ/SCR). |
-| `points` | `float \| None` | Team points earned. |
-| `seed_time`, `seed_course` | `Time \| None`, `Course \| None` | Seed/entry time and course. |
-| `event_min_time_class`, `event_max_time_class` | `EventTimeClass \| None` | Qualifying-class limits. |
-
-## `IndividualSwim`
-
-The result type for individual events (`event.is_relay()` is `False`).
+A leg reports the *individual* event it amounts to, so it sorts alongside
+flat-start swims:
 
 ```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class IndividualSwim(MeetResult, Swim):
-    swimmer: Swimmer
-    swimmer_age_class: str | None = None
-    attach_status: AttachStatus = AttachStatus.ATTACHED
-    splits: list[Split] = field(default_factory=list)
+relay.event              # Event.FREE_400_RELAY_SCY  (the squad event)
+relay.legs[0].event      # Event.FREE_100_SCY        (the leg's individual event)
 ```
 
-### Additional fields
+This is why `swimmer.swims_in(Event.FREE_100_SCY)` returns both 100-free
+flat-starts and matching relay legs.
 
-| Field | Type | Notes |
-|---|---|---|
-| `swimmer` | `Swimmer` | The swimmer who performed the swim. |
-| `swimmer_age_class` | `str \| None` | Print age class (e.g. `"12"` or `"FR"`). |
-| `attach_status` | `AttachStatus` | `UNATTACHED` for unattached swimmers. |
-| `splits` | `list[Split]` | Splits in distance order. |
+## Identity and scoping
 
-## `Relay`
+Meets are **independent** and never merged — the same competition exported twice
+yields two unrelated `Meet` objects. Everything below a meet is scoped to it:
 
-The result type for relay events (`event.is_relay()` is `True`).
+- **Swimmers** are grouped within a meet by `id_short`, falling back to `id_long`.
+  Matching never falls back to names or birthdays, so distinct people are never
+  fused. The same athlete at two meets is two distinct `Swimmer` objects;
+  reconciling them across meets is left to application code (see
+  [Recipes](cookbook.md)).
+- **Clubs** are keyed within a meet by `(team_code, lsc)`. Unattached entries
+  (team code ending `UN`, or a name containing "unattached") create no `Club`, and
+  the swim's `club` is `None`.
 
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class Relay(MeetResult):
-    relay_letter: str             # "A" / "B" / "C" ...
-    total_age: int | None = None  # Combined squad age
-    legs: list[RelaySwim] = field(default_factory=list)        # Counting swum legs (orders 1-4)
-    alternates: list[RelaySwim] = field(default_factory=list)  # Rostered alternates (order A)
-```
+## Times and outcomes
 
-### Additional fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `relay_letter` | `str` | Letter code identifying the squad (e.g., `"A"`). |
-| `total_age` | `int \| None` | Combined age of the relay squad. |
-| `legs` | `list[RelaySwim]` | Counting swum legs (orders `LEG_1`–`LEG_4`). Max 4. |
-| `alternates` | `list[RelaySwim]` | Rostered alternates who did not swim. Excluded from `Swimmer.swims`. |
-
-Relays represent a squad; splits live on the swum legs (`RelaySwim.splits`).
-
-## `RelaySwim`
-
-A `Swim` representing one swimmer's leg or roster position on a relay.
-
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class RelaySwim(Swim):
-    swimmer: Swimmer | None
-    relay: Relay                       # Parent relay back-reference
-    order: RelayLegOrder | None = None # Leg position or alternate code
-    time: Time | None = None           # Leg split time
-    status: ResultStatus = ResultStatus.OK
-    takeoff_time: int | None = None    # Take-off time in hundredths of a second
-    course: Course | None = None
-    swimmer_age_class: str | None = None
-    citizenship: Citizenship | Country | None = None
-    splits: list[Split] = field(default_factory=list)
-
-    @property
-    def is_relay_leg(self) -> bool:
-        return True
-```
-
-### Fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `swimmer` | `Swimmer \| None` | The swimmer on the leg (`None` only if USS# is corrupt). |
-| `relay` | `Relay` | Back-reference to the parent session-relay. |
-| `order` | `RelayLegOrder \| None` | Leg position (`LEG_1`–`LEG_4`) or `ALTERNATE`. |
-| `time` | `Time \| None` | Individual leg split time. |
-| `status` | `ResultStatus` | Outcome; mirrors parent relay's status. |
-| `takeoff_time` | `int \| None` | Relay take-off time in hundredths of a second (e.g., `29` = 0.29 s). |
-| `course` | `Course \| None` | Course swum. |
-| `swimmer_age_class` | `str \| None` | Print age class. |
-| `citizenship` | `Citizenship \| Country \| None` | Leg citizenship from F0. |
-| `splits` | `list[Split]` | Splits for this leg in distance order. |
-
-### Swim interface on a leg
-
-Computed properties delegating to the parent `relay`:
-
-| Property | Returns |
-|---|---|
-| `event` | `self.relay.event.leg_event(int(self.order))` — the individual leg event (e.g., `FREE_100_SCY` on a 400 free relay). |
-| `date` | `self.relay.date` |
-| `meet` | `self.relay.meet` |
-| `session` | `self.relay.session` |
-
-```python
-relay.event              # Event.FREE_400_RELAY_SCY
-relay.legs[0].event      # Event.FREE_100_SCY (individual event swum)
-```
-
-Swimmers have their swum legs stored in `Swimmer.swims` under the **individual** leg event alongside flat-start swims. Alternates are filed under `Relay.alternates` and omitted from `Swimmer.swims`.
-
-## `Split`
-
-One split entry from a G0 record.
-
-```python
-@dataclass(frozen=True)
-class Split:
-    distance: int                # Cumulative distance from start (50, 100, 150...)
-    time: Time | None            # None if split was unparseable
-    split_type: SplitType        # CUMULATIVE (elapsed) or INTERVAL (segment)
-```
-
-`Split` is frozen and hashable. Splits are ordered by distance ascending.
-
-## `SwimmerContact`
-
-Contact details populated from D1/D2 records. Frozen and reachable via `Swimmer.contact`. **Contains PII.**
-
-```python
-@dataclass(frozen=True)
-class SwimmerContact:
-    address: str | None = None
-    city: str | None = None
-    state: State | None = None
-    postal_code: str | None = None
-    country: Country | None = None
-    region: Region | None = None
-    alt_mailing_name: str | None = None
-    phone_primary: str | None = None
-    phone_secondary: str | None = None
-```
-
-## `SwimmerRegistration`
-
-Registration and demographic details populated from D1/D2/D3 records. Reachable via `Swimmer.registration`. **Contains sensitive PII.**
-
-```python
-@dataclass(frozen=True)
-class SwimmerRegistration:
-    member_status: MemberStatus | None = None
-    registration_date: datetime.date | None = None
-    season: Season | None = None
-    ethnicity_primary: Ethnicity | None = None
-    ethnicity_secondary: Ethnicity | None = None
-    affiliations: frozenset[Affiliation] = frozenset()
-    old_member_number: str | None = None
-    fina_other_federation: str | None = None
-    admin_info: str | None = None
-```
-
-## `Swimmer`
-
-A swimmer scoped to a single meet and identified within it by member ID.
-
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class Swimmer:
-    meet: Meet
-    first_name: str
-    last_name: str
-    sex: Sex
-    id_short: str | None = None  # 12-char short ID (USS#)
-    id_long: str | None = None   # 14-char new ID (long USS#)
-    middle_initial: str | None = None
-    preferred_first_name: str | None = None
-    birthday: datetime.date | None = None
-    citizenship: Citizenship | Country | None = None
-    contact: SwimmerContact | None = None
-    registration: SwimmerRegistration | None = None
-    club: Club | None = None     
-    swims: list[IndividualSwim | RelaySwim] = field(default_factory=list)  # individual swims + counting legs
-```
-
-`swims` holds individual swims and counting relay legs (alternates are excluded). Its elements' common base is [`Swim`](#swim); it is typed as the concrete union for precise attribute access.
-
-### Computed properties
-
-| Property | Returns |
-|---|---|
-| `individual_swims` | `swims` filtered to `IndividualSwim` instances. |
-| `relay_swims` | `swims` filtered to `RelaySwim` instances (counting legs only). |
-| `full_name` | `"First Middle Last"` or `"First Last"`. |
-
-### Methods
-
-#### `swims_in(event: Event) -> list[IndividualSwim | RelaySwim]`
-
-Returns swims for the individual event (e.g. flat-starts and relay legs matching the distance/stroke/course) in source order.
-
-### Identity
-
-- Grouped within a meet by `id_short` falling back to `id_long`. Every `Swimmer` carries at least one of these two.
-- Matches never fallback to names/birthdays, preventing accidental swimmer fusion.
-- Swimmers are meet-scoped; the same athlete at different meets represents distinct `Swimmer` objects.
-
-## `Club`
-
-A club scoped to a single meet.
-
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class Club:
-    meet: Meet
-    organization: Organization
-    team_code: str
-    lsc: LSC | None = None
-    full_name: str | None = None
-    abbreviated_name: str | None = None
-    address_one: str | None = None
-    address_two: str | None = None
-    city: str | None = None
-    state: State | None = None
-    postal_code: str | None = None
-    country: Country | None = None
-    region: Region | None = None
-    coach: str | None = None
-    coach_phone: str | None = None
-    short_name: str | None = None
-    entry_counts: ClubEntryCounts | None = None
-    results: list[MeetResult] = field(default_factory=list)   
-    swimmers: list[Swimmer] = field(default_factory=list)     
-```
-
-`ClubEntryCounts` is a frozen sub-dataclass containing D0, athlete, E0, F0, and split counts.
-
-### Computed properties
-
-| Property | Returns |
-|---|---|
-| `individual_swims` | `results` filtered to `IndividualSwim`s. |
-| `relays` | `results` filtered to `Relay`s. |
-
-### Identity
-
-Scoped to a single meet, keyed on `(team_code, lsc)`. `team_code` is the full SDIF code including LSC prefix and optional 5th extension character. Clubs are not merged across meets.
-
-## `Meet`
-
-Represents one meet's data from a single SDIF file B1 block.
-
-```python
-@dataclass(slots=True, kw_only=True, eq=False)
-class Meet:
-    organization: Organization
-    name: str
-    start_date: datetime.date
-    end_date: datetime.date | None = None
-    city: str | None = None
-    address_one: str | None = None
-    state: State | None = None
-    address_two: str | None = None
-    postal_code: str | None = None
-    country: Country | None = None
-    course: Course | None = None
-    altitude: int | None = None
-    meet_type: MeetType | None = None
-    host: MeetHost | None = None
-    source_file: SourceFile | None = None
-    results: list[MeetResult] = field(default_factory=list)
-    swimmers: list[Swimmer] = field(default_factory=list)
-    clubs: list[Club] = field(default_factory=list)
-```
-
-### Computed properties
-
-| Property | Returns |
-|---|---|
-| `individual_swims` | `results` filtered to `IndividualSwim`s. |
-| `relays` | `results` filtered to `Relay`s. |
-
-### Methods
-
-- `individual_swims_for(event: Event) -> list[IndividualSwim]`: Returns individual swims for an event in source order.
-- `relays_for(event: Event) -> list[Relay]`: Returns relays for an event in source order.
-
-Meets are independent and never merged, even if name/date match.
-
-## `MeetHost`
-
-```python
-@dataclass(frozen=True)
-class MeetHost:
-    name: str | None = None
-    address_one: str | None = None
-    address_two: str | None = None
-    city: str | None = None
-    state: State | None = None
-    postal_code: str | None = None
-    country: Country | None = None
-    phone: str | None = None
-```
-
-Reachable as `Meet.host`.
-
-## `SourceFile`
-
-File-level metadata from A0/Z0 records. Reachable as `Meet.source_file`.
-
-```python
-@dataclass(frozen=True)
-class SourceFile:
-    path: str | None = None            # Stream name or file path
-    file_type: FileType | None = None  
-    sdif_version: str | None = None
-    software_name: str | None = None
-    software_version: str | None = None
-    contact_name: str | None = None
-    contact_phone: str | None = None
-    created: datetime.date | None = None
-    submitted_by_lsc: LSC | None = None
-    notes: str | None = None           # Z0 note text
-```
-
-Meets from the same file share the same `SourceFile` instance.
+A timed swim has `status == ResultStatus.OK` and a [`Time`][tunas.time.Time].
+Non-time outcomes (`NT`, `NS`, `DNF`, `DQ`, `SCR`) keep `time = None` — except a
+course-`X` disqualification, which retains its recorded time with `status == DQ`.
+Every swim is preserved either way, so DQs and scratches are available for
+analysis rather than silently dropped.
 
 ## Example: traversing the model
 
