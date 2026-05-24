@@ -1,70 +1,57 @@
 # The `.cl2` / SDIF v3 file format
 
-`.cl2` files are USA Swimming meet result exports in the **Standard
-Data Interchange Format version 3**, originally specified by USA
-Swimming on April 28, 1998 and still in active use by Hy-Tek Meet
-Manager and most other meet-management systems.
+`.cl2` files contain USA Swimming meet results formatted in **Standard Data Interchange Format version 3** (SDIF v3). Defined by USA Swimming in 1998, SDIF v3 is still actively used by Hy-Tek Meet Manager and other systems.
 
-`tunas` parses every record type defined in the spec. This page is a
-short tour of the format and a pointer to the bundled spec for
-reference.
+`tunas` parses every record type in the meet-results portion of the spec. (Qualifying-time records `J0`/`J1`/`J2` are recognized but not modeled; they surface as warnings.)
 
 ## High-level structure
 
-A `.cl2` file is a sequence of **fixed-width text records**, one per
-line, each exactly 162 bytes long (160 bytes of data + a 2-byte
-checksum). Every record begins with a 2-character **type code** that
-determines how its remaining 160 bytes are interpreted.
+A `.cl2` file consists of **fixed-width text records**, one per line. Each record is exactly 160 characters (excluding trailing CR/LF line endings) and starts with a 2-character **type code** defining its field layout.
 
 Records appear in a hierarchical order:
 
 ```
-A0                              file description (one)
-  B1                            meet
-    B2                          meet host (optional)
-    C1                          team / club
-      C2                        team entry — coach, counts (optional)
-      D0                        individual event result
-        D1                      individual address (optional, PII)
-        D2                      individual phone/email (optional, PII)
-        D3                      long ID, preferred name (optional)
-        G0                      splits for the individual result (optional, multiple)
-      E0                        relay event result
-        F0                      relay name — one per swimmer on the relay (up to 4)
-        G0                      splits for the relay result (optional, multiple)
-Z0                              file terminator (one)
+A0                              File description (one per file)
+  B1                            Meet
+    B2                          Meet host (optional)
+    C1                          Team / club
+      C2                        Team entry — coach, counts (optional)
+      D0                        Individual event result
+        D1                      Individual administrative — phones, registration (optional, PII)
+        D2                      Individual contact — mailing address (optional, PII)
+        D3                      Long ID, preferred name (optional)
+        G0                      Splits for the individual result (optional, multiple)
+      E0                        Relay event result
+        F0                      Relay name — one per swimmer on the relay (up to 4)
+        G0                      Splits for the relay leg (optional, multiple)
+Z0                              File terminator (one per file)
 ```
 
-A single file may contain multiple `B1 ... Z0` blocks (multiple meets).
-A directory of `.cl2` files may contain the same swimmer across many
-files; `read_cl2` merges them. See [parsing.md](parsing.md#multi-file-semantics).
+Each SDIF file normally contains one `B1` meet record, so `read_cl2` yields one `Meet` per file (or per `B1 ... Z0` block). Meets are independent; swimmers and clubs are derived strictly from their containing file. See [parsing.md](parsing.md#multi-file-semantics).
 
 ## Record types
 
 | Code | Name | Mandatory | What `tunas` does |
 |---|---|---|---|
-| `A0` | File description | Yes | Read for metadata; no domain object created. |
-| `B1` | Meet record | Yes | Creates a `Meet`. |
-| `B2` | Meet host record | Optional | Adds host fields to the current `Meet`. |
-| `C1` | Team ID record | At least one | Creates a `Club` or marks the swimmer context unattached. |
-| `C2` | Team entry record | Optional | Adds coach + entry counts to the current `Club`. |
-| `D0` | Individual event entry/result | One per swim | Creates `IndividualMeetResult` and resolves/creates a `Swimmer`. |
-| `D1` | Individual administrative record | Optional | Populates `swimmer_contact.address_*` (PII). |
-| `D2` | Individual contact record | Optional | Populates `swimmer_contact.phone_*` / `email` (PII). |
-| `D3` | Individual info record | Optional | Sets `usa_id_long` and `preferred_first_name` on the current `Swimmer`. |
-| `E0` | Relay event record | One per relay | Creates `RelayMeetResult`. |
-| `F0` | Relay name record | Up to 4 per relay | Appends a `RelayLeg`. |
-| `G0` | Splits record | Optional, multiple | Appends `Split` entries to the current individual or relay result. |
-| `Z0` | File terminator | Yes | Resets parser context. |
+| `A0` | File description | Yes | Captured as `SourceFile` (file provenance). |
+| `B1` | Meet record | Yes | Starts a `Meet`. |
+| `B2` | Meet host record | Optional | Builds `Meet.host` (a `MeetHost`). |
+| `C1` | Team ID record | At least one | Creates a `Club`, or marks the swimmer context unattached. |
+| `C2` | Team entry record | Optional | Adds coach, phone, and entry counts to the current `Club`. |
+| `D0` | Individual event entry/result | One per swim | Creates an `IndividualSwim` per session; resolves/creates the `Swimmer`. |
+| `D1` | Individual administrative record | Optional | Populates `Swimmer.contact` / `Swimmer.registration` (PII). |
+| `D2` | Individual contact record | Optional | Populates `Swimmer.contact` / `Swimmer.registration` (PII). |
+| `D3` | Individual info record | Optional | Sets `id_long`, `preferred_first_name`, and demographics (`Swimmer.registration`). |
+| `E0` | Relay event record | One per relay | Creates a `Relay` per session. |
+| `F0` | Relay name record | Up to 4 (+ alternates) per relay | Appends a `RelaySwim` per session swum — to the relay's `legs` (counting legs) or `alternates`. |
+| `G0` | Splits record | Optional, multiple | Appends `Split`s to the current `IndividualSwim` or relay leg (`RelaySwim`). |
+| `Z0` | File terminator | Yes | Resets parser context; keeps any note on `SourceFile.notes`. |
 
-Forward-compatible: the parser silently ignores any 2-character header
-not in this table, so future SDIF revisions that add new records won't
-cause failures.
+Any 2-character header not in this table (including future SDIF revisions) is recorded as a `ParseWarning` rather than parsed.
 
 ## Sample
 
-A minimal but valid `.cl2` excerpt (whitespace-padded fixed-width
-fields, abbreviated below for readability):
+A minimal `.cl2` excerpt. **Field positions below are illustrative, not byte-accurate** — real records are whitespace-padded to the exact columns specified in the spec:
 
 ```
 A01V3      02Meet Results                  Hy-Tek, Ltd ...
@@ -77,41 +64,24 @@ D3CA025D306C5F47Kevin ...
 Z01Meet Res02Successful Build on 7/01/2024   1  1  12  12  ...
 ```
 
-The fixed positions of every field within each record are specified in
-the official spec (linked below). `tunas` uses small column-slice
-helpers under `_parser/fields.py` to extract them.
+The fixed positions of every field within each record are specified in the official spec. `tunas` uses column-slice helpers under `_parser/fields.py` to extract them.
 
 ## Bundled spec
 
-The full SDIF v3 specification is shipped with the library at:
+The authoritative SDIF v3 specification is shipped verbatim with the library (~65 KB plain text) at:
 
 ```
 src/tunas/_data/sdif-v3.txt
 ```
 
-It is a verbatim copy of the document published by USA Swimming. The
-file is plain text (~65 KB) and is the authoritative source for the
-exact byte layout of every record. Consult it if you're extending the
-parser or debugging an unusual file.
-
 ## Historical notes
 
-- **Older 14-character "USS#" IDs** (a.k.a. USSNUM): pre-2017, swimmer
-  identifiers were derived from name + birthday. The parser recognizes
-  the legacy format but does not store it as `usa_id_long` (which is
-  reserved for the modern 14-character format). It also does not infer
-  birthday from the legacy ID.
-- **Encoding**: the spec predates UTF-8. Real-world files typically use
-  CP-1252 or plain ASCII; `tunas` defaults to UTF-8 with
-  `errors="replace"` so corrupt bytes don't fail the parse. Pass
-  `encoding="cp1252"` if you're parsing very old files and want
-  faithful decoding.
-- **Checksums**: the trailing 2 bytes of each record are intended to be
-  a checksum, but in practice many tools emit garbage there. `tunas`
-  validates only the structural fields and ignores the checksum bytes.
+- **14-character USS# (USSNUM):** The 14-character member ID from `D3`/`F0` is stored verbatim in `id_long`. The DOB-based USSNUM format (e.g., `011553CATADURA`) is not decoded; birth dates are never inferred from an ID.
+- **Encoding:** SDIF predates UTF-8. Real-world files are encoded in CP-1252 or ASCII. `tunas` defaults to `encoding="cp1252"` (with `errors="replace"`) to preserve column alignment and decode accented names correctly. Pass `encoding="utf-8"` if your source differs.
+- **Line length:** Each record must be 160 characters (excluding trailing CR/LF). `tunas` right-pads shorter lines with spaces and warns only on over-long or otherwise unusable lines.
 
 ## Further reading
 
 - USA Swimming SDIF v3 spec: see the bundled `sdif-v3.txt`.
-- Hy-Tek Meet Manager documentation (commercial; not bundled).
 - USA Swimming developer / SWIMS resources: <https://www.usaswimming.org>.
+

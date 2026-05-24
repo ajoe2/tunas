@@ -1,48 +1,85 @@
 # `tunas.models` — the domain model
 
-This document describes every dataclass in the `tunas` domain model: its
-fields, computed properties, methods, identity rules, and how it relates
-to the other models. All classes documented here are importable from the
-top-level `tunas` package.
+This document describes the dataclasses in the `tunas` domain model: their fields, properties, methods, identity rules, and relationships. All classes are importable from the top-level `tunas` package.
 
 ## Object graph
 
+**Inheritance:**
+
 ```
-Meet
-├── individual_results : list[IndividualMeetResult]
-│       │
-│       └── swimmer : Swimmer ─────────────────┐
-│                                              │
-└── relay_results     : list[RelayMeetResult]  │
-        │                                      │
-        └── legs : list[RelayLeg]              │
-                ├── swimmer : Swimmer ──────── │
-                                               │
-Club ─────── (referenced by every result) ─────┘
+Swim (one swimmer's swim)           MeetResult (a row in Meet.results)
+├── IndividualSwim                  ├── IndividualSwim
+└── RelaySwim                       └── Relay
 ```
 
-`Meet` is the entry point. The two result lists on `Meet` are the **single
-source of truth**; every other "list of swimmers", "list of clubs", "list
-of results" exposed on `Swimmer`, `Club`, or `Meet` is a computed
-`@property` view derived from those lists. There is no synchronization to
-get wrong.
+**Containment:**
 
-## `MeetResult` — base class
+```
+list[Meet]                                ← read_cl2 returns one Meet per cl2 file
+└── Meet
+    ├── results   : list[MeetResult]      ← IndividualSwim or Relay
+    │   ├── IndividualSwim
+    │   │   └── swimmer  : Swimmer
+    │   └── Relay
+    │       ├── legs       : list[RelaySwim]    ← the ≤4 swum legs (order LEG_1–LEG_4)
+    │       │   └── RelaySwim
+    │       │       ├── swimmer : Swimmer
+    │       │       └── relay   : Relay         ← Back-reference
+    │       └── alternates : list[RelaySwim]    ← rostered but did not swim (order ALTERNATE)
+    ├── swimmers  : list[Swimmer]
+    │   └── Swimmer
+    │       ├── swims    : list[Swim]     ← IndividualSwims + RelaySwims
+    │       └── club     : Club | None
+    └── clubs     : list[Club]
+        └── Club
+            ├── results  : list[MeetResult]
+            └── swimmers : list[Swimmer]
+```
+
+- **`Swim`:** Abstract base interface for a single swimmer's swim, subclassed by `IndividualSwim` and `RelaySwim`. Provides a uniform interface (`swimmer`, `time`, `event`, `date`, `meet`, `splits`, `status`) and shares `Swimmer.swims`.
+- **`MeetResult`:** Shared base for results in `Meet.results`, subclassed by `IndividualSwim` and `Relay`. Shares event and place context. Holds no `swimmer` or `splits`.
+
+Meets are independent; each `Meet` owns its swimmers and clubs. Aggregate classes are mutable to support single-pass parser graph wiring, but use slots (`slots=True`) and keyword-only construction (`kw_only=True`).
+
+Aggregates also use identity equality (`eq=False`, so `==` is `is`) to avoid stack overflows from cyclic graph references (`meet ⇄ results`) and because the parser does not deduplicate objects.
+
+## `Swim`
+
+Abstract base interface for a single swimmer's swim (subclassed by `IndividualSwim` and `RelaySwim`). It has no stored fields, avoiding multiple inheritance layout conflicts.
+
+| Member | Type | Meaning |
+|---|---|---|
+| `swimmer` | `Swimmer` | The swimmer who made this swim. |
+| `time` | `Time \| None` | The swim time (`None` for a non-time outcome). |
+| `status` | `ResultStatus` | `OK` for an official time, else `NT`/`NS`/`DNF`/`DQ`/`SCR`. |
+| `session` | `Session` | `PRELIMS`, `FINALS`, or `SWIM_OFFS`. |
+| `event` | `Event \| None` | Leg individual event (e.g. `FREE_100_SCY` for a 400 relay leg) or individual swim event. `None` only for a medley-relay alternate. |
+| `date` | `datetime.date \| None` | Date of the swim. |
+| `meet` | `Meet` | Back-reference to the meet. |
+| `course` | `Course \| None` | Course of the swim. |
+| `swimmer_age_class` | `str \| None` | Age/class as printed. |
+| `splits` | `list[Split]` | Splits in distance order (empty if none). |
+| `is_relay_leg` | `bool` | `True` for a `RelaySwim`, `False` for an `IndividualSwim`. |
+
+## `MeetResult`
+
+Shared base dataclass representing a row in `Meet.results`.
 
 ```python
-@dataclass
+@dataclass(slots=True, kw_only=True, eq=False)
 class MeetResult:
     meet: Meet
     club: Club | None
     organization: Organization
     session: Session
-    date: datetime.date
     event: Event
-    event_min_age: int
-    event_max_age: int
-    event_number: str
+    event_min_age: int | None
+    event_max_age: int | None
+    event_number: str | None = None
     event_sex: Sex
-    time: Time
+    status: ResultStatus
+    time: Time | None
+    date: datetime.date | None
     heat: int | None = None
     lane: int | None = None
     rank: int | None = None
@@ -51,264 +88,230 @@ class MeetResult:
     seed_course: Course | None = None
     event_min_time_class: EventTimeClass | None = None
     event_max_time_class: EventTimeClass | None = None
-    splits: list[Split] = field(default_factory=list)
 ```
-
-`MeetResult` is **abstract in spirit but not enforced** — every actual
-result is either an `IndividualMeetResult` or a `RelayMeetResult`.
 
 ### Fields
 
 | Field | Type | Notes |
 |---|---|---|
 | `meet` | `Meet` | Back-reference. Always set. |
-| `club` | `Club \| None` | `None` for unattached swimmers (`AttachStatus.UNATTACHED`). |
+| `club` | `Club \| None` | `None` for unattached swimmers. |
 | `organization` | `Organization` | Usually `Organization.USS`. |
 | `session` | `Session` | `PRELIMS`, `FINALS`, or `SWIM_OFFS`. |
-| `date` | `datetime.date` | Date of the swim, not the meet start date. |
 | `event` | `Event` | The event swum. |
-| `event_min_age`, `event_max_age` | `int` | The event's age limits. `0` for "UN" (no min), `1000` for "OV" (no max). |
-| `event_number` | `str` | The meet's program number for this event, e.g. `"501"`. |
-| `event_sex` | `Sex` | Whether the event is a male, female, or mixed event. |
-| `time` | `Time` | The result time. Use `Time(0)` for "no time"; the parser drops `NT`/`NS`/`DNF`/`DQ`/`SCR` entries entirely. |
-| `heat`, `lane` | `int \| None` | Pool assignment. `None` if not in the source file. |
-| `rank` | `int \| None` | Place. `None` if not awarded (e.g. a heat result, or `≤ 0` in the source). |
-| `points` | `float \| None` | Team points earned. `None` if not awarded. |
-| `seed_time`, `seed_course` | `Time \| None`, `Course \| None` | The seed time the swimmer entered with. Both may be present, both may be `None`. |
-| `event_min_time_class`, `event_max_time_class` | `EventTimeClass \| None` | The qualifying-class cap on the event (e.g. "BB and slower"). |
-| `splits` | `list[Split]` | Splits in distance order. Empty if no G0 records were present. |
+| `event_min_age`, `event_max_age` | `int \| None` | Event age limits. `None` if open-ended (`"UN"` or `"OV"`). |
+| `event_number` | `str \| None` | Event program number (e.g., `"501"`). |
+| `event_sex` | `Sex` | Competition sex classification of the event. |
+| `status` | `ResultStatus` | Swim outcome: `OK`, `NT`, `NS`, `DNF`, `DQ`, or `SCR`. |
+| `time` | `Time \| None` | Recorded time (non-`None` iff `status == OK`, or course `X` DQ). |
+| `date` | `datetime.date \| None` | Date of the swim. |
+| `heat`, `lane` | `int \| None` | Pool assignment. |
+| `rank` | `int \| None` | Place awarded (e.g. `1` for first, `None` if DQ/SCR). |
+| `points` | `float \| None` | Team points earned. |
+| `seed_time`, `seed_course` | `Time \| None`, `Course \| None` | Seed/entry time and course. |
+| `event_min_time_class`, `event_max_time_class` | `EventTimeClass \| None` | Qualifying-class limits. |
 
-### Mutability
+## `IndividualSwim`
 
-`MeetResult` and its subclasses are **mutable dataclasses** so the parser
-can populate them incrementally as it reads. Application code is free to
-treat them as immutable after parsing; the library makes no further
-mutations once `read_cl2` returns.
-
-### Identity / equality
-
-`MeetResult` uses default dataclass equality (compares all fields). In
-practice, two distinct results from different files should compare equal
-only if they encode the same swim. Don't rely on hashing — results are
-mutable and not hashable by default.
-
-## `IndividualMeetResult(MeetResult)`
+The result type for individual events (`event.is_relay()` is `False`).
 
 ```python
-@dataclass
-class IndividualMeetResult(MeetResult):
+@dataclass(slots=True, kw_only=True, eq=False)
+class IndividualSwim(MeetResult, Swim):
     swimmer: Swimmer
     swimmer_age_class: str | None = None
     attach_status: AttachStatus = AttachStatus.ATTACHED
-    swimmer_contact: SwimmerContact | None = None
+    splits: list[Split] = field(default_factory=list)
 ```
-
-The result type for individual events (anything where `event.is_relay()`
-is `False`).
 
 ### Additional fields
 
 | Field | Type | Notes |
 |---|---|---|
-| `swimmer` | `Swimmer` | The swimmer who produced this result. |
-| `swimmer_age_class` | `str \| None` | Age class as printed in the source — usually a numeric age (`"12"`) but may be `"FR"`, `"SO"`, `"JR"`, `"SR"` for collegiate meets. |
-| `attach_status` | `AttachStatus` | `UNATTACHED` for swimmers not affiliated with the parsed club at the time of this swim. |
-| `swimmer_contact` | `SwimmerContact \| None` | Contact info from D1/D2 records. **Personally identifying information**; `None` unless the source file included it. |
+| `swimmer` | `Swimmer` | The swimmer who performed the swim. |
+| `swimmer_age_class` | `str \| None` | Print age class (e.g. `"12"` or `"FR"`). |
+| `attach_status` | `AttachStatus` | `UNATTACHED` for unattached swimmers. |
+| `splits` | `list[Split]` | Splits in distance order. |
 
-### `swimmer_contact` and PII
+## `Relay`
 
-D1 and D2 records carry swimmer addresses, phone numbers, and email
-addresses. The library parses them when present but separates them onto
-their own dataclass so callers can ignore them. If you don't read
-`result.swimmer_contact`, you never see the data; if you do, you're
-expected to handle it responsibly.
-
-## `RelayMeetResult(MeetResult)`
+The result type for relay events (`event.is_relay()` is `True`).
 
 ```python
-@dataclass
-class RelayMeetResult(MeetResult):
+@dataclass(slots=True, kw_only=True, eq=False)
+class Relay(MeetResult):
     relay_letter: str             # "A" / "B" / "C" ...
-    legs: list[RelayLeg] = field(default_factory=list)
+    total_age: int | None = None  # Combined squad age
+    legs: list[RelaySwim] = field(default_factory=list)        # Counting swum legs (orders 1-4)
+    alternates: list[RelaySwim] = field(default_factory=list)  # Rostered alternates (order A)
 ```
-
-The result type for relay events. `event.is_relay()` is `True`.
 
 ### Additional fields
 
 | Field | Type | Notes |
 |---|---|---|
-| `relay_letter` | `str` | Single character identifying the squad within the team. Concatenated with the club abbreviation when displaying, e.g. `"SCSC A"`. |
-| `legs` | `list[RelayLeg]` | One entry per F0 record. Up to four entries (the swimmers who actually competed); may be empty if no F0 records were present. |
+| `relay_letter` | `str` | Letter code identifying the squad (e.g., `"A"`). |
+| `total_age` | `int \| None` | Combined age of the relay squad. |
+| `legs` | `list[RelaySwim]` | Counting swum legs (orders `LEG_1`–`LEG_4`). Max 4. |
+| `alternates` | `list[RelaySwim]` | Rostered alternates who did not swim. Excluded from `Swimmer.swims`. |
 
-The relay's overall `time` is on the base `MeetResult` (from the E0
-record). Leg times live on each `RelayLeg`.
+Relays represent a squad; splits live on the swum legs (`RelaySwim.splits`).
 
-### Splits
+## `RelaySwim`
 
-`RelayMeetResult.splits` is populated from G0 records that follow the F0
-records for this relay. They represent the relay's elapsed time at each
-50/100 segment of the race.
-
-## `RelayLeg`
+A `Swim` representing one swimmer's leg or roster position on a relay.
 
 ```python
-@dataclass
-class RelayLeg:
+@dataclass(slots=True, kw_only=True, eq=False)
+class RelaySwim(Swim):
     swimmer: Swimmer | None
-    leg_order_prelim: int | None = None
-    leg_order_finals: int | None = None
-    leg_time: Time | None = None
+    relay: Relay                       # Parent relay back-reference
+    order: RelayLegOrder | None = None # Leg position or alternate code
+    time: Time | None = None           # Leg split time
+    status: ResultStatus = ResultStatus.OK
+    takeoff_time: int | None = None    # Take-off time in hundredths of a second
     course: Course | None = None
     swimmer_age_class: str | None = None
-    citizenship: Country | None = None
+    citizenship: Citizenship | Country | None = None
+    splits: list[Split] = field(default_factory=list)
+
+    is_relay_leg = True
 ```
 
-One per F0 record. Order within `RelayMeetResult.legs` matches the order
-of F0 records in the source file, which is **not** necessarily the swim
-order — that is recorded in `leg_order_prelim` / `leg_order_finals`
-(SDIF "ORDER" code).
+### Fields
 
 | Field | Type | Notes |
 |---|---|---|
-| `swimmer` | `Swimmer \| None` | The swimmer on this leg. `None` only if the F0 record cannot be resolved to a known swimmer (in which case a `ParseWarning` is emitted). |
-| `leg_order_prelim` | `int \| None` | 1–4 if this swimmer raced this position in prelims, else `None`. |
-| `leg_order_finals` | `int \| None` | 1–4 if this swimmer raced this position in finals, else `None`. |
-| `leg_time` | `Time \| None` | The split time for this leg. `None` if not in the source. |
-| `course` | `Course \| None` | Course the leg was swum in (usually matches the relay course). |
-| `swimmer_age_class` | `str \| None` | Age class as printed (numeric or `"FR"`/`"SO"`/`"JR"`/`"SR"`). |
-| `citizenship` | `Country \| None` | Citizenship as reported on the F0 record. |
+| `swimmer` | `Swimmer \| None` | The swimmer on the leg (`None` only if USS# is corrupt). |
+| `relay` | `Relay` | Back-reference to the parent session-relay. |
+| `order` | `RelayLegOrder \| None` | Leg position (`LEG_1`–`LEG_4`) or `ALTERNATE`. |
+| `time` | `Time \| None` | Individual leg split time. |
+| `status` | `ResultStatus` | Outcome; mirrors parent relay's status. |
+| `takeoff_time` | `int \| None` | Relay take-off time in hundredths of a second (e.g., `29` = 0.29 s). |
+| `course` | `Course \| None` | Course swum. |
+| `swimmer_age_class` | `str \| None` | Print age class. |
+| `citizenship` | `Citizenship \| Country \| None` | Leg citizenship from F0. |
+| `splits` | `list[Split]` | Splits for this leg in distance order. |
+
+### Swim interface on a leg
+
+Computed properties delegating to the parent `relay`:
+
+| Property | Returns |
+|---|---|
+| `event` | `self.relay.event.leg_event(int(self.order))` — the individual leg event (e.g., `FREE_100_SCY` on a 400 free relay). |
+| `date` | `self.relay.date` |
+| `meet` | `self.relay.meet` |
+| `session` | `self.relay.session` |
+
+```python
+relay.event              # Event.FREE_400_RELAY_SCY
+relay.legs[0].event      # Event.FREE_100_SCY (individual event swum)
+```
+
+Swimmers have their swum legs stored in `Swimmer.swims` under the **individual** leg event alongside flat-start swims. Alternates are filed under `Relay.alternates` and omitted from `Swimmer.swims`.
 
 ## `Split`
+
+One split entry from a G0 record.
 
 ```python
 @dataclass(frozen=True)
 class Split:
-    distance: int                # in meters or yards (matches event course)
-    time: Time
-    split_type: SplitType        # INTERVAL or CUMULATIVE
+    distance: int                # Cumulative distance from start (50, 100, 150...)
+    time: Time | None            # None if split was unparseable
+    split_type: SplitType        # CUMULATIVE (elapsed) or INTERVAL (segment)
 ```
 
-One per split entry on a G0 record. `Split` is frozen and hashable.
-`MeetResult.splits` is ordered by `distance` ascending; multiple G0
-records for the same swim are concatenated.
+`Split` is frozen and hashable. Splits are ordered by distance ascending.
 
 ## `SwimmerContact`
+
+Contact details populated from D1/D2 records. Frozen and reachable via `Swimmer.contact`. **Contains PII.**
 
 ```python
 @dataclass(frozen=True)
 class SwimmerContact:
-    address_1: str | None = None
-    address_2: str | None = None
+    address: str | None = None
     city: str | None = None
     state: State | None = None
     postal_code: str | None = None
     country: Country | None = None
-    phone_home: str | None = None
-    phone_work: str | None = None
-    email: str | None = None
+    region: Region | None = None
+    alt_mailing_name: str | None = None
+    phone_primary: str | None = None
+    phone_secondary: str | None = None
 ```
 
-Populated from D1 (address) and D2 (phone, email) records. Always frozen
-and optional. **This is PII** — treat it accordingly.
+## `SwimmerRegistration`
+
+Registration and demographic details populated from D1/D2/D3 records. Reachable via `Swimmer.registration`. **Contains sensitive PII.**
+
+```python
+@dataclass(frozen=True)
+class SwimmerRegistration:
+    member_status: MemberStatus | None = None
+    registration_date: datetime.date | None = None
+    season: Season | None = None
+    ethnicity_primary: Ethnicity | None = None
+    ethnicity_secondary: Ethnicity | None = None
+    affiliations: frozenset[Affiliation] = frozenset()
+    old_member_number: str | None = None
+    fina_other_federation: str | None = None
+    admin_info: str | None = None
+```
 
 ## `Swimmer`
 
+A swimmer scoped to a single meet and identified within it by member ID.
+
 ```python
-@dataclass
+@dataclass(slots=True, kw_only=True, eq=False)
 class Swimmer:
+    meet: Meet
     first_name: str
     last_name: str
     sex: Sex
-    usa_id_short: str | None = None
+    id_short: str | None = None  # 12-char short ID (USS#)
+    id_long: str | None = None   # 14-char new ID (long USS#)
     middle_initial: str | None = None
     preferred_first_name: str | None = None
     birthday: datetime.date | None = None
-    usa_id_long: str | None = None
-    citizenship: Country | None = None
+    citizenship: Citizenship | Country | None = None
+    contact: SwimmerContact | None = None
+    registration: SwimmerRegistration | None = None
+    club: Club | None = None     
+    swims: list[Swim] = field(default_factory=list)  # Individual + Relay counting legs
 ```
-
-### Stored fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `first_name`, `last_name` | `str` | Legal name as printed in the source. |
-| `sex` | `Sex` | The swimmer's competition sex. |
-| `usa_id_short` | `str \| None` | 12-character USA Swimming short ID. Optional because not every record carries it. |
-| `middle_initial` | `str \| None` | Single letter, or `None`. |
-| `preferred_first_name` | `str \| None` | From a D3 record. |
-| `birthday` | `datetime.date \| None` | `None` if the source omits it. The library **never** infers a birthday — see [parsing.md](parsing.md) for why. |
-| `usa_id_long` | `str \| None` | 14-character USA Swimming long ID, from D3 records. |
-| `citizenship` | `Country \| None` | From the D0 record. |
 
 ### Computed properties
 
-| Property | Returns | Notes |
-|---|---|---|
-| `full_name` | `str` | `"First Middle Last"` if middle initial present, else `"First Last"`. |
-| `individual_results` | `list[IndividualMeetResult]` | All this swimmer's individual results across all parsed meets. |
-| `relay_legs` | `list[tuple[RelayMeetResult, RelayLeg]]` | Every relay this swimmer appeared on. |
-| `meets` | `list[Meet]` | Unique meets the swimmer competed in, ordered by date. |
-| `clubs` | `list[Club]` | Unique clubs the swimmer has competed for, ordered by first appearance. |
-| `current_club` | `Club \| None` | Club from the most recent result, or `None` if no club results exist. |
-| `date_most_recent_swim` | `datetime.date \| None` | `None` if no results exist. |
+| Property | Returns |
+|---|---|
+| `individual_swims` | `swims` filtered to `IndividualSwim` instances. |
+| `relay_swims` | `swims` filtered to `RelaySwim` instances (counting legs only). |
+| `full_name` | `"First Middle Last"` or `"First Last"`. |
 
 ### Methods
 
-#### `best_result(event: Event) -> IndividualMeetResult | None`
+#### `swims_in(event: Event) -> list[Swim]`
 
-Returns the result with the fastest `time` for the given event, or `None`
-if the swimmer has no result in that event.
-
-```python
-swimmer.best_result(Event.FREE_100_SCY)
-```
-
-#### `results_in(event: Event) -> list[IndividualMeetResult]`
-
-All results for the given event, ordered fastest first.
-
-#### `results_between(start: datetime.date, end: datetime.date) -> list[IndividualMeetResult]`
-
-All results with `start <= result.date <= end`, ordered by date.
-
-#### `relays_in(event: Event) -> list[RelayMeetResult]`
-
-All relays the swimmer competed on for the given (relay) event.
-
-#### `age_on(date: datetime.date) -> int | None`
-
-The swimmer's age on `date`, or `None` if `birthday` is unknown.
-
-#### `age_range_on(date: datetime.date) -> tuple[int, int]`
-
-The swimmer's possible age on `date` inferred from `birthday` and from
-`swimmer_age_class` values across their result history.
-
-- If `birthday` is set, returns `(age, age)`.
-- Otherwise, infers a range from numeric age classes in past results
-  (each recorded age `A` swum on date `D` implies the swimmer was age
-  `A` on `D`, which bounds their birthday).
-- If no numeric age classes are available either, returns `(0, 1000)`.
+Returns swims for the individual event (e.g. flat-starts and relay legs matching the distance/stroke/course) in source order.
 
 ### Identity
 
-Two `Swimmer` instances are considered the same swimmer by the parser when:
-
-1. Their `usa_id_short` matches (exact), or
-2. Their `(first_name.lower(), last_name.lower(), birthday)` matches (exact).
-
-When the parser merges duplicates across files, it fills `None` fields
-from the duplicate but never overwrites a non-`None` field. Application
-code is free to build its own identity rules — `Swimmer` defines no
-`__eq__` or `__hash__` overrides, so reference equality is what `==` and
-`hash()` give you.
+- Grouped within a meet by `id_short` falling back to `id_long`. Every `Swimmer` carries at least one of these two.
+- Matches never fallback to names/birthdays, preventing accidental swimmer fusion.
+- Swimmers are meet-scoped; the same athlete at different meets represents distinct `Swimmer` objects.
 
 ## `Club`
 
+A club scoped to a single meet.
+
 ```python
-@dataclass
+@dataclass(slots=True, kw_only=True, eq=False)
 class Club:
+    meet: Meet
     organization: Organization
     team_code: str
     lsc: LSC | None = None
@@ -322,63 +325,39 @@ class Club:
     country: Country | None = None
     region: Region | None = None
     coach: str | None = None
+    coach_phone: str | None = None
+    short_name: str | None = None
     entry_counts: ClubEntryCounts | None = None
+    results: list[MeetResult] = field(default_factory=list)   
+    swimmers: list[Swimmer] = field(default_factory=list)     
 ```
 
-`ClubEntryCounts` is a small frozen sub-dataclass populated from C2
-records: `num_individual_swims`, `num_split_records`, `num_relay_entries`,
-`num_relay_name_records`, `num_relay_split_records`. All fields are
-optional `int`s.
+`ClubEntryCounts` is a frozen sub-dataclass containing D0, athlete, E0, F0, and split counts.
 
 ### Computed properties
 
-| Property | Returns | Notes |
-|---|---|---|
-| `swimmers` | `list[Swimmer]` | Unique swimmers who have any result with this club. |
-| `individual_results` | `list[IndividualMeetResult]` | All individual results recorded for this club across parsed meets. |
-| `relay_results` | `list[RelayMeetResult]` | All relay results recorded for this club. |
-| `meets` | `list[Meet]` | Unique meets the club has results at. |
-
-### Methods
-
-#### `find_swimmer(*, usa_id=None, name=None, birthday=None) -> Swimmer | None`
-
-Search the club's swimmers. Provide one or more of:
-
-- `usa_id` — matches either `usa_id_short` (12 chars) or `usa_id_long`
-  (14 chars).
-- `name` — case-insensitive match against `full_name`, `"last, first"`,
-  or `"first last"`.
-- `birthday` — exact match.
-
-Returns the first matching swimmer or `None`.
-
-#### `roster(on_date: datetime.date | None = None) -> list[Swimmer]`
-
-All swimmers who have at least one result with this club. If `on_date` is
-provided, only swimmers with a result on or before that date.
-
-#### `relay_results_for(event: Event | None = None) -> list[RelayMeetResult]`
-
-All relay results for the club, optionally filtered to a single event.
+| Property | Returns |
+|---|---|
+| `individual_swims` | `results` filtered to `IndividualSwim`s. |
+| `relays` | `results` filtered to `Relay`s. |
 
 ### Identity
 
-A club's identity is `(team_code, lsc)`. Two `Club` records with the same
-pair are treated as the same club by the parser and merged
-(non-`None` fields filled).
+Scoped to a single meet, keyed on `(team_code, lsc)`. `team_code` is the full SDIF code including LSC prefix and optional 5th extension character. Clubs are not merged across meets.
 
 ## `Meet`
 
+Represents one meet's data from a single SDIF file B1 block.
+
 ```python
-@dataclass
+@dataclass(slots=True, kw_only=True, eq=False)
 class Meet:
     organization: Organization
     name: str
     start_date: datetime.date
-    end_date: datetime.date
-    city: str
-    address_one: str
+    end_date: datetime.date | None = None
+    city: str | None = None
+    address_one: str | None = None
     state: State | None = None
     address_two: str | None = None
     postal_code: str | None = None
@@ -386,89 +365,77 @@ class Meet:
     course: Course | None = None
     altitude: int | None = None
     meet_type: MeetType | None = None
-    host_team_code: str | None = None
-    host_phone: str | None = None
-    individual_results: list[IndividualMeetResult] = field(default_factory=list)
-    relay_results: list[RelayMeetResult] = field(default_factory=list)
+    host: MeetHost | None = None
+    source_file: SourceFile | None = None
+    results: list[MeetResult] = field(default_factory=list)
+    swimmers: list[Swimmer] = field(default_factory=list)
+    clubs: list[Club] = field(default_factory=list)
 ```
-
-### Stored fields
-
-| Field | Type | Notes |
-|---|---|---|
-| `organization` | `Organization` | Usually `Organization.USS`. |
-| `name` | `str` | As printed in the source. |
-| `start_date`, `end_date` | `datetime.date` | Inclusive range. May be equal for single-day meets. |
-| `city`, `address_one` | `str` | Mandatory per spec. |
-| `state`, `address_two`, `postal_code`, `country` | various `\| None` | Optional. |
-| `course` | `Course \| None` | The meet's primary course, if set on the B1 record. Individual results carry their own course on `seed_course`; this is a meet-level summary. |
-| `altitude` | `int \| None` | Altitude in feet, if recorded. |
-| `meet_type` | `MeetType \| None` | Classification of the meet. |
-| `host_team_code`, `host_phone` | `str \| None` | From the B2 record, if present. |
-| `individual_results` | `list[IndividualMeetResult]` | All individual results. **Source of truth.** |
-| `relay_results` | `list[RelayMeetResult]` | All relay results. **Source of truth.** |
 
 ### Computed properties
 
-| Property | Returns | Notes |
-|---|---|---|
-| `results` | `list[MeetResult]` | Concatenation of `individual_results` + `relay_results`. |
-| `swimmers` | `list[Swimmer]` | Unique swimmers across both result lists. |
-| `clubs` | `list[Club]` | Unique clubs across both result lists. |
+| Property | Returns |
+|---|---|
+| `individual_swims` | `results` filtered to `IndividualSwim`s. |
+| `relays` | `results` filtered to `Relay`s. |
 
 ### Methods
 
-#### `find_swimmer(*, usa_id=None, name=None, birthday=None) -> Swimmer | None`
+- `individual_swims_for(event: Event) -> list[IndividualSwim]`: Returns individual swims for an event in source order.
+- `relays_for(event: Event) -> list[Relay]`: Returns relays for an event in source order.
 
-Search across all of the meet's swimmers. Same parameter shape as
-`Club.find_swimmer`.
+Meets are independent and never merged, even if name/date match.
 
-#### `individual_results_for(event: Event) -> list[IndividualMeetResult]`
+## `MeetHost`
 
-All individual results for the given event, ordered fastest first.
+```python
+@dataclass(frozen=True)
+class MeetHost:
+    name: str | None = None
+    address_one: str | None = None
+    address_two: str | None = None
+    city: str | None = None
+    state: State | None = None
+    postal_code: str | None = None
+    country: Country | None = None
+    phone: str | None = None
+```
 
-#### `relay_results_for(event: Event) -> list[RelayMeetResult]`
+Reachable as `Meet.host`.
 
-All relay results for the given event, ordered fastest first.
+## `SourceFile`
 
-### Identity
+File-level metadata from A0/Z0 records. Reachable as `Meet.source_file`.
 
-A meet is identified by `(name, start_date, organization)`. The parser
-will treat two files reporting the same triple as the same meet and merge
-their result lists.
+```python
+@dataclass(frozen=True)
+class SourceFile:
+    path: str | None = None            # Stream name or file path
+    file_type: FileType | None = None  
+    sdif_version: str | None = None
+    software_name: str | None = None
+    software_version: str | None = None
+    contact_name: str | None = None
+    contact_phone: str | None = None
+    created: datetime.date | None = None
+    submitted_by_lsc: LSC | None = None
+    notes: str | None = None           # Z0 note text
+```
 
-## Multi-file merging — rules
-
-When `read_cl2` is called with multiple files (or a directory), records
-that refer to the same logical entity are merged:
-
-- **Clubs** (matched on `(team_code, lsc)`): fields that are `None` on
-  the existing record are filled from the new record; non-`None` fields
-  are preserved.
-- **Swimmers** (matched on `usa_id_short`, then on `(first_name,
-  last_name, birthday)`): same null-fill policy. `IndividualMeetResult`s
-  from both files attach to the merged swimmer.
-- **Meets** (matched on `(name, start_date, organization)`): result lists
-  concatenated, other fields null-filled.
-
-This is the same semantics whether files arrive via a glob, a directory
-walk, or a list — order within a single call doesn't matter for the
-output, only for warnings (warnings are reported in file order).
+Meets from the same file share the same `SourceFile` instance.
 
 ## Example: traversing the model
 
 ```python
-from tunas import read_cl2, Event, Sex
+from tunas import read_cl2, Event
 
 meets, _ = read_cl2("results/")
 
 for meet in meets:
     print(f"== {meet.name} ({meet.start_date}) ==")
     for swimmer in meet.swimmers:
-        best = swimmer.best_result(Event.FREE_100_SCY)
-        if best is None:
-            continue
-        age = swimmer.age_on(best.date)
-        club = best.club.abbreviated_name if best.club else "UN"
-        print(f"  {swimmer.full_name:<25} {club:>5} {best.time}  (age {age})")
+        club = swimmer.club.abbreviated_name if swimmer.club else "UN"
+        for swim in swimmer.swims_in(Event.FREE_100_SCY):
+            outcome = swim.time if swim.time is not None else swim.status.value
+            print(f"  {swimmer.full_name:<25} {club:>5} {swim.session.value} {outcome}")
 ```

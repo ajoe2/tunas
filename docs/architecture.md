@@ -1,257 +1,85 @@
 # Architecture
 
-This document describes how `tunas` is organized, the design decisions behind
-the public API, and what is intentionally out of scope. It also includes
-publishing instructions so a release can be cut by hand.
+This document describes how `tunas` is organized and the design decisions behind its public API.
 
-## What `tunas` is (and isn't)
+## Description
 
-`tunas` is a **data-access library** for USA Swimming meet results. It reads
-`.cl2` files (the Hy-Tek SDIF v3 export format used across USA Swimming) into
-clean Python objects, ships a few high-value convenience helpers, and bundles
-USA Swimming time standards so qualifying-time lookups work out of the box.
+`tunas` is a data-access library for USA Swimming meet results. It parses `.cl2` files (Hy-Tek SDIF v3) into clean, well-typed Python objects and bundles USA Swimming time standards for offline qualifying-time lookups.
 
-The library is deliberately small. It is **not** an analysis framework, a
-relay-optimization tool, a meet-management system, or a web scraper. The
-intent is to give downstream developers a solid, well-typed, well-tested base
-to build *their* tools on.
+### Scope
 
-### Target user
-
-A Python developer building a swim-analytics or coach-tool application who
-wants:
-
-- A first-class object model for swim meet data (no `dict`-of-`dict`s).
-- A parser that handles the long tail of real-world `.cl2` quirks without
-  crashing.
-- Bundled qualifying-time standards so the application doesn't have to ship
-  its own.
-- A library that gets out of the way: no global state, no surprise I/O, no
-  required dependencies.
-
-### In scope for v1 (0.1.0)
-
-- `.cl2` parsing — every SDIF v3 record type, including relay events and
-  splits.
-- Domain model — `Meet`, `Club`, `Swimmer`, `MeetResult`,
-  `IndividualMeetResult`, `RelayMeetResult`, `RelayLeg`, `Split`,
-  `SwimmerContact`.
-- Value types — `Time`, `Event`, and a full set of SDIF enums.
-- Convenience query methods on `Swimmer`, `Meet`, and `Club`.
-- Time-standards lookup with bundled USA Swimming standards data.
-- Lenient parsing with a detailed `ParseReport`; opt-in `strict=True` mode.
-- Full type hints (`py.typed`).
-
-### Explicitly out of scope for v1
-
-- **Relay generation algorithms.** Parsing relay *results* is in scope;
-  optimizing relay rosters is not.
-- **Writing `.cl2` files.** Read-only for v1. SDIF-compliant emit (checksums,
-  fixed-width formatting) is deferred until a real user need surfaces.
-- **Web scraping.** No connectors to pacswim.org or other meet-result
-  archives. Users bring their own files.
-- **Visualization, CSV/JSON export helpers.** Examples appear in the
-  [cookbook](cookbook.md) but no built-in functions ship in v1.
+- **SDIF v3 Parsing:** Every meet-results record type, including relays and splits.
+- **Domain Model:** Dataclasses for `Meet`, `Club`, `Swimmer`, `MeetResult`, `IndividualSwim`, `Relay`, `RelaySwim`, `Split`, `SwimmerContact`, `SwimmerRegistration`, `MeetHost`, and `SourceFile`.
+- **Value Types:** `Time`, `Event`, and standard SDIF enums.
+- **Offline Standards:** Motivational cut lookups.
+- **Error Model:** Lenient parsing with structured `ParseWarning` entries, or opt-in `strict=True` validation.
 
 ## Repository layout
 
 ```
 tunas/
-├── pyproject.toml          Project metadata; hatchling build backend
+├── pyproject.toml          Project metadata and build config (Hatchling)
 ├── README.md               PyPI long-description
-├── LICENSE                 MIT
-├── CHANGELOG.md            Keep a Changelog style
-├── src/tunas/              Source (src-layout)
-│   ├── __init__.py             Public API re-exports
-│   ├── py.typed                PEP 561 marker
-│   ├── _version.py             Single source of truth for __version__
+├── LICENSE                 MIT License
+├── CHANGELOG.md            Semantic version changelog
+├── src/tunas/              Source package (src-layout)
+│   ├── __init__.py             Public API exports
+│   ├── py.typed                PEP 561 type-marker
+│   ├── _version.py             Package version
 │   ├── time.py                 Time value type
-│   ├── enums.py                Small SDIF enums
-│   ├── geography.py            Large enums (LSC, State, Country)
-│   ├── event.py                Event enum + helpers
+│   ├── enums.py                SDIF enums
+│   ├── geography.py            LSC, US state, and country enums
+│   ├── event.py                Event enum and helper properties
 │   ├── exceptions.py           Error hierarchy
-│   ├── models.py               Meet / Club / Swimmer / result dataclasses
-│   ├── parser.py               read_cl2 + ParseReport
-│   ├── standards.py            Time-standards lookup
-│   ├── _parser/                Per-record handlers (internal)
-│   └── _data/                  Bundled package data
-│       ├── standards-2025-2028.json
-│       └── sdif-v3.txt             Verbatim copy of the SDIF v3 spec
-├── tests/                  Pytest suite + .cl2 fixtures
-├── scripts/                Developer-only utilities (e.g., xlsx→json converter)
-├── docs/                   This documentation
-└── .github/workflows/      CI (lint + type-check + tests)
+│   ├── models.py               Slotted domain dataclasses
+│   ├── parser.py               read_cl2, ParseReport, and ParseWarning
+│   ├── standards.py            Time-standards lookups
+│   ├── _parser/                Per-record parsing logic (internal)
+│   └── _data/                  Bundled package data (JSON standards, spec doc)
+├── tests/                  Pytest suite and .cl2 test fixtures
+├── scripts/                Developer tools (e.g., standard sheets parser)
+└── docs/                   Markdown documentation
 ```
 
-The library uses the **src-layout** rather than a flat layout. This means the
-package is only importable after install, which protects against accidentally
-testing the working-tree copy when the installed wheel is what you actually
-ship.
+The package uses a **src-layout** to ensure tests run against the installed wheel rather than the working directory.
 
 ## Design decisions
 
-### Parser: lenient by default, exhaustive `ParseReport`
+### Self-contained meets
 
-`.cl2` files in the wild contain encoding errors, malformed swimmer IDs,
-unparseable times, and ambiguous club records — usually because they were
-hand-edited by a meet director or exported from buggy versions of Hy-Tek
-Meet Manager. A library that raises on the first error is unusable on real
-data.
+Meets are independent. Swimmers and clubs are scoped to their respective `Meet`. A swimmer competing in multiple meets exists as distinct, unrelated `Swimmer` objects, grouped by `id_short` (falling back to `id_long`). Cross-meet grouping is delegated to application code (see [cookbook.md](cookbook.md)).
 
-`read_cl2` therefore defaults to `strict=False`. Malformed records are
-**skipped** and a `ParseWarning` is appended to the returned `ParseReport`,
-so callers can inspect or `assert not report.warnings` if they want
-strictness without modifying behavior. Users who want hard failures pass
-`strict=True`.
+### Lenient parsing by default
 
-See [parsing.md](parsing.md) for the exhaustive list of edge cases handled.
+Formatting errors are common in real-world `.cl2` files due to buggy exporters. `read_cl2` defaults to `strict=False`, skipping corrupt records and accumulating warnings in `ParseReport` to maximize data recovery. Use `strict=True` for strict data validation.
 
-### Domain model: dataclasses with computed views
+### Slotted domain dataclasses
 
-Every domain class is a dataclass. Value types (`Time`, `Split`,
-`SwimmerContact`, `ParseWarning`) are **frozen**; aggregates (`Meet`,
-`Club`, `Swimmer`, `IndividualMeetResult`, `RelayMeetResult`) are mutable so
-the parser can populate them incrementally as it reads.
+We use slotted dataclasses (`@dataclass(slots=True)`) to minimize memory overhead and accelerate attribute lookups—critical for meets with tens of thousands of swims. Value types (`Time`, `Split`, `SwimmerContact`, `ParseWarning`) are frozen and hashable, while aggregates (`Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`) are mutable to support single-pass parsing.
 
-There is **one source of truth** for results:
+Aggregate classes use `kw_only=True` to keep wide constructors readable and avoid field ordering constraints in subclassing. We use identity equality (`eq=False`) to avoid stack overflows from cyclic graph references (`meet ⇄ results`) and because the parser does not deduplicate objects.
 
-- `Meet.individual_results: list[IndividualMeetResult]`
-- `Meet.relay_results: list[RelayMeetResult]`
+### Pre-populated cross-references
 
-Everything else — `Swimmer.meets`, `Swimmer.clubs`, `Swimmer.current_club`,
-`Club.swimmers`, `Meet.swimmers`, etc. — is a computed `@property` derived
-from those two lists. This eliminates the multi-list synchronization bug
-class that plagued the original tunas codebase.
+The parser wires all graph references (e.g., `Meet.results`, `Swimmer.swims`, and back-references) in a single pass. Subsequent reads are O(1) instead of computed.
 
-See [models.md](models.md) for every dataclass and its fields.
+### `Time`: a centisecond integer value type
 
-### `Time`: a single-int value type
-
-`Time` stores `centiseconds: int` internally and exposes `minute`, `second`,
-`hundredth`, `total_seconds`, and `centiseconds` as computed properties.
-This makes ordering, hashing, addition, and subtraction trivial — and
-correct, which the original codebase's separate min/sec/hundredth fields
-were not.
+`Time` stores `centiseconds: int` internally, exposing minutes, seconds, and hundredths as properties. This ensures precise comparisons and arithmetic without floating-point drift.
 
 ### `Event`: a hand-rolled enum
 
-`Event` is a 90+ member enum with `(distance, stroke, course)` tuple values.
-Hand-rolling rather than generating provides IDE autocomplete
-(`Event.FREE_100_SCY.<tab>`), is statically discoverable, and lets us add
-helper classmethods like `Event.find(distance, stroke, course)` cleanly.
+`Event` is a 90+ member enum representing swim distances, strokes, and courses. Hand-rolling provides static autocomplete and helpers (e.g., `Event.find`).
 
-### Time standards: bundled data, no setup
+### Zero setup time standards
 
-The library ships USA Swimming time standards as a single JSON file under
-`src/tunas/_data/standards-2025-2028.json`. The first call to
-`qualifies_for(...)`, `standard_time(...)`, or `all_qualified(...)` lazily
-loads and caches the file via `importlib.resources`. From the library
-user's perspective there is no setup — just call the function.
+Motivational standards are bundled as JSON and lazily loaded into an O(1) index on first use.
 
-When USA Swimming publishes new standards, a new release ships the updated
-JSON. Users get the new cutoffs by upgrading the library:
+### Lightweight runtime footprint
 
-```
-pip install --upgrade tunas
-```
+`tunas` depends exclusively on the standard library, keeping the runtime footprint light.
 
-See [standards.md](standards.md) for the schema and the quad-versioning
-policy.
+### Pythonic API
 
-### Zero runtime dependencies
+Data is exposed via plain attributes and properties rather than getter/setter methods, facilitating clean IDE auto-complete and static typing.
 
-`tunas` uses only the Python standard library at runtime. This keeps install
-times fast, dependency-resolution simple, and makes the library safe to add
-to any project regardless of its existing pin file. Dev-time dependencies
-(`pytest`, `ruff`, `mypy`, `openpyxl` for the standards converter script)
-live in the `[dependency-groups.dev]` section of `pyproject.toml` and are
-not installed by end users.
-
-### Pythonic API: properties over `get_x()` / `set_x()`
-
-Every public attribute is exposed as a property, not via getter/setter
-methods. Type hints flow through cleanly to IDEs and type-checkers. Mutable
-fields are mutated directly — there is no encapsulation game being played.
-
-## Phasing of this initial release
-
-The library is being built in four phases:
-
-1. **Scaffold + documentation** (this commit). Repository structure,
-   `pyproject.toml`, and the full `docs/` tree. **No library code.** The
-   user reviews these docs as the API contract.
-2. **Implementation.** Build `enums.py` → `geography.py` → `time.py` →
-   `event.py` → `exceptions.py` → `models.py` → `_parser/*` → `parser.py` →
-   `standards.py` and wire up `__init__.py` re-exports.
-3. **Tests.** Comprehensive pytest suite — every module, every record-type
-   handler, every documented edge case. Coverage target: ≥ 95%.
-4. **Publish prep.** Build the wheel, smoke-test in a clean venv, document
-   manual publishing steps. The user publishes to PyPI by hand.
-
-## Publishing
-
-`tunas` is published to PyPI **manually**. There is no automated publish
-workflow.
-
-### One-time setup
-
-1. Create a PyPI account at https://pypi.org and (optionally) a TestPyPI
-   account at https://test.pypi.org.
-2. Create an API token under *Account settings → API tokens*. Scope it to
-   the `tunas` project once the first release is up; for the very first
-   release scope it to the whole account.
-3. Store the token where `uv publish` can find it. The simplest option is:
-   ```
-   export UV_PUBLISH_TOKEN=pypi-xxxxx
-   ```
-
-### Per-release steps
-
-From the repository root, on a clean working tree:
-
-```
-# 1. Bump the version
-$EDITOR src/tunas/_version.py     # set __version__ = "X.Y.Z"
-$EDITOR pyproject.toml            # set version = "X.Y.Z"
-$EDITOR CHANGELOG.md              # move Unreleased entries under [X.Y.Z]
-
-# 2. Sanity check
-uv sync
-uv run ruff check && uv run ruff format --check
-uv run mypy src/tunas
-uv run pytest --cov=tunas --cov-fail-under=95
-
-# 3. Build the wheel + sdist
-rm -rf dist/
-uv build
-
-# 4. Verify the build
-uv run --with twine twine check dist/*
-
-# 5. (Optional but recommended) Smoke-test in a clean venv
-python -m venv /tmp/v
-/tmp/v/bin/pip install dist/*.whl
-/tmp/v/bin/python -c "from tunas import read_cl2, qualifies_for; print('ok')"
-rm -rf /tmp/v
-
-# 6. (Optional) Dry-run on TestPyPI first
-uv publish --publish-url https://test.pypi.org/legacy/
-
-# 7. Publish to PyPI
-uv publish
-
-# 8. Tag the release and push
-git tag vX.Y.Z
-git push --tags
-```
-
-### Notes
-
-- Always **bump the version** in both `pyproject.toml` and
-  `src/tunas/_version.py`. PyPI rejects re-uploads of the same version, so a
-  mismatch will surface immediately.
-- The `dist/` directory should be cleaned before each build to avoid
-  accidentally uploading stale artifacts.
-- If `uv publish` reports the project name is taken, the fallback is
-  `tunas-swim` — update `pyproject.toml`, `README.md`, and the `docs/` install
-  instructions, then rebuild.

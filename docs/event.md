@@ -1,17 +1,13 @@
 # `tunas.event` — the `Event` enum
 
-`Event` is the canonical identifier for a swimming event. Every
-`MeetResult.event` is an `Event` member, and every API that filters or
-queries by event takes an `Event`.
+`Event` represents a unique swimming event (distance, stroke, course). Every result has an `event`, and APIs filtering by event accept `Event` members.
 
 ## Design
 
-- `Event` is a `(distance, stroke, course)` enum with hand-rolled members.
-- Members are named in the form `<STROKE>_<DISTANCE>_<COURSE>` for
-  individual events and `<STROKE>_<DISTANCE>_RELAY_<COURSE>` for relays.
-- The members are listed below in their natural enumeration order.
-- Use `Event.find(distance, stroke, course)` to resolve an event when you
-  have the components but not the member name (typically inside the parser).
+- `Event` is a hand-rolled `(distance, stroke, course)` enum.
+- Members are named `<STROKE>_<DISTANCE>_<COURSE>` for individual events and `<STROKE>_<DISTANCE>_RELAY_<COURSE>` for relays.
+- Component combinations matching no enum member resolve to `None`. The parser treats this as a skipped record + warning, not a fatal error (see [parsing.md](parsing.md#mode-summary)).
+- Use `Event.find(distance, stroke, course)` to resolve an event by its components (primarily inside the parser). Application code should reference members directly.
 
 ## Members
 
@@ -58,11 +54,11 @@ FREE_1500_LCM
 FREE_200_RELAY_SCY       MEDLEY_200_RELAY_SCY
 FREE_400_RELAY_SCY       MEDLEY_400_RELAY_SCY
 FREE_800_RELAY_SCY
-
+ 
 FREE_200_RELAY_SCM       MEDLEY_200_RELAY_SCM
 FREE_400_RELAY_SCM       MEDLEY_400_RELAY_SCM
 FREE_800_RELAY_SCM
-
+ 
 FREE_200_RELAY_LCM       MEDLEY_200_RELAY_LCM
 FREE_400_RELAY_LCM       MEDLEY_400_RELAY_LCM
 FREE_800_RELAY_LCM
@@ -74,9 +70,9 @@ Each `Event` exposes its components as computed properties:
 
 | Property | Type | Description |
 |---|---|---|
-| `distance` | `int` | Total event distance in yards (SCY) or meters (SCM/LCM). For relays, the **total** distance (e.g. `FREE_400_RELAY_SCY.distance == 400`). |
-| `stroke` | `Stroke` | One of `FREESTYLE`, `BACKSTROKE`, `BREASTSTROKE`, `BUTTERFLY`, `INDIVIDUAL_MEDLEY`, `FREESTYLE_RELAY`, `MEDLEY_RELAY`. |
-| `course` | `Course` | One of `SCY`, `SCM`, `LCM`. |
+| `distance` | `int` | Event distance (total distance for relays, e.g., `FREE_400_RELAY_SCY.distance == 400`). |
+| `stroke` | `Stroke` | The event's `Stroke` enum value. |
+| `course` | `Course` | The event's `Course` enum value. |
 
 ```python
 from tunas import Event
@@ -93,8 +89,7 @@ Event.MEDLEY_400_RELAY_SCY.stroke    # Stroke.MEDLEY_RELAY
 
 ### `Event.find(distance: int, stroke: Stroke, course: Course) -> Event | None`
 
-Look up an `Event` by its components. Returns `None` if no matching event
-exists (e.g. there is no `BREAST_25_LCM`).
+Look up an `Event` by its components. Returns `None` if no matching event exists (e.g., no `BREAST_25_LCM`).
 
 ```python
 from tunas import Event, Stroke, Course
@@ -106,43 +101,42 @@ Event.find(25, Stroke.BREASTSTROKE, Course.LCM)
 # → None
 ```
 
-`Event.find` is primarily used by the parser to resolve events from raw
-SDIF tuples. Application code usually references members directly
-(`Event.FREE_100_SCY`).
+Backed by an O(1) lookup table.
 
 ## Helpers
 
 ### `Event.is_relay() -> bool`
 
-`True` if the event's stroke is `FREESTYLE_RELAY` or `MEDLEY_RELAY`.
+`True` if the event is a relay (`Stroke.FREESTYLE_RELAY` or `Stroke.MEDLEY_RELAY`).
 
 ### `Event.leg_distance() -> int`
 
-For relay events, returns `distance // 4` (the per-swimmer distance).
-For individual events, raises `ValueError`.
-
-```python
-Event.FREE_400_RELAY_SCY.leg_distance()    # 100
-```
+For relays, returns `distance // 4`. For individual events, raises `ValueError`.
 
 ### `Event.leg_strokes() -> list[Stroke]`
 
-For relay events, returns the four leg strokes in order. For a freestyle
-relay this is `[FREESTYLE, FREESTYLE, FREESTYLE, FREESTYLE]`; for a
-medley relay it is `[BACKSTROKE, BREASTSTROKE, BUTTERFLY, FREESTYLE]`.
-For individual events, raises `ValueError`.
+For relays, returns the four leg strokes in order. For individual events, raises `ValueError`.
+
+### `Event.leg_event(order: int) -> Event`
+
+For relays, returns the **individual** `Event` swum on leg `order` (`1`–`4`), resolved via `Event.find`. Raises `ValueError` for individual events or orders outside `1`–`4`.
 
 ```python
-Event.MEDLEY_400_RELAY_SCY.leg_strokes()
-# → [Stroke.BACKSTROKE, Stroke.BREASTSTROKE, Stroke.BUTTERFLY, Stroke.FREESTYLE]
+# Free relay — every leg is the same freestyle individual event
+Event.FREE_400_RELAY_SCY.leg_event(1)    # Event.FREE_100_SCY
+
+# Medley relay — stroke depends on leg position
+Event.MEDLEY_400_RELAY_SCY.leg_event(1)  # Event.BACK_100_SCY
+Event.MEDLEY_400_RELAY_SCY.leg_event(2)  # Event.BREAST_100_SCY
+Event.MEDLEY_400_RELAY_SCY.leg_event(3)  # Event.FLY_100_SCY
+Event.MEDLEY_400_RELAY_SCY.leg_event(4)  # Event.FREE_100_SCY
 ```
+
+All relay legs map to real individual event members across courses. `RelaySwim.event` relies on this helper (see [models.md](models.md#swim-interface-on-a-leg)).
 
 ## Ordering
 
-Members compare by enumeration position (the order in which they are
-declared, which matches the layout above — SCY individuals, then SCM, then
-LCM, then SCY relays, etc.). Use `Event.<name>` membership tests rather
-than ordering when filtering.
+Members compare by declaration order (SCY, SCM, LCM, then relays). Use explicit attribute filters when querying rather than ordinal comparisons.
 
 ## Example
 

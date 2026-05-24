@@ -6,22 +6,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.1.0] — Unreleased
 
-Initial release.
+Initial release of the `tunas` library, providing a parser and domain model for USA Swimming `.cl2` (Hy-Tek SDIF v3) files.
 
 ### Added
-- `read_cl2(source, *, strict=False)` — parse one or more `.cl2` files, a
-  directory of `.cl2` files, or a file-like object into a list of `Meet`
-  objects plus a `ParseReport`.
-- Parser support for every record type in the SDIF v3 spec
-  (`A0`, `B1`, `B2`, `C1`, `C2`, `D0`, `D1`, `D2`, `D3`, `E0`, `F0`, `G0`, `Z0`).
-- Domain model: `Meet`, `Club`, `Swimmer`, `MeetResult`, `IndividualMeetResult`,
-  `RelayMeetResult`, `RelayLeg`, `Split`, `SwimmerContact`, `Time`, `Event`,
-  and supporting enums.
-- Convenience methods on `Swimmer` (`best_result`, `results_in`,
-  `results_between`, `relays_in`, `age_on`, `age_range_on`), `Meet`
-  (`find_swimmer`, `individual_results_for`, `relay_results_for`), and `Club`
-  (`find_swimmer`, `roster`, `relay_results`).
-- Time-standards lookup: `qualifies_for`, `standard_time`, `all_qualified`,
-  `best_standard`, bundled with the USA Swimming 2025–2028 motivational
-  standards.
-- `py.typed` marker — fully type-hinted public API.
+- **Unified Entry Point:** `read_cl2(source, *, strict=False, encoding="cp1252", errors="replace") -> tuple[list[Meet], ParseReport]` accepts paths, directories, lists, or file-like objects.
+- **Spec Coverage:** Parses every meet-results record type (`A0`–`G0`, `Z0`); qualifying-time records (`J0`–`J2`) surface as warnings.
+- **Domain Model:** Dataclass graph covering `Meet`, `Club`, `Swimmer`, and the swim/result hierarchy (`Swim` → `IndividualSwim`, `RelaySwim`; `MeetResult` → `IndividualSwim`, `Relay`), as well as `Split`, `SwimmerContact`, `SwimmerRegistration`, `MeetHost`, `SourceFile`, `Time`, and `Event`. Swimmers expose a unified `swims` list.
+- **Pure and Faithful Parsing:** Meets are self-contained. Swimmers are unified within a meet by member ID (`id_short`, falling back to `id_long`).
+- **Zero Data Loss:** All entered swims are kept, including non-time outcomes (scratches, DQs, no-shows tracked via `ResultStatus`). Missing optional fields are set to `None`. Raw line contents are preserved on validation failures.
+- **Structured Error Model:** Structural (M1) violations raise `ParseError`. Data quality (M2) violations emit warnings or raise in `strict` mode. `ParseReport` provides query helpers (`by_severity`, `warnings_for`) and aggregates counts.
+- **Time Standards:** Offline lookup helpers (`qualifies_for`, `standard_time`, `all_qualified`) using bundled 2025–2028 motivational standards.
+- **Type-hinted:** Fully type-hinted and marked `py.typed`.
+

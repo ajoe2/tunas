@@ -4,13 +4,9 @@
 [![Python](https://img.shields.io/pypi/pyversions/tunas.svg)](https://pypi.org/project/tunas/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A Python library for parsing and analyzing USA Swimming meet result files
-(`.cl2` / Hy-Tek SDIF v3).
+A Python library for parsing and analyzing USA Swimming meet result files (`.cl2` / Hy-Tek SDIF v3).
 
-`tunas` reads `.cl2` files into clean, idiomatic Python objects — `Meet`,
-`Club`, `Swimmer`, `IndividualMeetResult`, `RelayMeetResult` — and ships
-USA Swimming time standards as bundled data so qualifying-time lookups
-work out of the box.
+`tunas` parses `.cl2` files into clean, idiomatic Python objects (`Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`) and bundles USA Swimming time standards for offline qualifying-time lookups.
 
 ## Install
 
@@ -18,45 +14,39 @@ work out of the box.
 pip install tunas
 ```
 
-`tunas` has zero runtime dependencies and supports Python 3.12+.
+Requires Python 3.12+ and has zero third-party runtime dependencies.
 
 ## Quick example
 
 ```python
-from tunas import read_cl2, Event, Sex, TimeStandard, qualifies_for
+from tunas import read_cl2
 
-meets, report = read_cl2("results/")
+meets, report = read_cl2("results.cl2")
 
 for meet in meets:
-    swimmer = meet.find_swimmer(name="Phelps, Michael")
-    if swimmer is None:
-        continue
-
-    best = swimmer.best_result(Event.FLY_200_LCM)
-    if best is None:
-        continue
-
-    standard = qualifies_for(best.time, best.event, swimmer.age_on(best.date), swimmer.sex)
-    print(f"{swimmer.full_name}: {best.time} ({standard.name if standard else 'no standard'})")
+    print(f"{meet.name} ({meet.start_date})")
+    for swim in meet.individual_swims:
+        outcome = swim.time if swim.time is not None else swim.status.value  # DQ / NS / ...
+        print(f"  {swim.swimmer.full_name:<24} {swim.event.name:<16} {outcome}")
 
 if report.warnings:
-    print(f"{len(report.warnings)} records were skipped — see report.warnings for details")
+    print(f"{len(report.warnings)} records flagged — see report.warnings")
 ```
+
+`read_cl2` parses files into self-contained `Meet` objects and a `ParseReport`. Swimmers are scoped to each meet; reconcile cross-meet swimmers by grouping on `id_short` or `id_long` in your application.
 
 ## Features
 
-- Parse `.cl2` (Hy-Tek SDIF v3) meet result files — every record type in the
-  spec, including relay events (E0/F0) and splits (G0).
-- Pythonic dataclass models with computed views — no manual synchronization.
-- Best-time lookup, swimmer search by USA ID / name / birthday.
-- USA Swimming time-standards lookup (B / BB / A / AA / AAA / AAAA + championship cuts), shipped as bundled data.
-- Lenient parsing by default with a detailed `ParseReport`; opt-in `strict=True`
-  raises on the first malformed record.
-- Zero runtime dependencies; fully type-hinted (`py.typed`).
+- **SDIF v3 Parser:** Parses `.cl2` meet result files including relays (E0/F0) and splits (G0).
+- **Self-Contained Meets:** No global state or cross-file merging; parsing is a pure function of input bytes.
+- **Clean Object Model:** Slotted dataclasses with direct object references (swimmers, clubs, swims, splits, and contact/registration data).
+- **Offline Time Standards:** Local lookup of USA Swimming B through AAAA motivational cuts.
+- **Lenient Parsing:** Recovers from data-quality issues by default with a detailed `ParseReport`. Opt-in `strict=True` raises on the first violation.
+- **Type-Safe:** Fully typed and carries the `py.typed` marker.
 
 ## Documentation
 
-Full documentation lives in [`docs/`](docs/):
+Full documentation is available in [`docs/`](docs/):
 
 - [Getting started](docs/getting_started.md)
 - [Architecture](docs/architecture.md)
@@ -65,10 +55,10 @@ Full documentation lives in [`docs/`](docs/):
 
 ## Status
 
-`tunas` is in **alpha**. The API is documented in `docs/` and stable enough to
-build on, but breaking changes may occur before 1.0 if real-world usage
-surfaces design issues.
+`tunas` is in **alpha**. The API documented in `docs/` is stable, but breaking changes may occur before 1.0 based on real-world feedback.
 
 ## License
 
 [MIT](LICENSE)
+
+

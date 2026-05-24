@@ -1,8 +1,3 @@
-# CLAUDE.md
-
-## Project Status
-Scaffolded with `uv init`. Contains only a `main.py` entry point.
-
 ## Tooling & Commands
 Managed via `uv` with Python 3.12. Do not use `pip` or bare `python` commands.
 

@@ -1,11 +1,12 @@
 # `tunas.parser` — reading `.cl2` files
 
-The parser turns one or more `.cl2` files into a list of `Meet` objects
-plus a `ParseReport`. It is exposed as a single function:
+The parser turns one or more `.cl2` files into a list of self-contained [`Meet`](models.md#meet) objects. It is exposed as a single top-level function:
 
 ```python
 from tunas import read_cl2
 ```
+
+`read_cl2` parses inputs into a tuple: `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from data-quality issues and storing warnings on the report.
 
 ## `read_cl2`
 
@@ -14,7 +15,7 @@ def read_cl2(
     source: str | os.PathLike | Iterable[str | os.PathLike] | TextIO,
     *,
     strict: bool = False,
-    encoding: str = "utf-8",
+    encoding: str = "cp1252",
     errors: str = "replace",
 ) -> tuple[list[Meet], ParseReport]: ...
 ```
@@ -23,55 +24,89 @@ def read_cl2(
 
 | Parameter | Type | Description |
 |---|---|---|
-| `source` | `str` or `Path` or iterable of paths or text file-like | What to parse — see *source types* below. |
-| `strict` | `bool` | If `True`, raise `ParseError` on the first malformed record. If `False` (the default), append a `ParseWarning` to the returned report and continue. |
-| `encoding` | `str` | Text encoding used when reading from a file path. Defaults to `"utf-8"`; some legacy exports use `"cp1252"`. Ignored when `source` is a file-like object. |
-| `errors` | `str` | The encoding error policy. Defaults to `"replace"` (corrupt bytes become `U+FFFD`), which matches the original tunas behavior and is appropriate for real-world `.cl2` files. Set to `"strict"` for fail-fast decoding. |
+| `source` | `str \| Path \| Iterable[Path] \| TextIO` | Input source — path, directory, list of paths, or text stream. |
+| `strict` | `bool` | If `True`, any warning raises a `ParseError`. If `False` (default), collects warnings and continues. **M1 structural violations always raise.** |
+| `encoding` | `str` | Text encoding for file paths. Defaults to `"cp1252"` (common for SDIF/DOS files) to preserve alignments and accented names. |
+| `errors` | `str` | Encoding error policy. Defaults to `"replace"`. |
 
 ### Source types
 
-`source` accepts four shapes:
+1. **File path:** Single `.cl2` file is parsed.
+2. **Directory path:** Walked recursively for `*.cl2` files (case-insensitive).
+3. **Iterable of paths:** Each path is parsed; meets are concatenated.
+4. **Text stream:** Parsed from the buffer (uses `"<stream>"` as warning source). Stream must yield `str`, not `bytes`.
 
-1. **A single file path** (`str` or `os.PathLike`): the file is parsed.
-2. **A directory path**: walked recursively for files matching `*.cl2`
-   (case-insensitive). All files are parsed into one shared state, so a
-   swimmer who appears in two files becomes one merged `Swimmer`.
-3. **An iterable of paths**: each is parsed in order into shared state.
-   Equivalent semantics to passing a directory that contains those files.
-4. **A text file-like object** (anything with `.read()` returning `str`):
-   parsed from the buffer. Useful for testing and for parsing files
-   downloaded into memory.
-
-### Return value
-
-A tuple `(meets, report)`:
-
-- `meets: list[Meet]` — one entry per B1/Z0 block encountered across all
-  inputs. Order matches the order meets first appear in the source.
-- `report: ParseReport` — summary statistics and any warnings (see below).
+Concatenating multi-file lists performs no cross-file merging or deduplication.
 
 ### Examples
 
 ```python
-# Single file
-meets, report = read_cl2("results.cl2")
-
 # Directory walk
 meets, report = read_cl2("results_dir/")
 
-# Explicit list
-meets, report = read_cl2(["meet1.cl2", "meet2.cl2"])
-
-# In-memory buffer
-import io
-text = open("results.cl2").read()
-meets, report = read_cl2(io.StringIO(text))
-
-# Strict mode — first malformed record raises
-meets, report = read_cl2("results.cl2", strict=True)
+# Strict validation
+try:
+    meets, report = read_cl2("messy.cl2", strict=True)
+except ParseError as exc:
+    print(f"Failed at line {exc.warning.line_no}: {exc.warning.reason}")
 ```
 
+## Per-meet scope
+
+- **One Meet per block:** Fresh meets start at each `B1` record.
+- **Meet-scoped clubs:** Repeated `C1` records for the same `(team_code, lsc)` reuse the existing `Club` instance.
+- **Meet-scoped swimmers:** Swimmers are grouped by member ID (`id_short` or `id_long`). The same athlete in different meets becomes separate `Swimmer` objects. Cross-meet indexing is delegated to application code.
+
+## Error model: M1 vs M2 fields
+
+### M1 — fatal (always raises)
+
+Missing or unparseable structural fields indicate a broken layout and always raise `ParseError`. These include: record-type constants, swimmer/team names, competition sex, event distance/stroke/age/sex, and meet start dates.
+
+### M2 — recoverable (kept as `None`)
+
+Data-quality fields skip corrupt/blank values with a `ParseWarning` (severity `RECOVERED`) and set the field to `None` in lenient mode. In strict mode, these raise `ParseError`.
+- **Swimmer ID (USS#):** Identity uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is skipped (severity `SKIPPED`). An `F0` record lacking both is kept with `swimmer=None` (severity `RECOVERED`).
+
+### Conditional markers
+
+- **`*` (Conditional Course):** Course bytes (SDIF COURSE Code 013) are required only if time is present. Missing courses warn and set `course=None`. A course byte of `"X"` denotes a **disqualification**; the swim is kept with `status=DQ` and preserves its recorded `time`. The event course falls back to other sessions, seed course, or the `B1` default.
+- **`**` (Championship Place/Points):** Required only at championship meets. Missing values are kept as `None` with a warning.
+- **`#` (Relay-Only Swimmers):** Swimmer records with blank event parameters create a `Swimmer` without generating an `IndividualSwim`. Partial event parameters remain fatal M1 violations.
+
+### Result outcomes (NT / NS / DNF / DQ / SCR)
+
+outcome codes in time fields are kept as official results with `status` set to the code and `time=None`. Combined with course `"X"`, all swims are preserved for analysis.
+
+### Other parsing behaviors
+
+- **Malformed optional field / Unknown code:** Set to `None` and warns.
+- **Orphaned record:** Trailing `F0` (without `E0`) or `G0` (without `D0`/`F0`) is dropped and warns (`SKIPPED`/`ORPHANED`).
+- **Record length:** Lines under 160 characters are right-padded with blanks and parsed. Lines over 160 characters are skipped and warn.
+- **Unknown record type:** Unmodeled types (e.g. `J0`–`J2`) are skipped and warn (`UNKNOWN_RECORD`), preserving the raw line.
+
+### Mode summary
+
+| Situation | Lenient (`strict=False`) | Strict (`strict=True`) |
+|---|---|---|
+| M1 field missing/unparseable | **raise `ParseError`** | raise `ParseError` |
+| Event fields valid but combo unresolvable | skip record + warn (`SKIPPED`) | raise `ParseError` |
+| `D0` with no `id_short` **and** no `id_long` | skip record + warn (`SKIPPED`) | raise `ParseError` |
+| `F0` with no `id_short`/`id_long` | keep leg, `swimmer=None` + warn | raise `ParseError` |
+| Other M2 (dates, birthdate, etc.) | keep record, null field + warn | raise `ParseError` |
+| Result outcome code (`NT`/`DQ`/etc.) | keep result, `status` set, `time=None` | keep result |
+| Course byte `X` (disqualified) | keep result + time, `status=DQ` | keep result |
+| `*` course missing for present time | keep, `course=None` + warn | raise `ParseError` |
+| Optional / unknown-code field | null field + warn | raise `ParseError` |
+| Orphaned record (`F0`/`G0`) | drop record + warn | raise `ParseError` |
+| Short line (< 160 chars) | right-pad + parse | right-pad + parse |
+| Over-long / unusable line | skip record + warn | raise `ParseError` |
+| Unknown record type | skip record + warn | raise `ParseError` |
+| Z0 count ≠ parsed total | warn (`COUNT_MISMATCH`) | raise `ParseError` |
+
 ## `ParseReport`
+
+Exposes metrics for the entire `read_cl2` execution.
 
 ```python
 @dataclass
@@ -80,227 +115,141 @@ class ParseReport:
     files_read: int = 0
     meets_parsed: int = 0
     swimmers_parsed: int = 0
-    individual_results_parsed: int = 0
-    relay_results_parsed: int = 0
+    individual_swims_parsed: int = 0
+    relays_parsed: int = 0
     splits_parsed: int = 0
+    records_skipped: int = 0     # Dropped records
+    fields_recovered: int = 0    # Nulled M2 fields (excludes COUNT_MISMATCH)
 
     @property
     def has_warnings(self) -> bool: ...
+
+    @property
+    def by_severity(self) -> dict[Severity, list[ParseWarning]]: ...
+
+    def warnings_for(
+        self,
+        *,
+        record_type: str | None = None,
+        field: str | None = None,
+        severity: Severity | None = None,
+        kind: IssueKind | None = None,
+    ) -> list[ParseWarning]: ...
 ```
 
-The fields are populated as the parser runs and reflect the entire call.
-`swimmers_parsed` counts **distinct** swimmers after merging, not raw D0
-record count.
-
 ## `ParseWarning`
+
+A structured diagnostic record.
 
 ```python
 @dataclass(frozen=True)
 class ParseWarning:
-    source: str             # file path, or "<stream>" for file-like input
-    line_no: int            # 1-indexed
-    record_type: str | None # e.g. "D0", or None if the header was unreadable
-    reason: str             # human-readable explanation
-    raw_line: str           # the offending line (truncated to 200 chars)
+    source: str               # File path or "<stream>"
+    line_no: int              # 1-indexed
+    record_type: str | None   # e.g., "D0"
+    field: str | None         # e.g., "id_short"
+    column: str | None        # e.g., "40/12"
+    mandatory: str | None     # "M1" | "M2" | "M1#" | "*" | "**" | None
+    severity: Severity        
+    kind: IssueKind           
+    reason: str               
+    raw_line: str             # Truncated to 200 chars
 ```
 
-Frozen and hashable, so warnings can go in a set if you want to de-dup
-across multiple `read_cl2` calls.
-
-## Strict vs lenient mode
-
-The default lenient mode silently skips malformed records and records a
-warning for each:
+### `Severity`
 
 ```python
-meets, report = read_cl2("messy.cl2")
-print(report.has_warnings)             # True
-for w in report.warnings:
-    print(f"{w.source}:{w.line_no} ({w.record_type}): {w.reason}")
+class Severity(enum.Enum):
+    FATAL     = "fatal"      # Structural (M1) violation; raises ParseError
+    SKIPPED   = "skipped"    # Record dropped entirely
+    RECOVERED = "recovered"  # Field set to None, record kept
 ```
 
-Strict mode raises a `ParseError` on the first malformed record. The
-exception carries the underlying `ParseWarning` for inspection:
+### `IssueKind`
 
 ```python
-try:
-    meets, _ = read_cl2("messy.cl2", strict=True)
-except ParseError as exc:
-    w = exc.warning
-    print(f"failed at {w.source}:{w.line_no}: {w.reason}")
+class IssueKind(enum.Enum):
+    MISSING        = "missing"        # Blank mandatory field
+    MALFORMED      = "malformed"      # Unparseable value (date/time/int)
+    UNKNOWN_CODE   = "unknown_code"   # Invalid code table value
+    BAD_LENGTH     = "bad_length"     # Over-long line
+    ORPHANED       = "orphaned"       # No anchor record found
+    UNKNOWN_RECORD = "unknown_record" # Unmodeled record header
+    COUNT_MISMATCH = "count_mismatch" # Z0 count mismatch
 ```
 
-**Use lenient mode for ingesting real data.** Use strict mode for
-testing, validation pipelines, or when you have a known-good upstream
-and want to be alerted if it regresses.
+## Mandatory-field reference
 
-## Multi-file semantics
+Detailed structural contracts enforced by the parser:
 
-When multiple files are parsed in one call, the parser maintains a single
-shared `_ParserState`. Entities are deduplicated across files using the
-rules in [models.md → multi-file merging](models.md#multi-file-merging--rules):
+**`A0` — File description → [`SourceFile`](models.md#sourcefile)**
+- *Captures:* FILE code (`file_type`), SDIF version, software name/version, contact name/phone, creation date, submitting LSC. Malformed fields warn.
 
-- **Clubs** are merged on `(team_code, lsc)`. Null fields are filled from
-  the second file; non-null fields are preserved.
-- **Swimmers** are merged first on `usa_id_short`, then on
-  `(first_name, last_name, birthday)`. Same null-fill rule.
-- **Meets** are merged on `(name, start_date, organization)`. Result
-  lists are concatenated.
+**`B1` — Meet (Anchor)**
+- *M1:* `"B1"` header, meet **name**, meet **start date**.
+- *M2:* ORG, **city**, **state**, **meet type**, **end date**.
+- *Optional:* Addresses, postal code, country, altitude, course.
 
-A swimmer who races at two meets in two files therefore appears as
-exactly one `Swimmer` whose `individual_results` spans both.
+**`B2` — Meet host (Enrich → `Meet.host`)**
+- *M2:* host **name**. *Captures:* Address, city, state, postal, country, phone.
 
-Single-call semantics: order of files within one call does not affect
-the final domain model (only the order of warnings in the report).
-**Cross-call semantics:** every `read_cl2` call returns fresh objects.
-Merging across calls is the application's responsibility.
+**`C1` — Team/Club (Context)**
+- *M1:* `"C1"` header, **team code**, **full team name**.
+- *Optional:* Abbreviated name, 5th team code char, address, city/state, postal, country, region.
+- *Unattached Heuristic:* A team code ending in `"UN"` (e.g. `"PCUN"`) or a name containing `"unattached"` marks the context as unattached. No `Club` is created; `swimmer.club` remains `None`.
 
-## Record types and handling
+**`C2` — Team entry (Enrich `Club`)**
+- *M2:* team code, **coach name**. *Captures:* `coach_phone`, `entry_counts` (D0/athlete/E0/F0/G0 record counts), `short_name`.
 
-The parser handles every record type defined in SDIF v3:
+**`D0` — Individual event (Leaf)**
+- *M1:* `"D0"` header, swimmer **name**, **sex**; event **sex**, **distance**, **stroke**, **event age** (except `#` relay-only swimmers).
+- *M2:* ORG; **USS#** (`id_short` falling back to `D3`'s `id_long`); **date of swim**; **birth date**.
+- *`*`:* prelim/swim-off/finals **course** (mandatory if time present).
+- *`**`:* prelim/finals **place**, **points** (championship-only).
+- *Optional:* Citizenship, age/class, seed time, heat/lane, event time class.
 
-| Record | Purpose | Handling |
-|---|---|---|
-| `A0` | File description header | Read for metadata, no domain object created. |
-| `B1` | Meet record | Creates a `Meet`. |
-| `B2` | Meet host | Enriches the current `Meet` with `host_team_code`, `host_phone`. |
-| `C1` | Team / club | Creates or merges a `Club`, or marks the swimmer context unattached. |
-| `C2` | Team entry | Enriches the current `Club` with coach name and `entry_counts`. |
-| `D0` | Individual event entry/result | Creates `IndividualMeetResult` records (one per session). Resolves or creates a `Swimmer`. |
-| `D1` | Address continuation | Populates `IndividualMeetResult.swimmer_contact` (PII). |
-| `D2` | Phone/email continuation | Populates `IndividualMeetResult.swimmer_contact` (PII). |
-| `D3` | Long ID / preferred name | Updates the current `Swimmer` with `usa_id_long` and `preferred_first_name`. |
-| `E0` | Relay event | Creates a `RelayMeetResult`. |
-| `F0` | Relay name | Appends a `RelayLeg` to the current `RelayMeetResult`. Resolves the swimmer reference. |
-| `G0` | Splits | Appends `Split` entries to the current individual or relay result. |
-| `Z0` | File terminator | Resets the current meet/club/swimmer/result context. |
+**`D1` — Swimmer administrative (Enrich `Swimmer.contact` / `.registration`)**
+- *Captures (PII):* Phone numbers, registration date, member status, old member number, admin-info text.
 
-Trailing records that depend on an earlier record (D1/D2 after D0, F0
-after E0, G0 after D0 or F0) are bound to the most recent matching
-context. If the antecedent is missing, a warning is emitted and the
-trailing record is dropped (or it raises `ParseError` in strict mode).
+**`D2` — Swimmer contact (Enrich `Swimmer.contact` / `.registration`)**
+- *Captures (PII):* Mailing address/city/state/postal/country, region, season, FINA-federation byte.
 
-## Edge cases the parser handles
+**`D3` — Swimmer information (Enrich `Swimmer` / `.registration`)**
+- *M2:* 14-char **USS#** (`id_long`).
+- *Captures (PII):* Preferred first name, ethnicity (primary/secondary), D3 program affiliations.
 
-These cases appear in real-world `.cl2` exports and are handled
-deliberately. Each entry below results in either a successful parse, a
-warning + skip, or — in strict mode — a `ParseError`.
+**`E0` — Relay event (Anchor)**
+- *M1:* `"E0"` header, **team letter**, **team code**, event **sex**, **distance**, **stroke**, **event age**.
+- *M2:* ORG, **date of swim**.
+- *`*`/`**`:* session **courses** (if times present), place/points.
+- *Optional:* Combined squad `total_age`, seed time, event time class.
 
-### Encoding
+**`F0` — Relay name (Leaf)**
+- *M1:* `"F0"` header, **team code**, swimmer **name**, **sex**, session **leg order**, **relay letter**.
+- *M2:* ORG, **USS#** (`id_short`/`id_long`), **birth date**.
+- *Captures:* Leg time, takeoff time, course (`*`), age/class, citizenship, preferred name. Spans prelims/finals, fanning out into one `RelaySwim` per session swum.
 
-- **Non-UTF-8 bytes** (legacy CP-1252 input): replaced with `U+FFFD` by
-  default (`errors="replace"`). Pass `errors="strict"` for fail-fast.
-- **BOM marker** at start of file: stripped silently.
-- **Mixed line endings** (`\r\n`, `\r`, `\n`): normalized.
+**`G0` — Splits (Leaf)**
+- *M1:* `"G0"` header, **sequence number**, **total split count**, **split distance**, **split type**.
+- *Attaches to:* Preceding `IndividualSwim` or `RelaySwim` matching the G0 session code (`P`/`F`/`S`).
 
-### Record-level
+**`Z0` — File terminator**
+- *M1:* `"Z0"` header. Resets parser context. Notes map to `SourceFile.notes`. FILE code is cross-checked against parsed record counts (mismatch warns).
 
-- **Line length not 162 chars**: skipped + warning. The SDIF spec
-  mandates exactly 162-byte records (160 data + 2-byte checksum).
-- **Unknown 2-char record header**: ignored silently (forward-compatible
-  with future SDIF revisions).
-- **Trailing whitespace** on a record: trimmed; record still processed.
+## Edge cases handled
 
-### Meet (`B1`)
+- **BOM & Line Endings:** Stripped and normalized.
+- **Short/Long Lines:** Right-padded (< 160) or skipped (> 160).
+- **Unattached:** Auto-detected by LSC prefix or `"unattached"` names.
+- **Missing course byte `*`:** Kept with `course=None` + warning. Course `X` sets `status=DQ` and retains recorded time.
+- **Relay-only swimmers:** Created with no `IndividualSwim` if all event fields are blank.
+- **Relay alternates:** Swimmers with order `ALTERNATE` are routed to `Relay.alternates` instead of `legs`, and excluded from `Swimmer.swims`.
+- **Relay legs fanning out:** A single `F0` spanning multiple sessions creates one `RelaySwim` per session. The single `F0` leg time is filed on the finals leg; splits from `G0` records tag their respective session swims.
+- **Splits attachment:** Attachment links to the preceding `D0`/`F0` swum session based on the G0's `prelims/finals` code.
 
-- **Malformed date** (MM/DD/YYYY parsing fails): skipped + warning. The
-  meet is not created.
-- **Missing course code**: `Meet.course = None`.
-- **Invalid course letter** (not `S`, `Y`, `L`, `1`, `2`, or `3`):
-  `Meet.course = None` + warning.
+## Performance
 
-### Club (`C1`)
-
-- **Unattached detection**: any of `lsc_code == "UN"`, `team_code.upper()
-  == "UN"`, `"unattached" in name.lower()`, or `("UN" in team_code and
-  "unat" in name.lower())` ⇒ no `Club` created; the swimmer context is
-  marked unattached.
-- **Invalid LSC code**: `Club.lsc = None` + warning.
-- **Invalid state / country code**: field set to `None` + warning.
-- **Duplicate club** (same `(team_code, lsc)`): merged, null-fill rules.
-
-### Swimmer / individual result (`D0`)
-
-- **`usa_id_short` not 12 chars**: skipped + warning. Result not created.
-- **Unknown stroke code**: skipped + warning.
-- **Name parsing fails**: skipped + warning.
-- **Missing birthday**: `Swimmer.birthday = None`. **No inference** —
-  unlike the original tunas tool, this library never reverse-engineers a
-  birthday from the legacy USS# format.
-- **Missing or `ignored` finish times** (`""`, `"NT"`, `"NS"`, `"DNF"`,
-  `"DQ"`, `"SCR"`): the result for that session is not created. Not a
-  warning — these are normal entries in heat sheets.
-- **Place value `≤ 0`**: `rank = None`. Not a warning.
-- **Invalid course code** on prelim/finals/swim-off: the result for that
-  session is not created + warning.
-- **Invalid event-age code** (`"UN<NN>"` / `"<NN>OV"`): `event_min_age =
-  0` / `event_max_age = 1000`.
-- **Swimmer match across files**: if a later `D0` references a swimmer
-  who already exists (by `usa_id_short`, then by `(name, birthday)`),
-  the existing swimmer is reused and its fields are null-filled.
-
-### Long ID / preferred name (`D3`)
-
-- **No preceding `D0`**: silently ignored (no `current_swimmer` to
-  update).
-- **`usa_id_long` not 14 chars**: ignored.
-- **Old-format ID** (legacy 14-char USS#): not stored as
-  `usa_id_long`. The library only stores the new long-ID format.
-
-### Relay event (`E0`)
-
-- **Event not resolvable** (`Event.find(distance, stroke, course)`
-  returns `None`): the relay is skipped + warning.
-- **Missing date** or **invalid course**: warning, fields set to `None`,
-  relay still created if possible.
-
-### Relay name (`F0`)
-
-- **No preceding `E0`**: skipped + warning. The leg cannot be attached
-  to a relay.
-- **Swimmer cannot be resolved** from name + USS# + birthday: a leg is
-  still created with `swimmer = None` and a warning is emitted.
-- **More than 4 F0 records for one E0**: extra legs are stored but a
-  warning is emitted (alternates may be reported on additional records
-  per the spec; the library preserves them).
-
-### Splits (`G0`)
-
-- **No preceding `D0` or `F0`**: skipped + warning.
-- **Out-of-order sequence numbers**: splits from later sequence numbers
-  are appended; final ordering is by `distance` ascending.
-- **Invalid split type code**: `SplitType.CUMULATIVE` assumed +
-  warning.
-
-### File-level
-
-- **Missing `Z0`**: tolerated. The parser flushes its state at EOF.
-- **Multiple `B1`s without intervening `Z0`s**: each `B1` ends the prior
-  meet implicitly + warning.
-- **Truncated file**: tolerated. Counts in `ParseReport` reflect what
-  was successfully read.
-
-## Performance notes
-
-- The parser is **single-pass** with **O(1) lookups** by `usa_id_short`,
-  `(team_code, lsc)`, and `(first_name, last_name, birthday)`. Parsing
-  scales roughly linearly with file size.
-- Reading from a file path streams line-by-line; the whole file is not
-  held in memory.
-- Reading from a file-like reads `.read()` once. If you have a very
-  large in-memory buffer, prefer writing it to a temp file and passing
-  the path.
-
-## Strict-mode invariant
-
-In strict mode, every situation listed above as "+ warning" instead
-raises `ParseError(warning)`. The exception is raised at the first such
-record, with all previously parsed records preserved on the partially
-constructed `Meet` objects (but `read_cl2` does not return them — they
-go away when the exception unwinds).
-
-## See also
-
-- [`models.md`](models.md) — the dataclasses the parser produces.
-- [`cl2_format.md`](cl2_format.md) — background on SDIF v3.
-- [`exceptions.md`](exceptions.md) — error hierarchy.
+- Scans single-pass.
+- Performs **O(1)** swimmer and club lookups.
+- Scales linearly with file size.
+- Streams files line-by-line.

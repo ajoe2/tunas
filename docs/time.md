@@ -1,20 +1,14 @@
 # `tunas.time` — the `Time` value type
 
-`Time` represents a swim time. It is the unit returned everywhere times
-appear in the API — `result.time`, `result.seed_time`, `Split.time`,
-`RelayLeg.leg_time`, and the values returned by `standard_time(...)`.
+`Time` represents a swim time, stored with centisecond precision. It is used throughout the library's API (e.g., `swim.time`, `Split.time`, and `standard_time`).
 
 ## Design summary
 
-- **Frozen dataclass** — `Time` instances are immutable, hashable, and
-  comparable.
-- **Single integer field** internally: `centiseconds: int`. Minutes,
-  seconds, and hundredths are exposed as computed properties.
-- **Natural ordering** — `t1 < t2` is "`t1` is a faster time."
-- **Supports arithmetic** — addition and subtraction return new `Time`
-  instances; subtraction raises if it would produce a negative result.
-- **Marathon-friendly** — `centiseconds` is an unbounded `int`, so times
-  longer than 60 minutes (e.g. open-water 10km) work correctly.
+- **Immutable Frozen Dataclass:** Immutable, hashable, and comparable.
+- **Centisecond Storage:** Stores `centiseconds: int` internally; exposes computed properties for minutes, seconds, hundredths, and total seconds.
+- **Natural Ordering:** Faster times compare as less than slower times (e.g., `t1 < t2` is `True` if `t1` is faster).
+- **Arithmetic Support:** Supports addition and subtraction (subtraction raises `ValueError` on negative results).
+- **Marathon Friendly:** Safe for open-water marathon times (internally an unbounded `int`).
 
 ## Construction
 
@@ -24,16 +18,15 @@ from tunas import Time
 
 ### `Time(centiseconds: int)`
 
-Direct constructor. Useful when you already have the value in centiseconds
-(e.g. from JSON):
+Constructs an instance directly from centiseconds:
 
 ```python
 Time(12345)          # 2:03.45
 ```
 
-### `Time.parse(s: str) -> Time` (classmethod)
+### `Time.parse(s: str) -> Time`
 
-Parses the standard swim-time string formats:
+Parses standard `[MM:]SS.HH` swim-time strings. Strips whitespace. Empty or invalid strings raise `ValueError`.
 
 ```python
 Time.parse("23.45")        # 23.45 — Time(2345)
@@ -42,27 +35,11 @@ Time.parse("0:23.45")      # 23.45 — Time(2345)
 Time.parse("12:34.56")     # 12:34.56
 ```
 
-Raises `ValueError` for unparseable input. The accepted grammar is:
-optional `MM:`, then `SS`, then `.HH`. Whitespace is stripped. Empty or
-whitespace-only strings raise `ValueError`.
-
-### `Time.from_parts(minute=0, second=0, hundredth=0) -> Time` (classmethod)
-
-Convenience for callers building a `Time` from individual components:
-
-```python
-Time.from_parts(1, 23, 45)     # 1:23.45
-Time.from_parts(second=45)     # 0:45.00
-```
-
-Each component must be a non-negative integer. `second` and `hundredth`
-must each be less than 60 and 100 respectively; `minute` is unbounded.
-
 ## Properties
 
 | Property | Type | Notes |
 |---|---|---|
-| `centiseconds` | `int` | The stored value. Always ≥ 0. |
+| `centiseconds` | `int` | The stored value (always ≥ 0). |
 | `minute` | `int` | `centiseconds // 6000`. |
 | `second` | `int` | `(centiseconds // 100) % 60`. |
 | `hundredth` | `int` | `centiseconds % 100`. |
@@ -79,34 +56,28 @@ t.centiseconds        # 8345
 
 ## String formatting
 
-`str(time)` returns the canonical swim-time format:
+`str(time)` returns canonical swim-time formatting:
+- `minute == 0` → `"SS.HH"` (e.g., `"23.45"`; `Time(0)` → `"0.00"`)
+- `minute > 0` → `"M:SS.HH"` (e.g., `"1:23.45"`)
 
-- `centiseconds == 0` → `""` (empty string — indicates "no time")
-- `minute == 0` → `"SS.HH"` (e.g. `"23.45"`)
-- otherwise → `"M:SS.HH"` (e.g. `"1:23.45"`)
+Missing or non-time outcomes (DQ, scratch, etc.) are represented by `time=None` with a [`ResultStatus`](enums.md#resultstatus), so `str(Time(...))` is never lossy and round-trips with `Time.parse`.
 
-`repr(time)` always returns `Time(centiseconds=N)` for unambiguous logging.
+`repr(time)` returns `Time(centiseconds=N)`.
 
 ## Comparison and hashing
 
-`Time` defines the full set of ordering operators (`<`, `<=`, `==`, `!=`,
-`>=`, `>`) via `dataclass(order=True, frozen=True)`. Comparison is on
-`centiseconds`, so smaller times compare as "less than" larger times.
+`Time` supports ordering (`<`, `<=`, `==`, `!=`, `>=`, `>`) based on centiseconds (faster first).
 
 ```python
 Time.parse("23.45") < Time.parse("23.46")       # True (faster)
-sorted([t1, t2, t3])                              # fastest first
+sorted([t1, t2, t3])                            # Sorted fastest first
 ```
 
-`Time` is hashable, so it can be used as a `dict` key or set member.
-Comparison with `None` returns `NotImplemented` (Python then evaluates to
-`False` for `==`).
+Instances are hashable and can be used in sets or as dictionary keys. Comparing with `None` returns `False` for `==`.
 
 ## Arithmetic
 
 ### Addition
-
-`t1 + t2` returns a new `Time` whose `centiseconds` is the sum:
 
 ```python
 Time.parse("1:00.00") + Time.parse("30.50")     # Time.parse("1:30.50")
@@ -114,20 +85,12 @@ Time.parse("1:00.00") + Time.parse("30.50")     # Time.parse("1:30.50")
 
 ### Subtraction
 
-`t1 - t2` returns a new `Time` whose `centiseconds` is `t1.centiseconds -
-t2.centiseconds`. Raises `ValueError` if the result would be negative
-(swim times don't go below zero):
+Raises `ValueError` if the result is negative:
 
 ```python
 Time.parse("1:30.00") - Time.parse("30.00")     # Time.parse("1:00.00")
-Time.parse("30.00") - Time.parse("1:00.00")     # raises ValueError
+Time.parse("30.00") - Time.parse("1:00.00")     # Raises ValueError
 ```
-
-## Errors
-
-`Time.parse(...)` and `Time.from_parts(...)` raise `ValueError` for malformed
-input. `Time.__sub__` raises `ValueError` for negative results. All errors
-include the offending input in their message.
 
 ## Example
 
@@ -137,7 +100,9 @@ from tunas import Time
 prelim = Time.parse("1:05.23")
 final = Time.parse("1:04.87")
 drop = prelim - final
-print(f"dropped {drop}")                  # dropped 0.36
-print(final < prelim)                       # True
+print(f"dropped {drop}")                        # dropped 0.36
+print(final < prelim)                           # True
 print(f"final converted: {final.total_seconds:.2f} s")
 ```
+
+

@@ -1,7 +1,6 @@
 # Getting started
 
-This page walks through installing `tunas` and using it for the first
-time. For deeper material, see the per-module pages linked at the end.
+This guide covers installation and basic usage of `tunas`.
 
 ## Install
 
@@ -9,36 +8,30 @@ time. For deeper material, see the per-module pages linked at the end.
 pip install tunas
 ```
 
-`tunas` requires Python 3.12 or newer and has **no runtime dependencies**.
-If you use `uv`, the equivalent command is:
+`tunas` requires Python 3.12 or newer. With `uv`:
 
 ```
 uv add tunas
 ```
 
-## A 15-line example
+## A first example
 
 ```python
-from tunas import read_cl2, Event, qualifies_for
+from tunas import read_cl2, Event
 
-meets, report = read_cl2("results/")          # path, dir, list of paths, or file-like
+meets, report = read_cl2("results/")        # path, dir, list of paths, or file-like
 
 for meet in meets:
-    swimmer = meet.find_swimmer(name="Phelps, Michael")
+    swimmer = next((s for s in meet.swimmers
+                    if s.id_short == "ABC123456789"), None)
     if swimmer is None:
         continue
-
-    best = swimmer.best_result(Event.FLY_200_LCM)
-    if best is None:
-        continue
-
-    age = swimmer.age_on(best.date)
-    std = qualifies_for(best.time, best.event, age, swimmer.sex)
-    print(f"{swimmer.full_name}: {best.time} ({std.name if std else 'no standard'})")
+    for swim in swimmer.swims_in(Event.FLY_200_LCM):
+        outcome = swim.time if swim.time is not None else swim.status.value
+        print(f"{meet.name}: {swimmer.full_name} {swim.session.value} {outcome}")
 ```
 
-That's the shape of every `tunas` program: parse, traverse, ask
-questions of the model.
+Every `tunas` program follows this pattern: parse input into self-contained [`Meet`](models.md) objects, then traverse the data graph.
 
 ## Walking through the example
 
@@ -48,56 +41,48 @@ questions of the model.
 meets, report = read_cl2("results/")
 ```
 
-`read_cl2` is the single entry point. It accepts a path, a directory, a
-list of paths, or any text file-like object. It returns a list of
-`Meet` objects plus a `ParseReport` summarizing what was processed.
+`read_cl2` accepts a file path, directory, list of paths, or text file-like object, returning `(list[Meet], ParseReport)`.
 
-If any records were malformed, they're listed on `report.warnings`:
+By default, parsing is lenient: malformed records are skipped and collected as warnings. Pass `strict=True` to fail fast on the first error.
 
 ```python
 for w in report.warnings:
     print(f"{w.source}:{w.line_no} ({w.record_type}): {w.reason}")
 ```
 
-The default mode is lenient — malformed records are skipped, never
-raised. Pass `strict=True` if you want a hard failure on the first bad
-record. See [`parsing.md`](parsing.md) for details.
+Meets are independent. Swimmers and clubs are scoped to each meet; the same swimmer in two different meets is parsed as two distinct `Swimmer` objects.
 
-### 2. Finding a swimmer
+### 2. Finding a swimmer in a meet
 
-```python
-swimmer = meet.find_swimmer(name="Phelps, Michael")
-```
-
-`find_swimmer` accepts `name`, `usa_id`, and/or `birthday`. Pass at
-least one. The name match is case-insensitive and accepts the
-SDIF-canonical `"Last, First"` order as well as `"First Last"`.
-
-`Club.find_swimmer` works the same way but is scoped to one club's
-roster.
-
-### 3. Best time in an event
+Filter `Meet.swimmers` to locate a specific athlete:
 
 ```python
-best = swimmer.best_result(Event.FLY_200_LCM)
+swimmer = next((s for s in meet.swimmers
+                if s.id_short == "ABC123456789"), None)
 ```
 
-`Event` is an enum of every USA Swimming event across SCY, SCM, and
-LCM — see [`event.md`](event.md). `best_result` returns the swimmer's
-fastest `IndividualMeetResult` for that event, or `None` if they haven't
-swum it.
+Swimmers within a meet are grouped by member ID (`id_short` falling back to `id_long`). Names are not guaranteed to be unique. See [models.md](models.md) for details.
+
+### 3. A swimmer's swims in an event
+
+```python
+swims = swimmer.swims_in(Event.FLY_200_LCM)
+```
+
+`Event` covers all USA Swimming events across courses (SCY, SCM, LCM) — see [event.md](event.md). `swimmer.swims_in(event)` returns all swims (including prelims, finals, DQs, and scratches). Both `IndividualSwim` and `RelaySwim` share a uniform interface (`time`, `status`, `event`, `date`, `meet`, `swimmer`).
+
+Get the fastest swim:
+```python
+fastest = min((s for s in swims if s.time), key=lambda s: s.time, default=None)
+```
 
 ### 4. Time standards
 
 ```python
-std = qualifies_for(best.time, best.event, age, swimmer.sex)
+std = qualifies_for(swim.time, swim.event, age, swimmer.sex)
 ```
 
-`qualifies_for` looks up the best USA Swimming standard the time
-qualifies for. The data is bundled — no setup, no file paths, no
-network. See [`standards.md`](standards.md).
-
-If the swim doesn't qualify for any standard, `std` is `None`.
+`qualifies_for` checks the highest USA Swimming motivational standard achieved. Standards are bundled locally (no internet access required). See [standards.md](standards.md).
 
 ## What's in the box
 
@@ -107,8 +92,9 @@ If the swim doesn't qualify for any standard, `std` is `None`.
 | A meet | `Meet` | [models.md](models.md) |
 | A swimmer | `Swimmer` | [models.md](models.md) |
 | A club | `Club` | [models.md](models.md) |
-| An individual result | `IndividualMeetResult` | [models.md](models.md) |
-| A relay | `RelayMeetResult`, `RelayLeg` | [models.md](models.md) |
+| One swimmer's swim | `Swim` (base of the next two) | [models.md](models.md#swim) |
+| An individual swim | `IndividualSwim` | [models.md](models.md) |
+| A relay (+ its legs / alternates) | `Relay`, `RelaySwim` | [models.md](models.md) |
 | Splits | `Split` | [models.md](models.md) |
 | A time | `Time` | [time.md](time.md) |
 | An event | `Event` | [event.md](event.md) |
@@ -117,11 +103,8 @@ If the swim doesn't qualify for any standard, `std` is `None`.
 
 ## Where to go next
 
-- [`cookbook.md`](cookbook.md) — end-to-end recipes for common tasks
-  (top-10 fastest in a club, season qualifying check, CSV export, …).
-- [`parsing.md`](parsing.md) — every edge case the parser handles, and
-  how to write strict-mode validators.
-- [`models.md`](models.md) — the full object graph, identity rules, and
-  multi-file merging behavior.
-- [`architecture.md`](architecture.md) — design decisions and
-  publishing notes (for forks and contributors).
+- [parsing.md](parsing.md) — `read_cl2` options and error handling.
+- [models.md](models.md) — the complete object graph.
+- [cookbook.md](cookbook.md) — recipes for common tasks.
+- [architecture.md](architecture.md) — codebase design and layout.
+

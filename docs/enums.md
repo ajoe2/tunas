@@ -1,36 +1,31 @@
 # `tunas.enums` and `tunas.geography` — supporting enumerations
 
-The enums on this page model the categorical fields in the SDIF v3 spec —
-sex, stroke, course, session type, attach status, age group, and the
-geography enums (LSC, US state, country). All values are importable from
-the top-level `tunas` package; the split between `tunas.enums` and
-`tunas.geography` is internal organization (the geography enums are
-larger).
+These enums model categorical fields in the SDIF v3 spec. All are importable from the top-level `tunas` package.
 
 ```python
 from tunas import (
     Sex, Stroke, Course, Session, AttachStatus, MeetType, Region,
-    EventTimeClass, Organization, AgeGroup, SplitType,
-    LSC, State, Country,
+    EventTimeClass, Organization, FileType, SplitType, ResultStatus,
+    RelayLegOrder, MemberStatus, Season, Ethnicity, Affiliation,
+    Citizenship, LSC, State, Country,
 )
 ```
 
 ## Sex
 
 ```python
-class Sex(str, Enum):
+class Sex(StrEnum):
     MALE = "M"
     FEMALE = "F"
     MIXED = "X"
 ```
 
-`MIXED` is used for mixed-gender relay results. The `.value` is the SDIF
-single-character code.
+Mixed-gender relays use `MIXED`. Values correspond to single-character SDIF codes.
 
 ## Stroke
 
 ```python
-class Stroke(str, Enum):
+class Stroke(StrEnum):
     FREESTYLE = "1"
     BACKSTROKE = "2"
     BREASTSTROKE = "3"
@@ -40,109 +35,104 @@ class Stroke(str, Enum):
     MEDLEY_RELAY = "7"
 ```
 
-`Stroke` exposes a `display()` method that returns the human-readable name
-(`"Free"`, `"Back"`, `"Breast"`, `"Fly"`, `"IM"`, `"Free Relay"`,
-`"Medley Relay"`).
+`display()` returns a human-readable display string (e.g., `"Free Relay"`, `"IM"`).
 
 ## Course
 
 ```python
-class Course(str, Enum):
+class Course(StrEnum):
     SCM = "1"      # Short Course Meters
     SCY = "2"      # Short Course Yards
     LCM = "3"      # Long Course Meters
 ```
 
-The parser accepts the SDIF letter codes (`"S"`, `"Y"`, `"L"`) as well as
-the digit codes and normalizes both to a `Course` value.
+The parser normalizes both digit codes and SDIF letter codes (`"S"`, `"Y"`, `"L"`) to `Course` values.
 
 ## Session
 
 ```python
-class Session(str, Enum):
+class Session(StrEnum):
     PRELIMS = "P"
     FINALS = "F"
     SWIM_OFFS = "S"
 ```
 
-Every `IndividualMeetResult` and `RelayMeetResult` belongs to exactly one
-session. A swimmer who races prelims and finals produces two distinct
-`IndividualMeetResult` instances.
+Represents the session of a swim. Prelim and final swims yield distinct result objects.
 
 ## AttachStatus
 
 ```python
-class AttachStatus(str, Enum):
+class AttachStatus(StrEnum):
     ATTACHED = "A"
     UNATTACHED = "U"
 ```
 
-A swimmer who appears at a meet without club affiliation (`LSC == "UN"`
-or `team_code == "UN"`, or the C1 club name contains "unattached") gets
-`UNATTACHED`. `result.club` is `None` for unattached swimmers.
+`UNATTACHED` marks swimmers with no club affiliation (where the team portion of the SDIF code is `"UN"` or name contains `"unattached"`). For these, `result.club` is `None`.
 
 ## MeetType
 
 ```python
-class MeetType(str, Enum):
+class MeetType(StrEnum):
     INVITATIONAL = "1"
     REGIONAL = "2"
     LSC_CHAMPIONSHIP = "3"
     ZONE = "4"
     ZONE_CHAMPIONSHIP = "5"
     NATIONAL_CHAMPIONSHIP = "6"
-    JUNIOR_NATIONAL = "7"
-    SENIOR_NATIONAL = "8"
-    OLYMPIC_TRIALS = "9"
-    INTERNATIONAL = "0"
-    OPEN = "A"
-    DUAL = "B"
-    TIME_TRIAL = "C"
-    AGE_GROUP = "D"
-    SENIOR = "E"
+    JUNIORS = "7"
+    SENIORS = "8"
+    DUAL = "9"
+    TIME_TRIAL = "0"
+    INTERNATIONAL = "A"
+    OPEN = "B"
+    LEAGUE = "C"
 ```
 
-Set on `Meet.meet_type`. May be `None` if the source file omits the field.
+SDIF MEET Code 005. Place/points calculations key on championship codes (6 and 7) — see [parsing.md](parsing.md#conditional-markers).
 
 ## Region
 
 ```python
-class Region(str, Enum):
-    EAST = "1"
-    SOUTH = "2"
-    MIDWEST = "3"
-    WEST = "4"
+class Region(StrEnum):
+    REGION_1  = "1"
+    REGION_2  = "2"
+    REGION_3  = "3"
+    REGION_4  = "4"
+    REGION_5  = "5"
+    REGION_6  = "6"
+    REGION_7  = "7"
+    REGION_8  = "8"
+    REGION_9  = "9"
+    REGION_10 = "A"
+    REGION_11 = "B"
+    REGION_12 = "C"
+    REGION_13 = "D"
+    REGION_14 = "E"
 ```
 
-Set on `Club.region` for USA Swimming clubs. Optional.
+SDIF REGION Code 007 (fourteen USA Swimming regions). Set on `Club.region` and `SwimmerContact.region`.
 
 ## EventTimeClass
 
 ```python
-class EventTimeClass(str, Enum):
-    NOVICE = "N"
-    B = "B"
-    BB = "P"
-    A = "A"
-    AA = "AA"
-    AAA = "AAA"
-    AAAA = "AAAA"
-    JNAT = "J"
-    NAT = "T"
-    OPEN = "O"
-    INVITATIONAL_ONLY = "I"
-    UNCLASSIFIED = "U"
+class EventTimeClass(StrEnum):
+    NOVICE = "1"
+    B      = "2"
+    BB     = "P"
+    A      = "3"
+    AA     = "4"
+    AAA    = "5"
+    AAAA   = "6"
+    JUNIOR = "J"
+    SENIOR = "S"
 ```
 
-Captures the meet's qualifying classification for the result's event
-(e.g. a meet may have a "BB and slower" cap). Distinct from the
-[`TimeStandard`](standards.md) enum, which represents the standard a time
-*qualifies for*.
+SDIF EVENT TIME CLASS Code 014. The parser splits 2-byte limits in the file into `event_min_time_class` and `event_max_time_class`. Represents meet-level eligibility, distinct from personal motivational standard lookups.
 
 ## Organization
 
 ```python
-class Organization(str, Enum):
+class Organization(StrEnum):
     USS = "1"           # USA Swimming
     MASTERS = "2"
     NCAA = "3"
@@ -156,79 +146,131 @@ class Organization(str, Enum):
 
 Set on `Meet.organization` and `MeetResult.organization`.
 
-## AgeGroup
+## FileType
 
 ```python
-class AgeGroup(str, Enum):
-    _8_U = "8_U"
-    _10_U = "10_U"
-    _11_12 = "11_12"
-    _13_14 = "13_14"
-    _15_16 = "15_16"
-    _17_18 = "17_18"
-    _15_18 = "15_18"
-    SENIOR = "SENIOR"          # 13 and over, used in some standards
-    OPEN = "OPEN"
+class FileType(StrEnum):
+    MEET_REGISTRATIONS         = "01"
+    MEET_RESULTS               = "02"
+    OVC                        = "03"
+    NATIONAL_AGE_GROUP_RECORD  = "04"
+    LSC_AGE_GROUP_RECORD       = "05"
+    LSC_MOTIVATIONAL_LIST      = "06"
+    NATIONAL_RECORDS_RANKINGS  = "07"
+    TEAM_SELECTION             = "08"
+    LSC_BEST_TIMES             = "09"
+    USS_REGISTRATION           = "10"
+    TOP_16                     = "16"
+    VENDOR_DEFINED             = "20"
 ```
 
-Each member supports `in` testing against an integer age:
+SDIF FILE Code 003, representing the type of data transmitted (usually `MEET_RESULTS`).
+
+## Event age range
+
+There is no `AgeGroup` enum because age bands are arbitrary (e.g., `11-12`, `13-OV`). The parser exposes limits directly as `event_min_age` and `event_max_age` integers.
+
+## Citizenship
 
 ```python
-12 in AgeGroup._11_12          # True
-13 in AgeGroup._11_12          # False
-12 in AgeGroup.SENIOR          # False
-17 in AgeGroup.SENIOR          # True
+class Citizenship(StrEnum):
+    DUAL    = "2AL"
+    FOREIGN = "FGN"
 ```
 
-`AgeGroup` is used as a key in the bundled time-standards data and may be
-returned from `Swimmer.age_range_on(date)` when no birthday is known.
+Parsed from SDIF CITIZEN Code 009. `Swimmer.citizenship` and `RelaySwim.citizenship` are typed `Citizenship | Country | None`.
 
 ## SplitType
 
 ```python
-class SplitType(str, Enum):
-    INTERVAL = "I"        # Each split is the time for that single segment
-    CUMULATIVE = "C"      # Each split is the elapsed time at that distance
+class SplitType(StrEnum):
+    INTERVAL = "I"        # Segment time
+    CUMULATIVE = "C"      # Elapsed time
 ```
 
-Set on every `Split` instance and on the G0 record. Most G0 splits are
-`CUMULATIVE`.
+Set on every `Split` instance. Most splits are cumulative.
+
+## ResultStatus
+
+```python
+class ResultStatus(StrEnum):
+    OK  = "OK"      # Official time
+    NT  = "NT"      # No Time
+    NS  = "NS"      # No Swim
+    DNF = "DNF"     # Did Not Finish
+    DQ  = "DQ"      # Disqualified
+    SCR = "SCR"     # Scratch
+```
+
+Outcome code for a swim. `OK` denotes an official, recorded time. Other statuses represent non-timed outcomes and may have a `None` `time` (except course-`X` DQs, which retain recorded times).
+
+## RelayLegOrder
+
+```python
+class RelayLegOrder(StrEnum):
+    NOT_SWUM  = "0"
+    LEG_1     = "1"
+    LEG_2     = "2"
+    LEG_3     = "3"
+    LEG_4     = "4"
+    ALTERNATE = "A"
+```
+
+SDIF ORDER Code 024. Represents leg position or `ALTERNATE`. Consumed by the parser to direct swimmer legs to `Relay.legs` or `Relay.alternates`.
+
+## Registration enums
+
+Used in administrative records and demographic data:
+
+```python
+class MemberStatus(StrEnum):       # SDIF MEMBER Code 021
+    RENEW  = "R"
+    NEW    = "N"
+    CHANGE = "C"
+    DELETE = "D"
+
+class Season(StrEnum):             # SDIF SEASON Code 022
+    SEASON_1   = "1"
+    SEASON_2   = "2"
+    YEAR_ROUND = "N"
+
+class Ethnicity(StrEnum):          # SDIF ETHNICITY Code 026 (PII)
+    AFRICAN_AMERICAN        = "Q"
+    ASIAN_PACIFIC_ISLANDER  = "R"
+    CAUCASIAN               = "S"
+    HISPANIC                = "T"
+    NATIVE_AMERICAN         = "U"
+    OTHER                   = "V"
+    DECLINE                 = "W"
+
+class Affiliation(Enum):           # D3 program flags
+    JUNIOR_HIGH = auto()
+    SENIOR_HIGH = auto()
+    YMCA_YWCA = auto()
+    COLLEGE = auto()
+    SUMMER_LEAGUE = auto()
+    MASTERS = auto()
+    DISABLED_SPORTS = auto()
+    WATER_POLO = auto()
+```
+
+`Affiliation` is a plain `Enum` consumed as a `frozenset[Affiliation]` on `Swimmer.registration.affiliations`. `Ethnicity` and registration details are **sensitive personal data (PII)**.
 
 ## LSC — Local Swimming Committee
 
-`tunas.geography.LSC` enumerates all 59 USA Swimming Local Swimming
-Committees. Members include `PC` (Pacific), `SR` (Sierra Nevada), `CC`
-(Central California), `SI` (San Diego–Imperial), `MA` (Middle Atlantic),
-`NE` (New England), `FL` (Florida), `NT` (North Texas), and so on.
-
-`LSC.<MEMBER>.value` is the SDIF two-letter code (e.g. `"PC"`).
-
-The full member list is large; consult `src/tunas/geography.py` for the
-authoritative listing. The parser accepts unknown codes by setting the
-field to `None` and emitting a `ParseWarning` (lenient mode) or raising
-`ParseError` (strict mode).
+`tunas.geography.LSC` enumerates the 59 Local Swimming Committees (e.g., `PC` for Pacific). Values contain SDIF two-letter codes.
 
 ## State
 
-`tunas.geography.State` enumerates the 50 US states plus DC, US
-territories, and the Canadian provinces commonly appearing in SDIF
-files. `.value` is the two-letter postal code (`"CA"`, `"NY"`, `"ON"`,
-…).
+`tunas.geography.State` enumerates US states, territories, and Canadian provinces as two-letter postal codes (e.g., `"CA"`).
 
 ## Country
 
-`tunas.geography.Country` enumerates IOC country codes (`"USA"`, `"CAN"`,
-`"GBR"`, `"FRA"`, etc.) for roughly 150 members. Used on `Meet.country`,
-`Club.country`, and `Swimmer.citizenship`.
-
-`tunas` corrects one collision present in older SDIF tables:
-`Country.EQUATORIAL_GUINEA` is encoded as `"GEQ"`, not `"GEO"` — `"GEO"`
-is the IOC code for Georgia.
+`tunas.geography.Country` enumerates the ~150 FINA country codes (e.g., `"USA"`, `"CAN"`).
 
 ## Lookup pattern
 
-All enums are `(str, Enum)` subclasses, so the SDIF code itself can be
-used to look up the member:
+Enums subclass `enum.StrEnum` (Python 3.11+) and can be resolved by their SDIF string codes:
 
 ```python
 Stroke("1")           # Stroke.FREESTYLE
@@ -237,6 +279,5 @@ Sex("F")              # Sex.FEMALE
 LSC("PC")             # LSC.PACIFIC
 ```
 
-Unknown codes raise `ValueError`. The parser wraps this with safe-lookup
-helpers in `_parser/fields.py`; library users who construct enums by
-value are expected to handle `ValueError` themselves.
+Unknown codes raise `ValueError`.
+

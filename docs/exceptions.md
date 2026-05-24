@@ -1,7 +1,6 @@
 # `tunas.exceptions` — exception hierarchy
 
-`tunas` raises a small, focused set of exceptions, all rooted at
-`TunasError`. They are importable from the top-level package:
+All library-specific exceptions inherit from `TunasError` and are importable from the top-level package.
 
 ```python
 from tunas import TunasError, ParseError, StandardsError
@@ -12,11 +11,10 @@ from tunas import TunasError, ParseError, StandardsError
 ```
 Exception
 └── TunasError                  Base class for all exceptions raised by tunas.
-    ├── ParseError              Raised by read_cl2(..., strict=True) on the first
-    │                           malformed record. Carries the offending warning.
+    ├── ParseError              Raised on fatal structural (M1) violations, or on
+    │                           any warning in strict=True mode. Carries the warning.
     └── StandardsError          Raised when time-standards data is missing,
-                                unreadable, or inconsistent for the requested
-                                quad / standard / event combination.
+                                unreadable, or inconsistent.
 ```
 
 ## `TunasError`
@@ -26,7 +24,7 @@ class TunasError(Exception):
     """Base class for all exceptions raised by tunas."""
 ```
 
-Catch this if you want to handle any tunas-specific failure uniformly:
+Catch `TunasError` to handle all library-specific failures uniformly:
 
 ```python
 try:
@@ -40,25 +38,25 @@ except TunasError as exc:
 
 ```python
 class ParseError(TunasError):
-    """Raised by read_cl2(..., strict=True) on the first malformed record."""
+    """Raised on a fatal (M1) violation, or on any problem under strict mode."""
 
     warning: ParseWarning           # the underlying warning
 ```
 
-`ParseError` is **only** raised in strict mode. The default lenient mode
-appends warnings to `ParseReport.warnings` and continues.
+`ParseError` is raised in two cases (see [parsing.md](parsing.md#error-model-m1-vs-m2-fields)):
 
-The `warning` attribute carries the full `ParseWarning` (source, line
-number, record type, reason, raw line) so error handlers can report the
-exact location of the failure:
+1. **M1 (structural) violations:** Missing or unparseable structural fields (e.g. swimmer name, sex, event distance, stroke, meet start date) always raise `ParseError` as the file layout is broken.
+2. **First warning under `strict=True`:** Minor M2 data-quality violations are promoted to a raised `ParseError`.
+
+The `warning` attribute contains the underlying [`ParseWarning`](parsing.md#parsewarning):
 
 ```python
 try:
     meets, _ = read_cl2(path, strict=True)
 except ParseError as exc:
     w = exc.warning
-    print(f"{w.source}:{w.line_no} ({w.record_type}): {w.reason}")
-    print(f"  {w.raw_line!r}")
+    print(f"{w.source}:{w.line_no} [{w.severity.value}] "
+          f"{w.record_type}.{w.field}: {w.reason}")
 ```
 
 ## `StandardsError`
@@ -68,22 +66,13 @@ class StandardsError(TunasError):
     """Raised when time-standards data is missing or inconsistent."""
 ```
 
-Raised by `tunas.standards.*` functions when:
+Raised by `tunas.standards` when:
+- The bundled JSON file cannot be read.
+- An internal data consistency check fails.
 
-- The requested `quad` (e.g. `"2025-2028"`) is not bundled with this
-  release.
-- The bundled JSON file is corrupt or cannot be read (this should never
-  happen in a released wheel, but is surfaced rather than swallowed).
-- An internal consistency check fails — for example, two standards
-  with the same `(standard, age_group, sex, event)` key.
+## Post-parse warning validation
 
-Functions in `tunas.standards` that take a `quad=` kwarg raise
-`StandardsError` for an unknown quad, never `KeyError` or `ValueError`.
-
-## Catching all parse warnings as errors
-
-If you want a "strict in production, lenient in dev" pattern, lenient
-mode plus a post-parse check is the idiomatic approach:
+To collect all warnings instead of failing immediately, parse in lenient mode and check the report:
 
 ```python
 meets, report = read_cl2(path)
@@ -91,5 +80,4 @@ if report.warnings:
     raise ParseError(report.warnings[0])
 ```
 
-This avoids `strict=True`'s fail-fast behavior — you get the *full* list
-of bad records in the report, and decide what to do based on policy.
+
