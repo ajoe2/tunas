@@ -49,6 +49,10 @@ _COURSE_MAP: dict[str, Course] = {
     "L": Course.LCM,
 }
 
+# EVENT AGE Code 025 open-ended markers: "UN"der (no lower bound) / "OV"er (no upper).
+_AGE_OPEN_LOW = "UN"
+_AGE_OPEN_HIGH = "OV"
+
 
 class Record:
     """A single padded SDIF line, sliced by 1-indexed ``start/length``."""
@@ -156,15 +160,15 @@ def event_age_value(raw: str) -> tuple[str, int | None, int | None]:
     field = raw[:4]
     lo_s, hi_s = field[0:2].strip().upper(), field[2:4].strip().upper()
 
-    def one(token: str, sentinel: str) -> tuple[bool, int | None]:
-        if token in (sentinel, ""):
+    def one(token: str, open_marker: str) -> tuple[bool, int | None]:
+        if token in (open_marker, ""):
             return True, None
         if token.isdigit():
             return True, int(token)
         return False, None
 
-    lo_ok, lo = one(lo_s, "UN")
-    hi_ok, hi = one(hi_s, "OV")
+    lo_ok, lo = one(lo_s, _AGE_OPEN_LOW)
+    hi_ok, hi = one(hi_s, _AGE_OPEN_HIGH)
     if not (lo_ok and hi_ok):
         return "bad", None, None
     return "ok", lo, hi

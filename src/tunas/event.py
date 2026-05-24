@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from functools import total_ordering
 
 from tunas.enums import Course, Stroke
 
@@ -19,10 +20,12 @@ _SCY = Course.SCY
 _SCM = Course.SCM
 _LCM = Course.LCM
 
-# Standard medley-relay leg order.
+# Standard medley-relay leg order, and the (all-freestyle) free-relay legs.
 _MEDLEY_LEG_STROKES = (_BACK, _BREAST, _FLY, _FREE)
+_FREE_LEG_STROKES = (_FREE, _FREE, _FREE, _FREE)
 
 
+@total_ordering
 class Event(Enum):
     """A unique swimming event. Value is ``(distance, stroke, course)``.
 
@@ -156,7 +159,7 @@ class Event(Enum):
             raise ValueError(f"{self.name} is not a relay")
         if self.stroke is _MEDLEY_R:
             return list(_MEDLEY_LEG_STROKES)
-        return [_FREE, _FREE, _FREE, _FREE]
+        return list(_FREE_LEG_STROKES)
 
     def leg_event(self, order: int) -> Event:
         """The individual :class:`Event` swum on leg ``order`` (1-4).
@@ -175,25 +178,11 @@ class Event(Enum):
         return event
 
     # --- Ordering by declaration order ---
+    # ``@total_ordering`` derives ``<=``, ``>``, ``>=`` from ``__lt__`` + ``Enum.__eq__``.
 
     def __lt__(self, other: object) -> bool:
         if isinstance(other, Event):
             return _ORDER[self] < _ORDER[other]
-        return NotImplemented
-
-    def __le__(self, other: object) -> bool:
-        if isinstance(other, Event):
-            return _ORDER[self] <= _ORDER[other]
-        return NotImplemented
-
-    def __gt__(self, other: object) -> bool:
-        if isinstance(other, Event):
-            return _ORDER[self] > _ORDER[other]
-        return NotImplemented
-
-    def __ge__(self, other: object) -> bool:
-        if isinstance(other, Event):
-            return _ORDER[self] >= _ORDER[other]
         return NotImplemented
 
 

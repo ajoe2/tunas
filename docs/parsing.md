@@ -17,6 +17,7 @@ def read_cl2(
     strict: bool = False,
     encoding: str = "cp1252",
     errors: str = "replace",
+    max_workers: int = 1,
 ) -> tuple[list[Meet], ParseReport]: ...
 ```
 
@@ -28,6 +29,17 @@ def read_cl2(
 | `strict` | `bool` | If `True`, any warning raises a `ParseError`. If `False` (default), collects warnings and continues. **M1 structural violations always raise.** |
 | `encoding` | `str` | Text encoding for file paths. Defaults to `"cp1252"` (common for SDIF/DOS files) to preserve alignments and accented names. |
 | `errors` | `str` | Encoding error policy. Defaults to `"replace"`. |
+| `max_workers` | `int` | Maximum parser threads. Defaults to `1` (sequential). With `max_workers > 1`, files are parsed concurrently — one file per task — and results are merged back **in source order**, so the output is identical to the sequential default. Must be `>= 1`. |
+
+### Parallel parsing
+
+By default files are parsed one at a time. Pass `max_workers > 1` to parse a directory or list of files concurrently on a thread pool:
+
+```python
+meets, report = read_cl2("season_archive/", max_workers=8)
+```
+
+The result is byte-for-byte identical to the sequential parse regardless of thread scheduling: each file is parsed by its own independent engine, and the per-file `Meet` lists and `ParseReport`s are merged back in source order. Because the per-record parsing holds the GIL, the speed-up comes mainly from overlapping file I/O, so it scales best across **many** files. A single text stream is always parsed inline (`max_workers` has no effect). In `strict` mode the earliest failing file's `ParseError` is raised.
 
 ### Source types
 

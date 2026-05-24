@@ -4,14 +4,17 @@ Reads the six B–AAAA workbooks (each with per-age-group sheets) from the sourc
 directory and writes ``src/tunas/_data/standards-2025-2028.json``. NOT shipped in
 the wheel; run manually when standards change:
 
-    uv run python scripts/convert_standards.py [SOURCE_DIR]
+    uv run python scripts/convert_standards.py <SOURCE_DIR>
+    TUNAS_STANDARDS_SRC=<SOURCE_DIR> uv run python scripts/convert_standards.py
 
-``SOURCE_DIR`` defaults to the original tunas-cli data directory.
+``SOURCE_DIR`` is the directory holding the B–AAAA ``.xlsx`` workbooks; provide it
+as the first argument or via the ``TUNAS_STANDARDS_SRC`` environment variable.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -60,7 +63,7 @@ _MERGED_DISTANCE: dict[str, dict[str, int]] = {
     "1500/1650": {"SCY": 1650, "SCM": 1500, "LCM": 1500},
 }
 
-_DEFAULT_SOURCE = Path("/storage_slow/ajoe/code/tunas-cli/data/timeStandards")
+_ENV_SOURCE = "TUNAS_STANDARDS_SRC"
 _OUTPUT = (
     Path(__file__).resolve().parent.parent / "src" / "tunas" / "_data" / "standards-2025-2028.json"
 )
@@ -103,6 +106,7 @@ def _resolve_event(label: str, course: str) -> Event | None:
 
 def convert(source_dir: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
+    unresolved: set[tuple[str, str]] = set()
     for filename, standard in _FILES.items():
         wb = openpyxl.load_workbook(source_dir / filename, read_only=True, data_only=True)
         sheets = wb.sheetnames[1:]  # skip "Source"
@@ -124,6 +128,9 @@ def convert(source_dir: Path) -> list[dict[str, object]]:
                         continue
                     event = _resolve_event(label, course)
                     if event is None:
+                        # A real cutoff we couldn't map to an Event — flag it rather
+                        # than silently dropping (e.g. a new/renamed distance).
+                        unresolved.add((label, course))
                         continue
                     rows.append(
                         {
@@ -135,12 +142,25 @@ def convert(source_dir: Path) -> list[dict[str, object]]:
                         }
                     )
         wb.close()
+    for label, course in sorted(unresolved):
+        print(f"warning: dropped cutoff for unresolved event {label!r} ({course})", file=sys.stderr)
     return rows
 
 
+def _source_dir() -> Path:
+    if len(sys.argv) > 1:
+        return Path(sys.argv[1])
+    env = os.environ.get(_ENV_SOURCE)
+    if env:
+        return Path(env)
+    raise SystemExit(
+        f"no source directory: pass it as the first argument or set ${_ENV_SOURCE} "
+        "(the directory holding the B–AAAA .xlsx workbooks)"
+    )
+
+
 def main() -> None:
-    source = Path(sys.argv[1]) if len(sys.argv) > 1 else _DEFAULT_SOURCE
-    rows = convert(source)
+    rows = convert(_source_dir())
     # Detect duplicates (would break the runtime index).
     seen: set[tuple[object, ...]] = set()
     for r in rows:

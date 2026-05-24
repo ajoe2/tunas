@@ -79,7 +79,9 @@ Motivational standards are bundled as JSON and lazily loaded into an O(1) index 
 
 ### Lightweight runtime footprint
 
-`tunas` depends exclusively on the standard library, keeping the runtime footprint light.
+At present `tunas` relies only on the Python standard library at runtime. This reflects the
+current scope rather than a zero-dependency rule — third-party libraries are adopted on merit
+where they are the better tool.
 
 ### Pythonic API
 

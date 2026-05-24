@@ -14,7 +14,7 @@ A Python library for parsing and analyzing USA Swimming meet result files (`.cl2
 pip install tunas
 ```
 
-Requires Python 3.12+ and has zero third-party runtime dependencies.
+Requires Python 3.12+. At present the runtime depends only on the Python standard library.
 
 ## Quick example
 

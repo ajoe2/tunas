@@ -10,9 +10,9 @@ from __future__ import annotations
 import datetime
 from collections import Counter
 from collections.abc import Callable, Iterable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from enum import StrEnum
-from typing import NoReturn, TypeVar
+from typing import NoReturn, TypedDict, TypeVar
 
 from tunas._parser.diagnostics import IssueKind, ParseReport, ParseWarning, Severity
 from tunas._parser.fields import (
@@ -53,6 +53,7 @@ from tunas.event import Event
 from tunas.exceptions import ParseError
 from tunas.geography import LSC, Country, State
 from tunas.models import (
+    CitizenshipOrCountry,
     Club,
     ClubEntryCounts,
     IndividualSwim,
@@ -87,6 +88,104 @@ _AFFILIATION_COLUMNS: list[tuple[int, Affiliation]] = [
     (40, Affiliation.DISABLED_SPORTS),
     (41, Affiliation.WATER_POLO),
 ]
+# A D3 affiliation flag counts as set when its byte is one of these.
+_AFFIRMATIVE = {"Y", "T", "1"}
+
+# COURSE-byte columns tried in priority order, falling back to the meet's course.
+_D0_COURSE_COLS = [124, 106, 115, 97]
+_E0_COURSE_COLS = [81, 63, 72, 54]
+
+# G0 split layout: ten 8-char split-time slots starting at column 64.
+_SPLITS_PER_RECORD = 10
+_SPLIT_WIDTH = 8
+_FIRST_SPLIT_COL = 64
+
+
+@dataclass(frozen=True)
+class SessionColumns:
+    """1-indexed start columns for one session's result fields on a D0/E0 record."""
+
+    session: Session
+    time: int
+    course: int
+    heat: int | None
+    lane: int | None
+    place: int | None
+    points: int | None
+
+
+# Per-session result columns for the three sessions on a D0 (individual) record.
+_INDIVIDUAL_SESSIONS = (
+    SessionColumns(
+        Session.PRELIMS, time=98, course=106, heat=125, lane=127, place=133, points=None
+    ),
+    SessionColumns(
+        Session.SWIM_OFFS, time=107, course=115, heat=None, lane=None, place=None, points=None
+    ),
+    SessionColumns(Session.FINALS, time=116, course=124, heat=129, lane=131, place=136, points=139),
+)
+# ...and on an E0 (relay) record.
+_RELAY_SESSIONS = (
+    SessionColumns(Session.PRELIMS, time=55, course=63, heat=82, lane=84, place=90, points=None),
+    SessionColumns(
+        Session.SWIM_OFFS, time=64, course=72, heat=None, lane=None, place=None, points=None
+    ),
+    SessionColumns(Session.FINALS, time=73, course=81, heat=86, lane=88, place=93, points=96),
+)
+
+
+@dataclass(frozen=True)
+class _SessionResult:
+    """Result fields parsed from one session column-group, before model assembly."""
+
+    session: Session
+    status: ResultStatus
+    time: Time | None
+    heat: int | None
+    lane: int | None
+    rank: int | None
+    points: float | None
+
+
+class _CommonResultFields(TypedDict):
+    """The ``MeetResult`` fields shared by an individual swim and a relay."""
+
+    meet: Meet
+    club: Club | None
+    organization: Organization
+    event: Event
+    event_min_age: int | None
+    event_max_age: int | None
+    event_sex: Sex
+    event_number: str | None
+    date: datetime.date | None
+    seed_time: Time | None
+    seed_course: Course | None
+    event_min_time_class: EventTimeClass | None
+    event_max_time_class: EventTimeClass | None
+
+
+@dataclass(frozen=True)
+class _Z0Check:
+    """One Z0 declared-vs-parsed count check. ``letter`` is the record-type letter
+    to tally, or ``None`` for the meet count."""
+
+    column: str
+    start: int
+    length: int
+    letter: str | None
+    label: str
+
+
+_Z0_CHECKS = (
+    _Z0Check("44/3", 44, 3, "B", "B records"),
+    _Z0Check("47/3", 47, 3, None, "meets"),
+    _Z0Check("50/4", 50, 4, "C", "C records"),
+    _Z0Check("58/6", 58, 6, "D", "D records"),
+    _Z0Check("70/5", 70, 5, "E", "E records"),
+    _Z0Check("75/6", 75, 6, "F", "F records"),
+    _Z0Check("81/6", 81, 6, "G", "G records"),
+)
 
 
 class _Engine:
@@ -224,6 +323,10 @@ class _Engine:
             rec.line,
         )
 
+    def _skip_orphan(self, rec: Record, reason: str) -> None:
+        """Skip a record that arrived without its required parent context."""
+        self._warn(rec, None, None, None, Severity.SKIPPED, IssueKind.ORPHANED, reason)
+
     def _fatal(
         self, rec: Record, field: str, column: str, mandatory: str, kind: IssueKind, reason: str
     ) -> NoReturn:
@@ -322,7 +425,7 @@ class _Engine:
         _, val = int_value(rec.raw(start, length))
         return val
 
-    def _citizenship(self, rec: Record, start: int, length: int) -> Citizenship | Country | None:
+    def _citizenship(self, rec: Record, start: int, length: int) -> CitizenshipOrCountry | None:
         v = rec.raw(start, length).strip()
         if not v:
             return None
@@ -463,7 +566,7 @@ class _Engine:
         middle: str | None,
         sex: Sex,
         birthday: datetime.date | None,
-        citizenship: Citizenship | Country | None,
+        citizenship: CitizenshipOrCountry | None,
         preferred: str | None,
     ) -> Swimmer | None:
         st = self.state
@@ -674,15 +777,7 @@ class _Engine:
     def _h_d0(self, rec: Record) -> None:
         st = self.state
         if st is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "D0 with no preceding B1 meet",
-            )
+            self._skip_orphan(rec, "D0 with no preceding B1 meet")
             return
         org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
         last, first, middle = parse_name(self._require_text(rec, 12, 28, "swimmer_name", "12/28"))
@@ -730,7 +825,7 @@ class _Engine:
             # swim — skip the whole record (lenient) / raise (strict). This is NOT a
             # fatal M1: one bad/odd record (e.g. a diving event with stroke "H") must
             # not abort an otherwise-valid file.
-            course = self._event_course(rec, [124, 106, 115, 97], st.meet.course)
+            course = self._event_course(rec, _D0_COURSE_COLS, st.meet.course)
             event = (
                 Event.find(dist, stroke, course)
                 if all(present)
@@ -757,39 +852,42 @@ class _Engine:
                 st.last_leaf = None
                 return
             assert esex is not None
-            seed_t = self._opt_time(rec, 89)
-            seed_c = self._opt_course(rec, 97)
             min_tc, max_tc = self._time_classes(rec, 143)
             champ = st.meet.meet_type in _CHAMPIONSHIP
-            shared: dict[str, object] = dict(
-                meet=st.meet,
-                club=None if st.unattached else st.current_club,
-                organization=org,
-                event=event,
-                event_min_age=emin,
-                event_max_age=emax,
-                event_sex=esex,
-                event_number=rec.text(73, 4),
-                date=date_of_swim,
-                seed_time=seed_t,
-                seed_course=seed_c,
-                event_min_time_class=min_tc,
-                event_max_time_class=max_tc,
-                swimmer=swimmer,
-                swimmer_age_class=age_class,
-                attach_status=attach_status,
-            )
-            specs = [
-                (Session.PRELIMS, 98, 106, 125, 127, 133, None),
-                (Session.SWIM_OFFS, 107, 115, None, None, None, None),
-                (Session.FINALS, 116, 124, 129, 131, 136, 139),
-            ]
-            for session, t_pos, c_pos, h_pos, l_pos, p_pos, pts_pos in specs:
-                r = self._individual_session(
-                    rec, session, t_pos, c_pos, h_pos, l_pos, p_pos, pts_pos, champ, shared
+            common: _CommonResultFields = {
+                "meet": st.meet,
+                "club": None if st.unattached else st.current_club,
+                "organization": org,
+                "event": event,
+                "event_min_age": emin,
+                "event_max_age": emax,
+                "event_sex": esex,
+                "event_number": rec.text(73, 4),
+                "date": date_of_swim,
+                "seed_time": self._opt_time(rec, 89),
+                "seed_course": self._opt_course(rec, 97),
+                "event_min_time_class": min_tc,
+                "event_max_time_class": max_tc,
+            }
+            for cols in _INDIVIDUAL_SESSIONS:
+                sr = self._parse_session(rec, cols, champ, "time")
+                if sr is None:
+                    continue
+                results.append(
+                    IndividualSwim(
+                        session=sr.session,
+                        status=sr.status,
+                        time=sr.time,
+                        heat=sr.heat,
+                        lane=sr.lane,
+                        rank=sr.rank,
+                        points=sr.points,
+                        swimmer=swimmer,
+                        swimmer_age_class=age_class,
+                        attach_status=attach_status,
+                        **common,
+                    )
                 )
-                if r is not None:
-                    results.append(r)
 
         if id_short:
             target = self._register_swimmer(swimmer, results)
@@ -800,20 +898,15 @@ class _Engine:
         st.current_individual_swims = results
         st.last_leaf = "individual"
 
-    def _individual_session(
-        self,
-        rec: Record,
-        session: Session,
-        t_pos: int,
-        c_pos: int,
-        h_pos: int | None,
-        l_pos: int | None,
-        p_pos: int | None,
-        pts_pos: int | None,
-        champ: bool,
-        shared: dict[str, object],
-    ) -> IndividualSwim | None:
-        tag, val = time_value(rec.raw(t_pos, 8))
+    def _parse_session(
+        self, rec: Record, cols: SessionColumns, champ: bool, noun: str
+    ) -> _SessionResult | None:
+        """Parse one session's shared result fields, or ``None`` for a blank/bad time.
+
+        Used for both individual swims and relays; ``noun`` ("time" / "relay time")
+        only tunes the warning text so the two callers read identically.
+        """
+        tag, val = time_value(rec.raw(cols.time, 8))
         if tag == "blank":
             return None
         status = ResultStatus.OK
@@ -824,57 +917,58 @@ class _Engine:
         elif tag == "bad":
             self._warn(
                 rec,
-                f"{session.name.lower()}_time",
-                f"{t_pos}/8",
+                f"{cols.session.name.lower()}_time",
+                f"{cols.time}/8",
                 None,
                 Severity.RECOVERED,
                 IssueKind.MALFORMED,
-                "malformed time",
+                f"malformed {noun}",
             )
             return None
         else:
             assert isinstance(val, Time)
             time = val
-            ctag, _cv = course_value(rec.raw(c_pos, 1))
+            ctag, _cv = course_value(rec.raw(cols.course, 1))
             if ctag == "dq":
                 status = ResultStatus.DQ
             elif ctag == "blank":
                 self._warn(
                     rec,
                     "course",
-                    f"{c_pos}/1",
+                    f"{cols.course}/1",
                     "*",
                     Severity.RECOVERED,
                     IssueKind.MISSING,
-                    "course required when time present",
+                    f"course required when {noun} present",
                 )
             elif ctag == "unknown":
                 self._warn(
                     rec,
                     "course",
-                    f"{c_pos}/1",
+                    f"{cols.course}/1",
                     "*",
                     Severity.RECOVERED,
                     IssueKind.UNKNOWN_CODE,
                     "unknown course code",
                 )
         rank = (
-            self._place(rec, p_pos, f"{session.name.lower()}_place", f"{p_pos}/3", champ)
-            if p_pos is not None
+            self._place(
+                rec, cols.place, f"{cols.session.name.lower()}_place", f"{cols.place}/3", champ
+            )
+            if cols.place is not None
             else None
         )
         points = None
-        if pts_pos is not None:
-            _, points = decimal_value(rec.raw(pts_pos, 4))
-        return IndividualSwim(
-            session=session,
+        if cols.points is not None:
+            _, points = decimal_value(rec.raw(cols.points, 4))
+        return _SessionResult(
+            session=cols.session,
             status=status,
             time=time,
-            heat=self._opt_int(rec, h_pos, 2) if h_pos else None,
-            lane=self._opt_int(rec, l_pos, 2) if l_pos else None,
+            heat=self._opt_int(rec, cols.heat, 2) if cols.heat else None,
+            lane=self._opt_int(rec, cols.lane, 2) if cols.lane else None,
             rank=rank,
             points=points,
-            **shared,  # type: ignore[arg-type]
         )
 
     def _event_course(
@@ -897,15 +991,7 @@ class _Engine:
     def _h_d1(self, rec: Record) -> None:
         st = self.state
         if st is None or st.current_swimmer is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "D1 with no current swimmer",
-            )
+            self._skip_orphan(rec, "D1 with no current swimmer")
             return
         sw = st.current_swimmer
         self._update_contact(sw, phone_primary=rec.text(125, 12), phone_secondary=rec.text(137, 12))
@@ -920,15 +1006,7 @@ class _Engine:
     def _h_d2(self, rec: Record) -> None:
         st = self.state
         if st is None or st.current_swimmer is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "D2 with no current swimmer",
-            )
+            self._skip_orphan(rec, "D2 with no current swimmer")
             return
         sw = st.current_swimmer
         self._update_contact(
@@ -950,15 +1028,7 @@ class _Engine:
     def _h_d3(self, rec: Record) -> None:
         st = self.state
         if st is None or st.current_swimmer is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "D3 with no current swimmer",
-            )
+            self._skip_orphan(rec, "D3 with no current swimmer")
             return
         sw = st.current_swimmer
         id_long = normalize_id(rec.raw(3, 14))
@@ -972,7 +1042,7 @@ class _Engine:
         affiliations = frozenset(
             aff
             for col, aff in _AFFILIATION_COLUMNS
-            if rec.raw(col, 1).strip().upper() in ("Y", "T", "1")
+            if rec.raw(col, 1).strip().upper() in _AFFIRMATIVE
         )
         self._update_registration(
             sw,
@@ -1003,15 +1073,7 @@ class _Engine:
     def _h_e0(self, rec: Record) -> None:
         st = self.state
         if st is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "E0 with no preceding B1 meet",
-            )
+            self._skip_orphan(rec, "E0 with no preceding B1 meet")
             return
         self._commit_pending()
         org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
@@ -1022,7 +1084,7 @@ class _Engine:
         eage_tag, emin, emax = event_age_value(rec.raw(31, 4))
         date_of_swim = self._date(rec, 38, 8, "date", "38/8", "M2")
         # Unresolvable relay event -> skip record (lenient) / raise (strict), not fatal.
-        course = self._event_course(rec, [81, 63, 72, 54], st.meet.course)
+        course = self._event_course(rec, _E0_COURSE_COLS, st.meet.course)
         event = (
             Event.find(dist, stroke, course)
             if dist is not None
@@ -1049,152 +1111,53 @@ class _Engine:
             return
         assert esex is not None
 
-        seed_t = self._opt_time(rec, 46)
-        seed_c = self._opt_course(rec, 54)
         min_tc, max_tc = self._time_classes(rec, 100)
         total_age = self._opt_int(rec, 35, 3)
         champ = st.meet.meet_type in _CHAMPIONSHIP
-        shared: dict[str, object] = dict(
-            meet=st.meet,
-            club=None if st.unattached else st.current_club,
-            organization=org,
-            event=event,
-            event_min_age=emin,
-            event_max_age=emax,
-            event_sex=esex,
-            event_number=rec.text(27, 4),
-            date=date_of_swim,
-            seed_time=seed_t,
-            seed_course=seed_c,
-            event_min_time_class=min_tc,
-            event_max_time_class=max_tc,
-        )
+        common: _CommonResultFields = {
+            "meet": st.meet,
+            "club": None if st.unattached else st.current_club,
+            "organization": org,
+            "event": event,
+            "event_min_age": emin,
+            "event_max_age": emax,
+            "event_sex": esex,
+            "event_number": rec.text(27, 4),
+            "date": date_of_swim,
+            "seed_time": self._opt_time(rec, 46),
+            "seed_course": self._opt_course(rec, 54),
+            "event_min_time_class": min_tc,
+            "event_max_time_class": max_tc,
+        }
         st.current_relays = {}
-        specs = [
-            (Session.PRELIMS, 55, 63, 82, 84, 90, None),
-            (Session.SWIM_OFFS, 64, 72, None, None, None, None),
-            (Session.FINALS, 73, 81, 86, 88, 93, 96),
-        ]
-        for session, t_pos, c_pos, h_pos, l_pos, p_pos, pts_pos in specs:
-            relay = self._relay_session(
-                rec,
-                session,
-                t_pos,
-                c_pos,
-                h_pos,
-                l_pos,
-                p_pos,
-                pts_pos,
-                champ,
-                relay_letter,
-                total_age,
-                shared,
+        for cols in _RELAY_SESSIONS:
+            sr = self._parse_session(rec, cols, champ, "relay time")
+            if sr is None:
+                continue
+            relay = Relay(
+                session=sr.session,
+                status=sr.status,
+                time=sr.time,
+                relay_letter=relay_letter,
+                total_age=total_age,
+                heat=sr.heat,
+                lane=sr.lane,
+                rank=sr.rank,
+                points=sr.points,
+                **common,
             )
-            if relay is not None:
-                st.current_relays[session] = relay
+            st.meet.results.append(relay)
+            if relay.club is not None:
+                relay.club.results.append(relay)
+            self.report.relays_parsed += 1
+            st.current_relays[sr.session] = relay
         st.current_relay_legs = {}
         st.last_leaf = "relay"
-
-    def _relay_session(
-        self,
-        rec: Record,
-        session: Session,
-        t_pos: int,
-        c_pos: int,
-        h_pos: int | None,
-        l_pos: int | None,
-        p_pos: int | None,
-        pts_pos: int | None,
-        champ: bool,
-        relay_letter: str,
-        total_age: int | None,
-        shared: dict[str, object],
-    ) -> Relay | None:
-        tag, val = time_value(rec.raw(t_pos, 8))
-        if tag == "blank":
-            return None
-        status = ResultStatus.OK
-        time: Time | None = None
-        if tag == "status":
-            assert isinstance(val, ResultStatus)
-            status = val
-        elif tag == "bad":
-            self._warn(
-                rec,
-                f"{session.name.lower()}_time",
-                f"{t_pos}/8",
-                None,
-                Severity.RECOVERED,
-                IssueKind.MALFORMED,
-                "malformed relay time",
-            )
-            return None
-        else:
-            assert isinstance(val, Time)
-            time = val
-            ctag, _cv = course_value(rec.raw(c_pos, 1))
-            if ctag == "dq":
-                status = ResultStatus.DQ
-            elif ctag == "blank":
-                self._warn(
-                    rec,
-                    "course",
-                    f"{c_pos}/1",
-                    "*",
-                    Severity.RECOVERED,
-                    IssueKind.MISSING,
-                    "course required when relay time present",
-                )
-            elif ctag == "unknown":
-                self._warn(
-                    rec,
-                    "course",
-                    f"{c_pos}/1",
-                    "*",
-                    Severity.RECOVERED,
-                    IssueKind.UNKNOWN_CODE,
-                    "unknown course code",
-                )
-        rank = (
-            self._place(rec, p_pos, f"{session.name.lower()}_place", f"{p_pos}/3", champ)
-            if p_pos is not None
-            else None
-        )
-        points = None
-        if pts_pos is not None:
-            _, points = decimal_value(rec.raw(pts_pos, 4))
-        st = self.state
-        assert st is not None
-        relay = Relay(
-            session=session,
-            status=status,
-            time=time,
-            relay_letter=relay_letter,
-            total_age=total_age,
-            heat=self._opt_int(rec, h_pos, 2) if h_pos else None,
-            lane=self._opt_int(rec, l_pos, 2) if l_pos else None,
-            rank=rank,
-            points=points,
-            **shared,  # type: ignore[arg-type]
-        )
-        st.meet.results.append(relay)
-        if relay.club is not None:
-            relay.club.results.append(relay)
-        self.report.relays_parsed += 1
-        return relay
 
     def _h_f0(self, rec: Record) -> None:
         st = self.state
         if st is None or not st.current_relays:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "F0 relay name with no preceding E0 relay event",
-            )
+            self._skip_orphan(rec, "F0 relay name with no preceding E0 relay event")
             return
         last, first, middle = parse_name(self._require_text(rec, 23, 28, "swimmer_name", "23/28"))
         sex = self._require_code(rec, 76, 1, Sex, "sex", "76/1")
@@ -1271,15 +1234,7 @@ class _Engine:
     def _h_g0(self, rec: Record) -> None:
         st = self.state
         if st is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "G0 splits with no preceding swim",
-            )
+            self._skip_orphan(rec, "G0 splits with no preceding swim")
             return
         seq = self._require_int(rec, 56, 1, "sequence_number", "56/1")
         if seq < 1:
@@ -1301,20 +1256,12 @@ class _Engine:
 
         target_splits = self._g0_target(rec, session)
         if target_splits is None:
-            self._warn(
-                rec,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.ORPHANED,
-                "G0 splits could not be attached to a swim",
-            )
+            self._skip_orphan(rec, "G0 splits could not be attached to a swim")
             return
-        base = (seq - 1) * 10
-        for j in range(10):
-            start = 64 + j * 8
-            tag, val = time_value(rec.raw(start, 8))
+        base = (seq - 1) * _SPLITS_PER_RECORD
+        for j in range(_SPLITS_PER_RECORD):
+            start = _FIRST_SPLIT_COL + j * _SPLIT_WIDTH
+            tag, val = time_value(rec.raw(start, _SPLIT_WIDTH))
             if tag == "blank":
                 # Skip an empty slot rather than stopping: a blank early split
                 # followed by a recorded later split (e.g. only the final
@@ -1380,26 +1327,18 @@ class _Engine:
         actual_by_letter: Counter[str] = Counter()
         for rt, n in self.file_counts.items():
             actual_by_letter[rt[0]] += n
-        checks = [
-            ("44/3", 44, 3, actual_by_letter["B"], "B records"),
-            ("47/3", 47, 3, self.meets_this_file, "meets"),
-            ("50/4", 50, 4, actual_by_letter["C"], "C records"),
-            ("58/6", 58, 6, actual_by_letter["D"], "D records"),
-            ("70/5", 70, 5, actual_by_letter["E"], "E records"),
-            ("75/6", 75, 6, actual_by_letter["F"], "F records"),
-            ("81/6", 81, 6, actual_by_letter["G"], "G records"),
-        ]
-        for column, start, length, actual, label in checks:
-            tag, declared = int_value(rec.raw(start, length))
+        for chk in _Z0_CHECKS:
+            actual = self.meets_this_file if chk.letter is None else actual_by_letter[chk.letter]
+            tag, declared = int_value(rec.raw(chk.start, chk.length))
             if tag == "int" and declared != actual:
                 self._warn(
                     rec,
-                    label,
-                    column,
+                    chk.label,
+                    chk.column,
                     None,
                     Severity.RECOVERED,
                     IssueKind.COUNT_MISMATCH,
-                    f"Z0 declares {declared} {label} but parsed {actual}",
+                    f"Z0 declares {declared} {chk.label} but parsed {actual}",
                 )
 
 

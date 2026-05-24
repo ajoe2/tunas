@@ -40,6 +40,18 @@ from tunas.time import Time
 if TYPE_CHECKING:
     from tunas.enums import Session
 
+# A swimmer/leg citizenship is either one of the two non-country SDIF codes or a
+# country code (see :class:`~tunas.enums.Citizenship`).
+type CitizenshipOrCountry = Citizenship | Country
+
+# Relay leg position -> 1-based leg number (NOT_SWUM/ALTERNATE are absent).
+_LEG_NUMBERS: dict[RelayLegOrder, int] = {
+    RelayLegOrder.LEG_1: 1,
+    RelayLegOrder.LEG_2: 2,
+    RelayLegOrder.LEG_3: 3,
+    RelayLegOrder.LEG_4: 4,
+}
+
 __all__ = [
     "Swim",
     "MeetResult",
@@ -237,7 +249,7 @@ class RelaySwim(Swim):
     takeoff_time: int | None = None  # hundredths of a second
     course: Course | None = None
     swimmer_age_class: str | None = None
-    citizenship: Citizenship | Country | None = None
+    citizenship: CitizenshipOrCountry | None = None
     splits: list[Split] = field(default_factory=list)
 
     @property
@@ -250,17 +262,14 @@ class RelaySwim(Swim):
         relay_event = self.relay.event
         if relay_event is None or self.order is None:
             return None
-        try:
-            order_num = int(self.order)
-        except ValueError:  # ALTERNATE
-            order_num = None
-        if order_num is None or not (1 <= order_num <= 4):
-            # A free relay's legs are all the same event even for alternates;
-            # a medley alternate's stroke is undetermined.
-            if relay_event.stroke is Stroke.FREESTYLE_RELAY:
-                return relay_event.leg_event(1)
-            return None
-        return relay_event.leg_event(order_num)
+        leg_number = _LEG_NUMBERS.get(self.order)
+        if leg_number is not None:
+            return relay_event.leg_event(leg_number)
+        # ALTERNATE (no fixed leg): a free relay's legs are all the same event,
+        # so its event is still well-defined; a medley alternate's is not.
+        if relay_event.stroke is Stroke.FREESTYLE_RELAY:
+            return relay_event.leg_event(1)
+        return None
 
     @property
     def date(self) -> datetime.date | None:
@@ -293,7 +302,7 @@ class Swimmer:
     middle_initial: str | None = None
     preferred_first_name: str | None = None
     birthday: datetime.date | None = None
-    citizenship: Citizenship | Country | None = None
+    citizenship: CitizenshipOrCountry | None = None
     contact: SwimmerContact | None = None
     registration: SwimmerRegistration | None = None
     club: Club | None = None

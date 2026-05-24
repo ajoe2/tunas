@@ -31,16 +31,22 @@ class TimeStandard(IntEnum):
         return self.name
 
 
+# USA Swimming single-year age groups, as (inclusive upper bound, label) ordered
+# youngest first. Ages above the last bound fall into _OLDEST_AGE_GROUP.
+_AGE_GROUPS: tuple[tuple[int, str], ...] = (
+    (10, "10_U"),
+    (12, "11_12"),
+    (14, "13_14"),
+    (16, "15_16"),
+)
+_OLDEST_AGE_GROUP = "17_18"
+
+
 def _age_group(age: int) -> str:
-    if age <= 10:
-        return "10_U"
-    if age <= 12:
-        return "11_12"
-    if age <= 14:
-        return "13_14"
-    if age <= 16:
-        return "15_16"
-    return "17_18"
+    for upper, label in _AGE_GROUPS:
+        if age <= upper:
+            return label
+    return _OLDEST_AGE_GROUP
 
 
 @functools.cache
@@ -70,14 +76,17 @@ def _check_sex(sex: Sex) -> None:
         raise ValueError("time standards are defined for MALE/FEMALE only, not MIXED")
 
 
+def _cutoff(standard: TimeStandard, event: Event, age: int, sex: Sex) -> int | None:
+    """Cutoff in centiseconds for one (standard, event, age, sex), or ``None``."""
+    return _load_index().get((standard.name, _age_group(age), sex.value, event.name))
+
+
 def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard | None:
     """The fastest standard ``time`` achieves for the event/age/sex, or ``None``."""
     _check_sex(sex)
-    index = _load_index()
-    age_group = _age_group(age)
     best: TimeStandard | None = None
     for standard in TimeStandard:
-        cutoff = index.get((standard.name, age_group, sex.value, event.name))
+        cutoff = _cutoff(standard, event, age, sex)
         if cutoff is not None and time.centiseconds <= cutoff:
             best = standard
     return best
@@ -86,12 +95,10 @@ def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard 
 def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStandard]:
     """Every standard ``time`` qualifies for, ordered slowest first."""
     _check_sex(sex)
-    index = _load_index()
-    age_group = _age_group(age)
     return [
         standard
         for standard in TimeStandard
-        if (cutoff := index.get((standard.name, age_group, sex.value, event.name))) is not None
+        if (cutoff := _cutoff(standard, event, age, sex)) is not None
         and time.centiseconds <= cutoff
     ]
 
@@ -99,6 +106,5 @@ def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStan
 def standard_time(standard: TimeStandard, event: Event, age: int, sex: Sex) -> Time | None:
     """The cutoff time required to achieve ``standard``, or ``None`` if undefined."""
     _check_sex(sex)
-    index = _load_index()
-    cutoff = index.get((standard.name, _age_group(age), sex.value, event.name))
+    cutoff = _cutoff(standard, event, age, sex)
     return Time(cutoff) if cutoff is not None else None

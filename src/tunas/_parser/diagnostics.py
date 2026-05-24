@@ -6,7 +6,7 @@ Re-exported publicly from :mod:`tunas.parser`.
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 
 __all__ = ["Severity", "IssueKind", "ParseWarning", "ParseReport"]
 
@@ -56,6 +56,17 @@ class ParseReport:
     splits_parsed: int = 0
     records_skipped: int = 0  # records dropped entirely
     fields_recovered: int = 0  # nulled M2 fields (excludes COUNT_MISMATCH)
+
+    def merge(self, other: ParseReport) -> None:
+        """Fold ``other`` into this report: append its warnings and sum all counts.
+
+        Used to combine the independent per-file reports produced by a parallel
+        parse back into a single report (see :func:`tunas.read_cl2`).
+        """
+        self.warnings.extend(other.warnings)
+        for f in fields(self):
+            if f.name != "warnings":
+                setattr(self, f.name, getattr(self, f.name) + getattr(other, f.name))
 
     @property
     def has_warnings(self) -> bool:
