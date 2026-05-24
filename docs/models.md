@@ -28,7 +28,7 @@ list[Meet]                                ← read_cl2 returns one Meet per cl2 
     │       └── alternates : list[RelaySwim]    ← rostered but did not swim (order ALTERNATE)
     ├── swimmers  : list[Swimmer]
     │   └── Swimmer
-    │       ├── swims    : list[Swim]     ← IndividualSwims + RelaySwims
+    │       ├── swims    : list[IndividualSwim | RelaySwim]   ← common base: Swim
     │       └── club     : Club | None
     └── clubs     : list[Club]
         └── Club
@@ -60,6 +60,8 @@ Abstract base interface for a single swimmer's swim (subclassed by `IndividualSw
 | `swimmer_age_class` | `str \| None` | Age/class as printed. |
 | `splits` | `list[Split]` | Splits in distance order (empty if none). |
 | `is_relay_leg` | `bool` | `True` for a `RelaySwim`, `False` for an `IndividualSwim`. |
+
+`Swim` itself declares only the abstract `is_relay_leg`; the remaining members are provided by the two concrete subclasses (as fields or delegating properties). It serves as the common base for `isinstance` checks and as the documented interface. Collections of swims (e.g. `Swimmer.swims`) are typed as the concrete union `IndividualSwim | RelaySwim` so that attribute access on their elements is precise.
 
 ## `MeetResult`
 
@@ -175,7 +177,9 @@ class RelaySwim(Swim):
     citizenship: Citizenship | Country | None = None
     splits: list[Split] = field(default_factory=list)
 
-    is_relay_leg = True
+    @property
+    def is_relay_leg(self) -> bool:
+        return True
 ```
 
 ### Fields
@@ -281,8 +285,10 @@ class Swimmer:
     contact: SwimmerContact | None = None
     registration: SwimmerRegistration | None = None
     club: Club | None = None     
-    swims: list[Swim] = field(default_factory=list)  # Individual + Relay counting legs
+    swims: list[IndividualSwim | RelaySwim] = field(default_factory=list)  # individual swims + counting legs
 ```
+
+`swims` holds individual swims and counting relay legs (alternates are excluded). Its elements' common base is [`Swim`](#swim); it is typed as the concrete union for precise attribute access.
 
 ### Computed properties
 
@@ -294,7 +300,7 @@ class Swimmer:
 
 ### Methods
 
-#### `swims_in(event: Event) -> list[Swim]`
+#### `swims_in(event: Event) -> list[IndividualSwim | RelaySwim]`
 
 Returns swims for the individual event (e.g. flat-starts and relay legs matching the distance/stroke/course) in source order.
 

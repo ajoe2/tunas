@@ -1,0 +1,50 @@
+name: publish
+
+# Publishes to PyPI automatically when a GitHub Release is published.
+# Uses PyPI Trusted Publishing (OIDC) — no API token is stored in the repo.
+#
+# One-time setup on PyPI (https://pypi.org/manage/account/publishing/):
+#   add a Trusted Publisher (or, for the very first upload, a "pending publisher")
+#   with: owner = ajoe2, repository = tunas, workflow = publish.yml,
+#   environment = pypi.
+# Optionally protect the `pypi` GitHub Environment (repo Settings -> Environments).
+#
+# To release: bump __version__ in src/tunas/_version.py, then create a GitHub
+# Release whose tag equals that version (e.g. tag "v0.1.0" or "0.1.0").
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tunas
+    permissions:
+      id-token: write # required for Trusted Publishing (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Verify the release tag matches the package version
+        run: |
+          version="$(grep -oE '"[^"]+"' src/tunas/_version.py | tr -d '"')"
+          tag="${GITHUB_REF_NAME#v}"
+          echo "package version: $version | release tag: $tag"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::release tag '${GITHUB_REF_NAME}' != package version '${version}'"
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Check distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

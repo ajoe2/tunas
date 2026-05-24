@@ -27,7 +27,7 @@ A0                              File description (one per file)
 Z0                              File terminator (one per file)
 ```
 
-Each SDIF file normally contains one `B1` meet record, so `read_cl2` yields one `Meet` per file (or per `B1 ... Z0` block). Meets are independent; swimmers and clubs are derived strictly from their containing file. See [parsing.md](parsing.md#multi-file-semantics).
+Each SDIF file normally contains one `B1` meet record, so `read_cl2` yields one `Meet` per file (or per `B1 ... Z0` block). Meets are independent; swimmers and clubs are derived strictly from their containing file. See [parsing.md](parsing.md#per-meet-scope).
 
 ## Record types
 

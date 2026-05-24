@@ -1,0 +1,87 @@
+"""Structured parse diagnostics: ``Severity``, ``IssueKind``, ``ParseWarning``, ``ParseReport``.
+
+Re-exported publicly from :mod:`tunas.parser`.
+"""
+
+from __future__ import annotations
+
+import enum
+from dataclasses import dataclass, field
+
+__all__ = ["Severity", "IssueKind", "ParseWarning", "ParseReport"]
+
+
+class Severity(enum.Enum):
+    FATAL = "fatal"  # Structural (M1) violation; carried only by the raised ParseError
+    SKIPPED = "skipped"  # Record dropped entirely
+    RECOVERED = "recovered"  # Field set to None, record kept
+
+
+class IssueKind(enum.Enum):
+    MISSING = "missing"  # Blank mandatory field
+    MALFORMED = "malformed"  # Unparseable value (date/time/int)
+    UNKNOWN_CODE = "unknown_code"  # Invalid code-table value or unresolvable event
+    BAD_LENGTH = "bad_length"  # Over-long / unusable line
+    ORPHANED = "orphaned"  # No anchor record found
+    UNKNOWN_RECORD = "unknown_record"  # Unmodeled record header
+    COUNT_MISMATCH = "count_mismatch"  # Z0 declared count != parsed total
+
+
+@dataclass(frozen=True)
+class ParseWarning:
+    """A single structured diagnostic."""
+
+    source: str
+    line_no: int
+    record_type: str | None
+    field: str | None
+    column: str | None  # SDIF "start/length", e.g. "40/12"
+    mandatory: str | None  # "M1" | "M2" | "M1#" | "*" | "**" | None
+    severity: Severity
+    kind: IssueKind
+    reason: str
+    raw_line: str  # truncated to 200 chars
+
+
+@dataclass
+class ParseReport:
+    """Metrics and warnings for an entire ``read_cl2`` call."""
+
+    warnings: list[ParseWarning] = field(default_factory=list)
+    files_read: int = 0
+    meets_parsed: int = 0
+    swimmers_parsed: int = 0
+    individual_swims_parsed: int = 0
+    relays_parsed: int = 0
+    splits_parsed: int = 0
+    records_skipped: int = 0  # records dropped entirely
+    fields_recovered: int = 0  # nulled M2 fields (excludes COUNT_MISMATCH)
+
+    @property
+    def has_warnings(self) -> bool:
+        return bool(self.warnings)
+
+    @property
+    def by_severity(self) -> dict[Severity, list[ParseWarning]]:
+        out: dict[Severity, list[ParseWarning]] = {s: [] for s in Severity}
+        for w in self.warnings:
+            out[w.severity].append(w)
+        return out
+
+    def warnings_for(
+        self,
+        *,
+        record_type: str | None = None,
+        field: str | None = None,
+        severity: Severity | None = None,
+        kind: IssueKind | None = None,
+    ) -> list[ParseWarning]:
+        """Warnings filtered by any combination of attributes."""
+        return [
+            w
+            for w in self.warnings
+            if (record_type is None or w.record_type == record_type)
+            and (field is None or w.field == field)
+            and (severity is None or w.severity is severity)
+            and (kind is None or w.kind is kind)
+        ]

@@ -61,7 +61,11 @@ except ParseError as exc:
 
 ### M1 — fatal (always raises)
 
-Missing or unparseable structural fields indicate a broken layout and always raise `ParseError`. These include: record-type constants, swimmer/team names, competition sex, event distance/stroke/age/sex, and meet start dates.
+Missing or unparseable structural fields indicate a broken record and always raise `ParseError`. These include: the record-type constant, swimmer/team names, swimmer sex, meet name and start date, relay team code and letter, and the split sequence number / distance / type (`G0`).
+
+### Unresolvable events — skipped (not fatal)
+
+A swim's **event fields** (event sex, distance, stroke, age) are *not* treated as fatal M1. If they are missing-but-partial, carry an unknown code, or do not map to a known [`Event`](event.md) (e.g. a diving event with a non-swim stroke, or an impossible combination like `25 m` long course), the **record is skipped** with a `SKIPPED` warning in lenient mode and raises in strict mode. A single odd or invalid `D0`/`E0` never aborts an otherwise-valid file. (A `D0` with *all* event fields blank is a relay-only swimmer — see the `#` marker below — not an error.)
 
 ### M2 — recoverable (kept as `None`)
 
@@ -72,7 +76,7 @@ Data-quality fields skip corrupt/blank values with a `ParseWarning` (severity `R
 
 - **`*` (Conditional Course):** Course bytes (SDIF COURSE Code 013) are required only if time is present. Missing courses warn and set `course=None`. A course byte of `"X"` denotes a **disqualification**; the swim is kept with `status=DQ` and preserves its recorded `time`. The event course falls back to other sessions, seed course, or the `B1` default.
 - **`**` (Championship Place/Points):** Required only at championship meets. Missing values are kept as `None` with a warning.
-- **`#` (Relay-Only Swimmers):** Swimmer records with blank event parameters create a `Swimmer` without generating an `IndividualSwim`. Partial event parameters remain fatal M1 violations.
+- **`#` (Relay-Only Swimmers):** Swimmer records with *all* event parameters blank create a `Swimmer` without generating an `IndividualSwim`. Partial or invalid event parameters are not fatal — the record is skipped (see [Unresolvable events](#unresolvable-events--skipped-not-fatal)).
 
 ### Result outcomes (NT / NS / DNF / DQ / SCR)
 
@@ -84,13 +88,14 @@ outcome codes in time fields are kept as official results with `status` set to t
 - **Orphaned record:** Trailing `F0` (without `E0`) or `G0` (without `D0`/`F0`) is dropped and warns (`SKIPPED`/`ORPHANED`).
 - **Record length:** Lines under 160 characters are right-padded with blanks and parsed. Lines over 160 characters are skipped and warn.
 - **Unknown record type:** Unmodeled types (e.g. `J0`–`J2`) are skipped and warn (`UNKNOWN_RECORD`), preserving the raw line.
+- **Split sequence < 1:** A `G0` sequence number below 1 (which would imply negative cumulative split distances) is recovered to 1 with a `RECOVERED`/`MALFORMED` warning.
 
 ### Mode summary
 
 | Situation | Lenient (`strict=False`) | Strict (`strict=True`) |
 |---|---|---|
 | M1 field missing/unparseable | **raise `ParseError`** | raise `ParseError` |
-| Event fields valid but combo unresolvable | skip record + warn (`SKIPPED`) | raise `ParseError` |
+| Event fields invalid, partial, or unresolvable | skip record + warn (`SKIPPED`) | raise `ParseError` |
 | `D0` with no `id_short` **and** no `id_long` | skip record + warn (`SKIPPED`) | raise `ParseError` |
 | `F0` with no `id_short`/`id_long` | keep leg, `swimmer=None` + warn | raise `ParseError` |
 | Other M2 (dates, birthdate, etc.) | keep record, null field + warn | raise `ParseError` |
@@ -202,7 +207,8 @@ Detailed structural contracts enforced by the parser:
 - *M2:* team code, **coach name**. *Captures:* `coach_phone`, `entry_counts` (D0/athlete/E0/F0/G0 record counts), `short_name`.
 
 **`D0` — Individual event (Leaf)**
-- *M1:* `"D0"` header, swimmer **name**, **sex**; event **sex**, **distance**, **stroke**, **event age** (except `#` relay-only swimmers).
+- *M1 (fatal):* `"D0"` header, swimmer **name**, **sex**.
+- *Event (skipped if unresolvable, not fatal):* event **sex**, **distance**, **stroke**, **event age** — invalid/partial/unresolvable values skip the record; all blank ⇒ relay-only swimmer (`#`).
 - *M2:* ORG; **USS#** (`id_short` falling back to `D3`'s `id_long`); **date of swim**; **birth date**.
 - *`*`:* prelim/swim-off/finals **course** (mandatory if time present).
 - *`**`:* prelim/finals **place**, **points** (championship-only).
@@ -219,19 +225,22 @@ Detailed structural contracts enforced by the parser:
 - *Captures (PII):* Preferred first name, ethnicity (primary/secondary), D3 program affiliations.
 
 **`E0` — Relay event (Anchor)**
-- *M1:* `"E0"` header, **team letter**, **team code**, event **sex**, **distance**, **stroke**, **event age**.
+- *M1 (fatal):* `"E0"` header, relay **team letter**. (The relay attaches to the current `C1` club.)
+- *Event (skipped if unresolvable, not fatal):* event **sex**, **distance**, **stroke**, **event age**.
 - *M2:* ORG, **date of swim**.
 - *`*`/`**`:* session **courses** (if times present), place/points.
 - *Optional:* Combined squad `total_age`, seed time, event time class.
 
 **`F0` — Relay name (Leaf)**
-- *M1:* `"F0"` header, **team code**, swimmer **name**, **sex**, session **leg order**, **relay letter**.
+- *M1 (fatal):* `"F0"` header, **team code**, swimmer **name**, **sex**, **relay letter**.
+- *Leg order:* the three per-session ORDER codes select which sessions the swimmer raced; an unknown code or `NOT_SWUM` simply omits that session's leg (not fatal).
 - *M2:* ORG, **USS#** (`id_short`/`id_long`), **birth date**.
 - *Captures:* Leg time, takeoff time, course (`*`), age/class, citizenship, preferred name. Spans prelims/finals, fanning out into one `RelaySwim` per session swum.
 
 **`G0` — Splits (Leaf)**
-- *M1:* `"G0"` header, **sequence number**, **total split count**, **split distance**, **split type**.
+- *M1 (fatal):* `"G0"` header, **sequence number**, **split distance**, **split type**.
 - *Attaches to:* Preceding `IndividualSwim` or `RelaySwim` matching the G0 session code (`P`/`F`/`S`).
+- *Blank slots:* An empty split slot is skipped (not treated as end-of-list), so a record that fills only a later slot — e.g. just the final cumulative time — still contributes that split, at the cumulative distance implied by its slot position.
 
 **`Z0` — File terminator**
 - *M1:* `"Z0"` header. Resets parser context. Notes map to `SourceFile.notes`. FILE code is cross-checked against parsed record counts (mismatch warns).
@@ -246,6 +255,7 @@ Detailed structural contracts enforced by the parser:
 - **Relay alternates:** Swimmers with order `ALTERNATE` are routed to `Relay.alternates` instead of `legs`, and excluded from `Swimmer.swims`.
 - **Relay legs fanning out:** A single `F0` spanning multiple sessions creates one `RelaySwim` per session. The single `F0` leg time is filed on the finals leg; splits from `G0` records tag their respective session swims.
 - **Splits attachment:** Attachment links to the preceding `D0`/`F0` swum session based on the G0's `prelims/finals` code.
+- **Blank split slots:** Skipped individually; a recorded split in a later slot is still kept (no information is lost when an earlier split is missing).
 
 ## Performance
 

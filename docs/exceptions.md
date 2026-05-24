@@ -45,7 +45,7 @@ class ParseError(TunasError):
 
 `ParseError` is raised in two cases (see [parsing.md](parsing.md#error-model-m1-vs-m2-fields)):
 
-1. **M1 (structural) violations:** Missing or unparseable structural fields (e.g. swimmer name, sex, event distance, stroke, meet start date) always raise `ParseError` as the file layout is broken.
+1. **M1 (structural) violations:** Missing or unparseable structural fields (e.g. swimmer/team name, swimmer sex, meet name and start date, relay team code/letter, split sequence/distance/type) always raise `ParseError` as the record layout is broken. (Invalid or unresolvable *event* fields are not fatal — that record is skipped; see [parsing.md](parsing.md#unresolvable-events--skipped-not-fatal).)
 2. **First warning under `strict=True`:** Minor M2 data-quality violations are promoted to a raised `ParseError`.
 
 The `warning` attribute contains the underlying [`ParseWarning`](parsing.md#parsewarning):

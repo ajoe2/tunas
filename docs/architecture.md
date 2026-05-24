@@ -36,9 +36,11 @@ tunas/
 │   ├── standards.py            Time-standards lookups
 │   ├── _parser/                Per-record parsing logic (internal)
 │   └── _data/                  Bundled package data (JSON standards, spec doc)
-├── tests/                  Pytest suite and .cl2 test fixtures
+├── tests/                  Pytest suite (fully self-contained, no network)
+│   └── data/                   Committed real `.cl2` meets + golden expected JSON
 ├── scripts/                Developer tools (e.g., standard sheets parser)
-└── docs/                   Markdown documentation
+├── docs/                   Markdown documentation
+└── .github/workflows/      CI (test.yml) and PyPI release (publish.yml)
 ```
 
 The package uses a **src-layout** to ensure tests run against the installed wheel rather than the working directory.
@@ -82,4 +84,43 @@ Motivational standards are bundled as JSON and lazily loaded into an O(1) index 
 ### Pythonic API
 
 Data is exposed via plain attributes and properties rather than getter/setter methods, facilitating clean IDE auto-complete and static typing.
+
+## Development
+
+The project is managed with [`uv`](https://docs.astral.sh/uv/) and Python 3.12+.
+
+```bash
+uv sync                       # create/refresh the virtual environment (incl. dev deps)
+
+uv run pytest                 # run the test suite
+uv run pytest --cov=tunas     # run with coverage (gated at 95% via pyproject)
+uv run ruff check             # lint
+uv run ruff format            # auto-format (use --check in CI)
+uv run mypy src/tunas         # type-check (strict)
+```
+
+The test suite is **fully self-contained and offline**: real-world coverage comes
+from committed "golden" files under `tests/data/` (a real meet `.cl2` plus its
+hand-verified expected-state JSON), so no data download or external checkout is
+needed. CI (`.github/workflows/test.yml`) runs lint, type-check, and the
+coverage-gated suite on Python 3.12 and 3.13.
+
+> If `uv run pytest` fails with "Failed to spawn", the virtual environment is
+> stale (e.g. the project directory was renamed) — run `rm -rf .venv && uv sync`.
+
+### Releasing
+
+Releases publish to PyPI automatically via `.github/workflows/publish.yml`
+(PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) — no API
+token is stored). To cut a release:
+
+1. Bump `__version__` in `src/tunas/_version.py` and update `CHANGELOG.md`.
+2. Push, and let CI pass.
+3. Create a GitHub Release whose tag matches the version (e.g. `v0.1.0`). The
+   workflow verifies the tag matches `__version__`, builds the sdist + wheel,
+   runs `twine check`, and uploads to PyPI.
+
+One-time setup: register a Trusted Publisher (or a "pending publisher" for the
+first upload) on PyPI for owner `ajoe2`, repo `tunas`, workflow `publish.yml`,
+environment `pypi`.
 

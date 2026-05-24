@@ -53,6 +53,20 @@ Full documentation is available in [`docs/`](docs/):
 - [Parsing](docs/parsing.md) · [Models](docs/models.md) · [Time](docs/time.md) · [Event](docs/event.md) · [Enums](docs/enums.md) · [Exceptions](docs/exceptions.md) · [Standards](docs/standards.md)
 - [CL2 / SDIF v3 format](docs/cl2_format.md) · [Cookbook](docs/cookbook.md)
 
+## Development
+
+Managed with [`uv`](https://docs.astral.sh/uv/) (Python 3.12+):
+
+```bash
+uv sync                     # set up the environment
+uv run pytest               # run the (offline, self-contained) test suite
+uv run pytest --cov=tunas   # with coverage (gated at 95%)
+uv run ruff check && uv run mypy src/tunas   # lint + type-check
+```
+
+See [docs/architecture.md](docs/architecture.md#development) for the full
+workflow and the release process.
+
 ## Status
 
 `tunas` is in **alpha**. The API documented in `docs/` is stable, but breaking changes may occur before 1.0 based on real-world feedback.

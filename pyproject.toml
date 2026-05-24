@@ -59,6 +59,14 @@ dev = [
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 
+[tool.coverage.run]
+source = ["tunas"]
+
+[tool.coverage.report]
+# CI runs `pytest --cov=tunas`; this gates the result.
+fail_under = 95
+show_missing = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -71,3 +79,12 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 python_version = "3.12"
 strict = true
 files = ["src/tunas"]
+
+[tool.pyright]
+# Lets Pylance resolve the project venv (pytest, etc.) and the tests/ helpers
+# (conftest) that pytest puts on sys.path at runtime.
+include = ["src", "tests", "scripts"]
+extraPaths = ["tests"]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
