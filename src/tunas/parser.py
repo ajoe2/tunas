@@ -35,14 +35,24 @@ def read_cl2(
     errors: str = "replace",
     max_workers: int = 1,
 ) -> tuple[list[Meet], ParseReport]:
-    """Parse `.cl2` / SDIF v3 files into `(list[Meet], ParseReport)`.
+    """Parse `.cl2` / SDIF v3 files into a list of meets and a parse report.
 
-    `source` can be a file path, a directory (walked recursively for `*.cl2`), an iterable
-    of paths, or a text stream. Parsing is lenient by default; `strict=True` raises ParseError
-    on the first problem. M1 structural violations always raise.
+    Args:
+        source: File path, directory (walked recursively for `*.cl2`), iterable of paths,
+            or an open text stream.
+        strict: If True, raises ParseError on the first recovered/skipped warning.
+            Otherwise, parsing is lenient. Fatal M1 structural violations always raise.
+        encoding: Text encoding to use when opening file paths.
+        errors: Error handling scheme for decoding errors.
+        max_workers: Thread pool size for concurrent file parsing. Order is preserved.
 
-    `max_workers > 1` parses files concurrently on a thread pool (one file per thread).
-    Results are merged back in source order deterministically.
+    Returns:
+        A tuple of `(meets, report)` where `meets` is the list of parsed `Meet` objects
+        and `report` contains parsed counts and diagnostics.
+
+    Raises:
+        ParseError: If a fatal structural violation occurs, or in strict mode if any
+            parse warning is encountered.
     """
     return _read(
         source,
@@ -63,12 +73,27 @@ def read_hy3(
     errors: str = "replace",
     max_workers: int = 1,
 ) -> tuple[list[Meet], ParseReport]:
-    """Parse Hy-Tek `.hy3` result files into `(list[Meet], ParseReport)`.
+    """Parse Hy-Tek `.hy3` result files into a list of meets and a parse report.
 
-    Mirrors :func:`read_cl2`: `source` is a file path, a directory (walked recursively for
-    `*.hy3`), an iterable of paths, or a text stream, and the same `strict` / `encoding` /
-    `errors` / `max_workers` options apply. Only fields confirmed by the reverse-engineered
-    `.hy3` specification are parsed, into the same `Meet` object graph.
+    Only fields confirmed by the reverse-engineered `.hy3` specification are parsed
+    into the returned `Meet` object graph.
+
+    Args:
+        source: File path, directory (walked recursively for `*.hy3`), iterable of paths,
+            or an open text stream.
+        strict: If True, raises ParseError on the first recovered/skipped warning.
+            Otherwise, parsing is lenient. Fatal M1 structural violations always raise.
+        encoding: Text encoding to use when opening file paths.
+        errors: Error handling scheme for decoding errors.
+        max_workers: Thread pool size for concurrent file parsing. Order is preserved.
+
+    Returns:
+        A tuple of `(meets, report)` where `meets` is the list of parsed `Meet` objects
+        and `report` contains parsed counts and diagnostics.
+
+    Raises:
+        ParseError: If a fatal structural violation occurs, or in strict mode if any
+            parse warning is encountered.
     """
     return _read(
         source,

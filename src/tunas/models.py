@@ -77,7 +77,7 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Split:
-    """A split entry from a G0 record."""
+    """A split entry representing the swim time at a cumulative distance of a swim."""
 
     distance: int  # Cumulative distance from start (50, 100, 150, etc.)
     time: Time | None  # None if split was present but unparseable
@@ -86,7 +86,7 @@ class Split:
 
 @dataclass(frozen=True)
 class SwimmerContact:
-    """Contact details from D1/D2 (contains PII)."""
+    """Contact details for a swimmer (contains PII)."""
 
     address: str | None = None
     city: str | None = None
@@ -101,7 +101,7 @@ class SwimmerContact:
 
 @dataclass(frozen=True)
 class SwimmerRegistration:
-    """Registration and demographic details from D1/D2/D3 (contains sensitive PII)."""
+    """Registration and demographic details for a swimmer (contains sensitive PII)."""
 
     member_status: MemberStatus | None = None
     registration_date: datetime.date | None = None
@@ -389,7 +389,7 @@ class Club:
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Meet:
-    """A single meet parsed from an SDIF file's B1 block."""
+    """A single swimming meet containing clubs, swimmers, and results."""
 
     organization: Organization
     name: str

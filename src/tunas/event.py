@@ -29,8 +29,10 @@ _FREE_LEG_STROKES = (_FREE, _FREE, _FREE, _FREE)
 class Event(Enum):
     """A unique swimming event represented by a `(distance, stroke, course)` tuple.
 
-    Members are named `<STROKE>_<DISTANCE>_<COURSE>` for individual events and
-    `<STROKE>_<DISTANCE>_RELAY_<COURSE>` for relays. Supports declaration-order comparison.
+    Supports declaration-order comparison. Members are named with uppercase patterns
+    using abbreviated stroke names, e.g. `<STROKE>_<DISTANCE>_<COURSE>` (for individual
+    events like `FREE_50_SCY`) or `<STROKE>_<DISTANCE>_RELAY_<COURSE>` (for relays like
+    `MEDLEY_200_RELAY_LCM`).
     """
 
     # --- Individual, short course yards (SCY) ---
@@ -150,13 +152,27 @@ class Event(Enum):
         return self.stroke in (_FREE_R, _MEDLEY_R)
 
     def leg_distance(self) -> int:
-        """Per-leg distance (distance // 4). Raises ValueError for individual events."""
+        """Calculate the per-leg distance (total distance divided by 4).
+
+        Returns:
+            The distance of a single leg in the relay.
+
+        Raises:
+            ValueError: If the event is an individual swim rather than a relay.
+        """
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")
         return self.distance // 4
 
     def leg_strokes(self) -> list[Stroke]:
-        """The four leg strokes in order. Raises ValueError for individual events."""
+        """Get the ordered sequence of strokes swum on the four legs of this relay.
+
+        Returns:
+            A list of four `Stroke` values representing each leg in order.
+
+        Raises:
+            ValueError: If the event is an individual swim rather than a relay.
+        """
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")
         if self.stroke is _MEDLEY_R:
@@ -164,10 +180,17 @@ class Event(Enum):
         return list(_FREE_LEG_STROKES)
 
     def leg_event(self, order: int) -> Event:
-        """The individual Event swum on leg `order` (1-4).
+        """Resolve the individual `Event` swum on a specific relay leg.
 
-        >>> Event.MEDLEY_400_RELAY_SCY.leg_event(2)
-        <Event.BREAST_100_SCY: ...>
+        Args:
+            order: The 1-based leg position (must be between 1 and 4).
+
+        Returns:
+            The corresponding individual `Event` swum on that leg.
+
+        Raises:
+            ValueError: If this is an individual event, or if `order` is not
+                between 1 and 4 inclusive.
         """
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")

@@ -69,7 +69,18 @@ class Record:
 
 
 def course_value(raw: str) -> tuple[str, Course | None]:
-    """Resolve a course value."""
+    """Parse and resolve a course value from a raw fixed-width string.
+
+    Args:
+        raw: The raw fixed-width string containing a course code.
+
+    Returns:
+        A tuple of `(status, course)` where `status` is one of:
+        - `"ok"`: Successfully parsed; `course` is a `Course` enum.
+        - `"blank"`: The field was blank or whitespace-only; `course` is `None`.
+        - `"dq"`: A disqualified course sentinel `"X"`; `course` is `None`.
+        - `"unknown"`: An invalid or unrecognized course code; `course` is `None`.
+    """
     v = raw.strip().upper()
     if not v:
         return "blank", None
@@ -82,7 +93,18 @@ def course_value(raw: str) -> tuple[str, Course | None]:
 
 
 def time_value(raw: str) -> tuple[str, Time | ResultStatus | None]:
-    """Resolve a swim time value."""
+    """Parse and resolve a swim time or non-time status from a raw fixed-width string.
+
+    Args:
+        raw: The raw fixed-width string containing a time or non-time code.
+
+    Returns:
+        A tuple of `(status, value)` where `status` is one of:
+        - `"time"`: Successfully parsed; `value` is a `Time` instance.
+        - `"status"`: Recognized non-time outcome (e.g. `"NS"`, `"DQ"`); `value` is a `ResultStatus`.
+        - `"blank"`: The field was blank; `value` is `None`.
+        - `"bad"`: An unparseable or invalid time string; `value` is `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None
@@ -96,7 +118,17 @@ def time_value(raw: str) -> tuple[str, Time | ResultStatus | None]:
 
 
 def date_value(raw: str) -> tuple[str, datetime.date | None]:
-    """Parse an MMDDYYYY date."""
+    """Parse a date string formatted as `MMDDYYYY` into a date object.
+
+    Args:
+        raw: The raw 8-character fixed-width string.
+
+    Returns:
+        A tuple of `(status, date)` where `status` is one of:
+        - `"date"`: Successfully parsed; `date` is a `datetime.date`.
+        - `"blank"`: The field was blank; `date` is `None`.
+        - `"bad"`: Malformed date format or an invalid date (e.g. 13th month); `date` is `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None
@@ -110,7 +142,17 @@ def date_value(raw: str) -> tuple[str, datetime.date | None]:
 
 
 def int_value(raw: str) -> tuple[str, int | None]:
-    """Parse an integer value."""
+    """Parse an integer value from a raw fixed-width string.
+
+    Args:
+        raw: The raw fixed-width string.
+
+    Returns:
+        A tuple of `(status, value)` where `status` is one of:
+        - `"int"`: Successfully parsed; `value` is an `int`.
+        - `"blank"`: The field was blank; `value` is `None`.
+        - `"bad"`: Non-numeric or otherwise unparseable string; `value` is `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None
@@ -121,7 +163,17 @@ def int_value(raw: str) -> tuple[str, int | None]:
 
 
 def decimal_value(raw: str) -> tuple[str, float | None]:
-    """Parse a float value."""
+    """Parse a decimal/float value from a raw fixed-width string.
+
+    Args:
+        raw: The raw fixed-width string.
+
+    Returns:
+        A tuple of `(status, value)` where `status` is one of:
+        - `"dec"`: Successfully parsed; `value` is a `float`.
+        - `"blank"`: The field was blank; `value` is `None`.
+        - `"bad"`: Unparseable non-numeric float string; `value` is `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None
@@ -132,7 +184,18 @@ def decimal_value(raw: str) -> tuple[str, float | None]:
 
 
 def code_value[E: StrEnum](raw: str, enum_cls: type[E]) -> tuple[str, E | None]:
-    """Resolve an SDIF code-table enum value."""
+    """Resolve a raw code-table string into a specific StrEnum class member.
+
+    Args:
+        raw: The raw fixed-width string.
+        enum_cls: The specific StrEnum subclass to resolve into.
+
+    Returns:
+        A tuple of `(status, enum_member)` where `status` is one of:
+        - `"ok"`: Code successfully matched; `enum_member` is a member of `enum_cls`.
+        - `"blank"`: The field was blank; `enum_member` is `None`.
+        - `"unknown"`: Code is not a valid member of `enum_cls`; `enum_member` is `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None
@@ -143,7 +206,20 @@ def code_value[E: StrEnum](raw: str, enum_cls: type[E]) -> tuple[str, E | None]:
 
 
 def event_age_value(raw: str) -> tuple[str, int | None, int | None]:
-    """Parse a 4-byte EVENT AGE Code 025 (UN/OV map to None)."""
+    """Parse a 4-byte EVENT AGE Code 025 field into minimum and maximum age bounds.
+
+    Open-ended bounds represented by sentinels (e.g. `'UN'` for under or `'OV'` for over)
+    map to `None` to indicate no lower/upper limit.
+
+    Args:
+        raw: The raw 4-character fixed-width string.
+
+    Returns:
+        A tuple of `(status, min_age, max_age)` where `status` is one of:
+        - `"ok"`: Parsing succeeded; `min_age` and `max_age` are bounds (each `int` or `None`).
+        - `"blank"`: The field was blank; bounds are both `None`.
+        - `"bad"`: The field contained malformed or unrecognized characters; bounds are both `None`.
+    """
     v = raw.strip()
     if not v:
         return "blank", None, None

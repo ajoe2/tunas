@@ -82,7 +82,23 @@ def _cutoff(standard: TimeStandard, event: Event, age: int, sex: Sex) -> int | N
 
 
 def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard | None:
-    """Fastest standard achieved for event/age/sex, or None."""
+    """Determine the fastest USA Swimming motivational standard achieved for the given event, age, and sex.
+
+    Uses a youngest-first lookup for the swimmer's age group (10 & Under, 11-12, 13-14, 15-16, 17-18).
+
+    Args:
+        time: The swimmer's time.
+        event: The event.
+        age: The swimmer's age in years.
+        sex: The swimmer's sex (must be MALE or FEMALE).
+
+    Returns:
+        The fastest achieved `TimeStandard` (from slowest B to fastest AAAA), or `None`
+        if the time does not qualify for any motivational standard.
+
+    Raises:
+        ValueError: If `sex` is `Sex.MIXED`.
+    """
     _check_sex(sex)
     best: TimeStandard | None = None
     for standard in TimeStandard:
@@ -93,7 +109,20 @@ def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard 
 
 
 def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStandard]:
-    """All standards qualified for, ordered slowest first."""
+    """Retrieve all USA Swimming motivational standards qualified for by the given time.
+
+    Args:
+        time: The swimmer's time.
+        event: The event.
+        age: The swimmer's age in years.
+        sex: The swimmer's sex (must be MALE or FEMALE).
+
+    Returns:
+        A list of all qualified `TimeStandard` values, ordered from slowest (B) to fastest (AAAA).
+
+    Raises:
+        ValueError: If `sex` is `Sex.MIXED`.
+    """
     _check_sex(sex)
     return [
         standard
@@ -104,7 +133,21 @@ def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStan
 
 
 def standard_time(standard: TimeStandard, event: Event, age: int, sex: Sex) -> Time | None:
-    """Cutoff time required to achieve standard, or None if undefined."""
+    """Get the cutoff time required to achieve a specific motivational standard.
+
+    Args:
+        standard: The target motivational standard.
+        event: The event.
+        age: The swimmer's age in years.
+        sex: The swimmer's sex (must be MALE or FEMALE).
+
+    Returns:
+        The cutoff `Time` required to achieve the standard, or `None` if the standard
+        is undefined for the event/age/sex combination.
+
+    Raises:
+        ValueError: If `sex` is `Sex.MIXED`.
+    """
     _check_sex(sex)
     cutoff = _cutoff(standard, event, age, sex)
     return Time(cutoff) if cutoff is not None else None

@@ -11,10 +11,13 @@ __all__ = ["Time"]
 class Time:
     """An immutable, hashable swim time with centisecond precision.
 
-    Stored internally as a non-negative centiseconds integer (unbounded int).
-    Faster times compare as less than slower times. String formatting uses `[M:]SS.HH`
-    (e.g., "1:04.87" or "23.45"), which round-trips with `parse`. Supports addition
-    and subtraction (subtraction raising ValueError if the result is negative).
+    Stored internally as a non-negative centiseconds integer. Faster times compare
+    as less than slower times (i.e. smaller values indicate faster swims). Supports
+    addition and subtraction between `Time` instances.
+
+    String formatting returns `"M:SS.HH"` if the time is at least one minute, or
+    `"SS.HH"` if under a minute. The formatted string zero-pads seconds and hundredths
+    but does not pad the minute component.
     """
 
     centiseconds: int
@@ -25,12 +28,20 @@ class Time:
 
     @classmethod
     def parse(cls, s: str) -> Time:
-        """Parse a `[MM:]SS.HH` swim-time string.
+        """Parse a swim-time string formatted as `[MM:]SS.HH` or `[M:]SS.HH`.
 
-        Strips whitespace. Raises ValueError for empty or malformed strings.
+        Strips leading/trailing whitespace. Tolerates 1- or 2-digit minutes,
+        seconds, and fractions of a second.
 
-        >>> Time.parse("1:23.45")
-        Time(centiseconds=8345)
+        Args:
+            s: The time string to parse (e.g., `"1:04.87"`, `"23.4"`, `"8.23"`).
+
+        Returns:
+            A new `Time` instance with the parsed centiseconds duration.
+
+        Raises:
+            ValueError: If the string is empty, lacks a decimal point, contains
+                non-numeric digits, or has more than two segments separated by colons.
         """
         raw = s.strip()
         if not raw:
