@@ -84,4 +84,6 @@ src/tunas/_data/sdif-v3.txt
 
 - USA Swimming SDIF v3 spec: see the bundled `sdif-v3.txt`.
 - USA Swimming developer / SWIMS resources: <https://www.usaswimming.org>.
+- [The Hy-Tek `.hy3` file format](hy3_format.md): a reverse-engineered reference for
+  Hy-Tek's proprietary sibling format, cross-validated against SDIF.
 

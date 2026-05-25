@@ -59,6 +59,7 @@ nav:
       - Data model: models.md
       - Recipes: cookbook.md
       - File format (SDIF): cl2_format.md
+      - File format (Hy-Tek .hy3): hy3_format.md
   - API reference: reference.md
   - About:
       - Design: architecture.md
