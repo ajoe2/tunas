@@ -41,7 +41,7 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Install `tunas` and parse your first `.cl2` file in a few lines.
 
-    [:octicons-arrow-right-24: Get up and running](getting_started.md)
+    [:octicons-arrow-right-24: Get up and running](guide/getting_started.md)
 
 -   :material-file-document-alert-outline:{ .lg .middle } __Parsing & errors__
 
@@ -49,7 +49,7 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Understand the parsing modes and the never-lose-data error model.
 
-    [:octicons-arrow-right-24: Parsing files](parsing.md)
+    [:octicons-arrow-right-24: Parsing files](guide/parsing.md)
 
 -   :material-chef-hat:{ .lg .middle } __Cookbook__
 
@@ -57,7 +57,7 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Copy-paste practical recipes for common analysis tasks.
 
-    [:octicons-arrow-right-24: Browse recipes](cookbook.md)
+    [:octicons-arrow-right-24: Browse recipes](guide/cookbook.md)
 
 -   :material-graph-outline:{ .lg .middle } __Domain model__
 
@@ -65,7 +65,7 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Learn the object graph — `Meet`, `Club`, `Swimmer`, `Relay`.
 
-    [:octicons-arrow-right-24: Domain model](models.md)
+    [:octicons-arrow-right-24: Domain model](guide/models.md)
 
 -   :material-api:{ .lg .middle } __API reference__
 
@@ -73,7 +73,7 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Look up a specific class, function, or exception.
 
-    [:octicons-arrow-right-24: API reference](reference.md)
+    [:octicons-arrow-right-24: API reference](reference/index.md)
 
 -   :material-drawing:{ .lg .middle } __Design__
 
@@ -81,6 +81,6 @@ print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swim
 
     Understand the architecture and the decisions behind it.
 
-    [:octicons-arrow-right-24: Design notes](architecture.md)
+    [:octicons-arrow-right-24: Design notes](about/architecture.md)
 
 </div>

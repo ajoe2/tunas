@@ -9,29 +9,28 @@ from tunas import (
     qualifies_for, all_qualified, standard_time,
 )
 ```
+`read_cl2` returns `(meets, report)`. Because swimmers and clubs are scoped to single meets, cross-meet analysis requires explicit iteration or indexing.
 
-`read_cl2` returns `(meets, report)`. Swimmers and clubs are scoped to single meets; cross-meet lookups require explicit iteration.
+## Helper Functions
 
-## Helpers
-
-Common helper functions for calculating swimmer age or fastest swims from parsed fields:
+Common helper functions to compute a swimmer's age and identify fastest swims:
 
 ```python
 def age_at(swimmer, on_date):
-    """Age in years on a date, from the parsed birthday, or None."""
-    b = swimmer.birthday
-    if b is None or on_date is None:
+    """Compute swimmer age in years on a specific date, or return None."""
+    birthday = swimmer.birthday
+    if birthday is None or on_date is None:
         return None
-    return on_date.year - b.year - ((on_date.month, on_date.day) < (b.month, b.day))
+    return on_date.year - birthday.year - ((on_date.month, on_date.day) < (birthday.month, birthday.day))
 
 def fastest(swims):
-    """The fastest timed swim in an iterable of Swims, or None."""
+    """Return the fastest timed swim from an iterable, or None."""
     timed = [s for s in swims if s.time is not None]
     return min(timed, key=lambda s: s.time, default=None)
 ```
 
 
-## Iterate every individual swim
+## Print all individual swims
 
 Print every individual swim across all meets:
 
@@ -251,4 +250,106 @@ def dq_rate(meet):
 meets, _ = read_cl2("champs.cl2")
 for meet in meets:
     print(meet.name, status_breakdown(meet), f"DQ {dq_rate(meet):.1%}")
+```
+
+## Work with splits
+
+Splits live on the individual swim or relay leg that produced them. Each `Split` has a
+cumulative `distance`, a `time`, and a `split_type` (`INTERVAL` or `CUMULATIVE`). This helper
+yields per-segment times regardless of how the file stored them:
+
+```python
+from tunas import SplitType
+
+def interval_splits(swim):
+    """Yield (segment_distance, segment_time) for a swim's splits."""
+    prev = None
+    for sp in sorted(swim.splits, key=lambda s: s.distance):
+        if sp.time is None:
+            continue
+        if sp.split_type is SplitType.INTERVAL:
+            yield sp.distance, sp.time
+        else:  # CUMULATIVE — subtract the previous cumulative time
+            yield sp.distance, sp.time if prev is None else sp.time - prev
+            prev = sp.time
+
+meets, _ = read_cl2("champs.cl2")
+for r in meets[0].individual_swims:
+    if r.splits:
+        print(r.swimmer.full_name, r.event.name)
+        for dist, seg in interval_splits(r):
+            print(f"  @{dist:>4}  {seg}")
+```
+
+## Time arithmetic
+
+[`Time`](models.md#times) compares, adds, and subtracts in exact centiseconds:
+
+```python
+from tunas import Time
+
+def legs_total(relay):
+    """Sum a relay's leg times (None if any leg is missing a time)."""
+    total = Time(0)
+    for leg in relay.legs:
+        if leg.time is None:
+            return None
+        total = total + leg.time
+    return total
+
+def gap_to(standard, swim, age, sex):
+    """How much a swim must drop to hit a standard (None if it already qualifies)."""
+    cut = standard_time(standard, swim.event, age, sex)
+    if cut is None or swim.time is None or swim.time <= cut:
+        return None
+    return swim.time - cut   # ValueError-safe: only subtract when swim.time > cut
+```
+
+## Compare prelims and finals
+
+```python
+from tunas import Session
+
+def prelim_final(swimmer, event):
+    """(prelim_time, final_time) for an event, when both were swum."""
+    by_session = {s.session: s for s in swimmer.swims_in(event) if s.time is not None}
+    p, f = by_session.get(Session.PRELIMS), by_session.get(Session.FINALS)
+    return (p.time, f.time) if p and f else None
+```
+
+## Parse a whole season concurrently
+
+```python
+meets, report = read_cl2("season_archive/", max_workers=8)
+print(report.files_read, "files,", report.meets_parsed, "meets")
+```
+
+Results are merged in source order — identical output to the sequential default; the speed-up
+comes from overlapping file I/O across threads.
+
+## Inspect file provenance
+
+Each meet links back to its `A0`/`Z0` file header through `meet.source_file`:
+
+```python
+meets, _ = read_cl2("results.cl2")
+src = meets[0].source_file
+if src is not None:
+    print("software:", src.software_name, src.software_version)
+    print("contact: ", src.contact_name, src.contact_phone)
+    print("created: ", src.created, "| file type:", src.file_type)
+    print("LSC:     ", src.submitted_by_lsc)
+```
+
+## Print a swimmer's full standards table
+
+Building on `standards_table` above, render every standard a swimmer has achieved:
+
+```python
+def print_standards(swimmer):
+    table = standards_table(swimmer)
+    for event in sorted(table):
+        cuts = table[event]
+        best = cuts[-1].display() if cuts else "—"   # fastest standard met
+        print(f"{event.name:<22} {best:<5} ({', '.join(c.display() for c in cuts) or 'none'})")
 ```

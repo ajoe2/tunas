@@ -1,20 +1,16 @@
 # Architecture
 
-This document describes the organization of `tunas` and the design decisions behind its public API.
+This document describes the design decisions and parser internals of `tunas`.
 
-## Description
+## Scope
 
-`tunas` is a data-access library for USA Swimming meet results. It parses `.cl2` files (Hy-Tek SDIF v3) into structured Python objects and bundles offline motivational time standards.
+- **SDIF v3 Parsing:** Parses all results-related record types, including relays and splits.
+- **Domain Model:** Dataclasses representing `Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`, and supporting structures.
+- **Value Types:** Immutable representation of `Time`, `Event`, and enums.
+- **Offline Standards:** Motivational time standard lookups.
+- **Error Model:** Lenient-by-default parsing via `ParseWarning` collections, with optional `strict=True` validation.
 
-### Scope
-
-- **SDIF v3 Parsing:** Every meet-results record type, including relays and splits.
-- **Domain Model:** Dataclasses for `Meet`, `Club`, `Swimmer`, `MeetResult`, `IndividualSwim`, `Relay`, `RelaySwim`, `Split`, `SwimmerContact`, `SwimmerRegistration`, `MeetHost`, and `SourceFile`.
-- **Value Types:** `Time`, `Event`, and standard SDIF enums.
-- **Offline Standards:** Motivational cut lookups.
-- **Error Model:** Lenient parsing with structured `ParseWarning` entries, or opt-in `strict=True` validation.
-
-## Repository layout
+## Repository Layout
 
 ```
 tunas/
@@ -45,19 +41,19 @@ tunas/
 
 The package uses a **src-layout** to ensure tests run against the installed wheel rather than the working directory.
 
-## Design decisions
+## Design Decisions
 
 ### Self-contained meets
 
-Meets are independent. Swimmers and clubs are scoped to their respective `Meet`. A swimmer competing in multiple meets exists as distinct, unrelated `Swimmer` objects, grouped by `id_short` (falling back to `id_long`). Cross-meet grouping is delegated to application code (see [cookbook.md](cookbook.md)).
+Meets are independent; swimmers and clubs are scoped to their respective `Meet`. A swimmer competing in multiple meets exists as distinct, unrelated `Swimmer` objects, grouped by `id_short` (falling back to `id_long`). Cross-meet grouping is delegated to application code (see [cookbook.md](../guide/cookbook.md)).
 
 ### Lenient parsing by default
 
-Formatting errors are common in real-world `.cl2` files due to buggy exporters. `read_cl2` defaults to `strict=False`, skipping corrupt records and accumulating warnings in `ParseReport` to maximize data recovery. Use `strict=True` for strict data validation.
+Formatting errors are common in real-world `.cl2` files due to buggy exporters. `read_cl2` defaults to `strict=False`, skipping corrupt records and accumulating warnings in `ParseReport` to maximize data recovery. Use `strict=True` for strict validation.
 
 ### Slotted domain dataclasses
 
-We use slotted dataclasses (`@dataclass(slots=True)`) to minimize memory overhead and accelerate attribute lookups—critical for meets with tens of thousands of swims. Value types (`Time`, `Split`, `SwimmerContact`, `ParseWarning`) are frozen and hashable, while aggregates (`Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`) are mutable to support single-pass parsing.
+We use slotted dataclasses (`@dataclass(slots=True)`) to minimize memory overhead and accelerate attribute lookups. Value types (`Time`, `Split`, `SwimmerContact`, `ParseWarning`) are frozen and hashable, while aggregates (`Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`) are mutable to support single-pass parsing.
 
 Aggregate classes use `kw_only=True` to keep wide constructors readable and avoid field ordering constraints in subclassing. We use identity equality (`eq=False`) to avoid stack overflows from cyclic graph references (`meet ⇄ results`) and because the parser does not deduplicate objects.
 
@@ -92,6 +88,31 @@ where they are the better tool.
 ### Pythonic API
 
 Data is exposed via plain attributes and properties rather than getter/setter methods, facilitating clean IDE auto-complete and static typing.
+
+## Parser internals
+
+`read_cl2` is a thin entry point in `parser.py`; the engine lives in the internal `_parser/`
+package and runs a single streaming pass per file:
+
+| Module | Responsibility |
+|---|---|
+| `handlers.py` | The `_Engine`: reads lines, dispatches on the 2-char record code, and assembles the object graph. Holds the `SessionColumns` layouts, per-session result assembly, and the `Z0` count check. |
+| `state.py` | `ParserState` — per-meet mutable context (current club/swimmer/relay, pending records), reset at every `B1`. |
+| `fields.py` | Fixed-width field extraction: slicing SDIF `start/length` columns and coercing to `int` / `date` / `Time` / code enums, emitting diagnostics on failure. |
+| `names.py` | SDIF `NAME` parsing (`Last, First MI` → components). |
+| `ids.py` | Member-ID (USS#) normalization and the `id_short` → `id_long` identity rule. |
+| `diagnostics.py` | `Severity`, `IssueKind`, `ParseWarning`, `ParseReport` (re-exported from `parser.py`). |
+
+**Data flow.** Each line is decoded (CP-1252 by default), normalised (BOM and line endings
+stripped, short lines right-padded), and routed to a handler. `A0`/`Z0` populate the shared
+`SourceFile`; `B1` opens a `Meet` and resets state; `C1`/`C2` establish club context;
+`D0`/`E0` create result rows; `D1`/`D2`/`D3`/`G0` are continuation records that enrich the
+most recent swimmer/result; `F0` adds relay legs. Cross-references are wired as objects are
+created, so the returned graph needs no post-processing.
+
+In parallel mode (`max_workers > 1`) each file gets its own `_Engine`; the per-file meets and
+`ParseReport`s are merged back in submission order via `ParseReport.merge`, producing output
+identical to the sequential pass.
 
 ## Development
 

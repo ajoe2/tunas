@@ -73,47 +73,33 @@ except ParseError as exc:
 
 ### M1 — fatal (always raises)
 
-Missing or unparseable structural fields indicate a broken record and always raise
-`ParseError`. These include: the record-type constant, swimmer/team names, swimmer
-sex, meet name and start date, relay team code and letter, and the split sequence
-number / distance / type (`G0`).
+Missing or unparseable structural fields indicate a broken record and always raise `ParseError`. These include the record-type constant, swimmer and team names, swimmer sex, meet name, start date, relay team code/letter, and split sequence/distance/type (`G0`).
 
 ### Unresolvable events — skipped (not fatal)
 
-A swim's **event fields** (event sex, distance, stroke, age) are *not* treated as
-fatal M1. If they are missing-but-partial, carry an unknown code, or do not map to a
-known [`Event`][tunas.event.Event] (e.g. a diving event with a non-swim
-stroke, or an impossible combination like `25 m` long course), the **record is
-skipped** with a `SKIPPED` warning in lenient mode and raises in strict mode. A
-single odd or invalid `D0`/`E0` never aborts an otherwise-valid file. (A `D0` with
-*all* event fields blank is a relay-only swimmer — see the `#` marker below — not an
-error.)
+A swim's event fields (sex, distance, stroke, age) are not treated as fatal M1. If they are partial, invalid, or do not map to a known [`Event`][tunas.event.Event] (e.g., a diving event with a non-swim stroke), the record is skipped with a `SKIPPED` warning in lenient mode or raises `ParseError` in strict mode. A single invalid event record never aborts an otherwise valid file. (A `D0` with all event fields blank denotes a relay-only swimmer; see the `#` marker below).
 
 ### M2 — recoverable (kept as `None`)
 
-Data-quality fields skip corrupt/blank values with a `ParseWarning` (severity
-`RECOVERED`) and set the field to `None` in lenient mode. In strict mode, these
-raise `ParseError`.
-- **Swimmer ID (USS#):** Identity uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is skipped (severity `SKIPPED`). An `F0` record lacking both is kept with `swimmer=None` (severity `RECOVERED`).
+Data-quality fields skip corrupt or blank values with a `RECOVERED` warning and set the field to `None` in lenient mode, or raise `ParseError` in strict mode:
+- **Swimmer ID (USS#):** Uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is skipped (`SKIPPED`). An `F0` record lacking both is kept with `swimmer=None` (`RECOVERED`).
 
 ### Conditional markers
 
-- **`*` (Conditional Course):** Course bytes (SDIF COURSE Code 013) are required only if time is present. Missing courses warn and set `course=None`. A course byte of `"X"` denotes a **disqualification**; the swim is kept with `status=DQ` and preserves its recorded `time`. The event course falls back to other sessions, seed course, or the `B1` default.
-- **`**` (Championship Place/Points):** Required only at championship meets. Missing values are kept as `None` with a warning.
-- **`#` (Relay-Only Swimmers):** Swimmer records with *all* event parameters blank create a `Swimmer` without generating an `IndividualSwim`. Partial or invalid event parameters are not fatal — the record is skipped (see [Unresolvable events](#unresolvable-events-skipped-not-fatal)).
+- **`*` (Conditional Course):** Course bytes are required only if a time is present. Missing courses warn and set `course=None`. A course byte of `"X"` denotes a **disqualification**; the swim is kept with `status=DQ` while preserving its recorded time.
+- **`**` (Championship Place/Points):** Required only at championship meets. Missing values are set to `None` with a warning.
+- **`#` (Relay-Only Swimmers):** Swimmer records with all event parameters blank create a `Swimmer` without generating an `IndividualSwim`. Partial or invalid event parameters skip the record (see [Unresolvable events](#unresolvable-events-skipped-not-fatal)).
 
 ### Result outcomes (NT / NS / DNF / DQ / SCR)
 
-outcome codes in time fields are kept as official results with `status` set to the
-code and `time=None`. Combined with course `"X"`, all swims are preserved for
-analysis.
+Outcome codes in time fields are kept as official results with `status` set to the code and `time=None`. Combined with course `"X"`, all swims are preserved for analysis.
 
 ### Other parsing behaviors
 
-- **Malformed optional field / Unknown code:** Set to `None` and warns.
-- **Orphaned record:** Trailing `F0` (without `E0`) or `G0` (without `D0`/`F0`) is dropped and warns (`SKIPPED`/`ORPHANED`).
+- **Malformed optional field / Unknown code:** Sets the field to `None` and warns.
+- **Orphaned record:** A trailing `F0` (without `E0`) or `G0` (without `D0`/`F0`) is dropped and warns (`SKIPPED`/`ORPHANED`).
 - **Record length:** Lines under 160 characters are right-padded with blanks and parsed. Lines over 160 characters are skipped and warn.
-- **Unknown record type:** Unmodeled types (e.g. `J0`–`J2`) are skipped and warn (`UNKNOWN_RECORD`), preserving the raw line.
+- **Unknown record type:** Unmodeled types (e.g., `J0`–`J2`) are skipped and warn (`UNKNOWN_RECORD`), preserving the raw line.
 - **Split sequence < 1:** A `G0` sequence number below 1 (which would imply negative cumulative split distances) is recovered to 1 with a `RECOVERED`/`MALFORMED` warning.
 
 ### Mode summary
@@ -146,7 +132,7 @@ returned alongside the meets.
 `splits_parsed`, `records_skipped`, `fields_recovered` — and a `warnings_for(...)`
 filter. Each `ParseWarning` pins down one issue: `source`, `line_no`,
 `record_type`, `field`, `column`, `mandatory`, `severity`, `kind`, `reason`, and the
-truncated `raw_line`. See the [API reference](reference.md#parsing-and-diagnostics)
+truncated `raw_line`. See the [API reference](../reference/parsing.md)
 for the exact fields and methods.
 
 Every warning is tagged with a **severity** and a **kind**:
@@ -189,7 +175,7 @@ All library errors subclass [`TunasError`][tunas.exceptions.TunasError], so a si
       print(f"{w.source}:{w.line_no} {w.record_type}.{w.field}: {w.reason}")
   ```
 
-- **`StandardsError`** — raised by the [time-standards](reference.md#time-standards)
+- **`StandardsError`** — raised by the [time-standards](../reference/standards.md)
   lookups if the bundled data is missing or inconsistent.
 
 To collect every problem instead of failing fast, parse leniently and inspect

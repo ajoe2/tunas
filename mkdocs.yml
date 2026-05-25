@@ -54,16 +54,28 @@ extra_css:
 nav:
   - Home: index.md
   - Guide:
-      - Getting started: getting_started.md
-      - Parsing & errors: parsing.md
-      - Data model: models.md
-      - Recipes: cookbook.md
-      - File format (SDIF): cl2_format.md
-      - File format (Hy-Tek .hy3): hy3_format.md
-  - API reference: reference.md
+      - Overview: guide/index.md
+      - Getting started: guide/getting_started.md
+      - Parsing & errors: guide/parsing.md
+      - Data model: guide/models.md
+      - Recipes: guide/cookbook.md
+  - API reference:
+      - Overview: reference/index.md
+      - Parsing & diagnostics: reference/parsing.md
+      - Exceptions: reference/exceptions.md
+      - Domain model: reference/models.md
+      - Events & time: reference/event_time.md
+      - Enumerations: reference/enums.md
+      - Geography: reference/geography.md
+      - Time standards: reference/standards.md
+  - File Format:
+      - Overview: formats/index.md
+      - SDIF (.cl2): formats/cl2_format.md
+      - Hy-Tek (.hy3): formats/hy3_format.md
   - About:
-      - Design: architecture.md
-      - Changelog: changelog.md
+      - Overview: about/index.md
+      - Design: about/architecture.md
+      - Changelog: about/changelog.md
 
 plugins:
   - search

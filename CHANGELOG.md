@@ -2,6 +2,15 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [Unreleased]
+
+### Documentation
+- **Expanded `.hy3` format reference:** Reverse-engineered the `.hy3` format using meet results from Pacific Swimming (2013–2026, ~1,680 meets) and Michigan Swimming (425 meets) matched against `.cl2` siblings. Decoded the line checksum, athlete numbering, springboard diving strokes, watch-time columns, exhibition statuses, and relay structures.
+- **Complete `.cl2` / SDIF v3 reference:** Rewrote the `.cl2` guide into a comprehensive field-level reference covering all record types (`A0`–`Z0`, registration `D1`/`D2`, time-standards `J0`–`J2`), column ranges, and code tables. Documented empirically-verified deviations of real-world Hy-Tek/TeamUnify output (measured over 2,190 files).
+- **Guide & API Reference Updates:** Expanded the data model guide with PII value types, `Time` accessors, and event helpers. Added cookbook recipes for split arithmetic, concurrent parsing, and standards lookups. Added a parser-internals breakdown to the architecture page and a public symbol index.
+- **Docs Styling & Organization:** Set a neutral black dark mode theme and renamed the "Data" navigation section to "File Format".
+- **README Polish:** Simplified the dependency note and improved core concept definitions.
+
 ## [0.1.1] — 2026-05-24
 
 ### Added

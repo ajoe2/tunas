@@ -14,11 +14,11 @@ A Python library for parsing USA Swimming meet result files (`.cl2` / Hy-Tek SDI
 pip install tunas
 ```
 
-Requires Python 3.12+ and has zero runtime dependencies outside the standard library.
+Requires Python 3.12+. Currently, the runtime depends only on the Python standard library.
 
 ## Quick Start
 
-`read_cl2` is the main entry point. It parses files, directories, lists of paths, or text streams, returning a list of `Meet` objects and a `ParseReport`:
+`read_cl2` is the primary entry point. It parses file paths, directories, lists of paths, or text streams, returning a list of `Meet` objects and a `ParseReport`:
 
 ```python
 from tunas import read_cl2
@@ -39,11 +39,15 @@ if report.warnings:
 
 All parsed data is contained in independent `Meet` objects:
 
-- **`Meet`**: Owns `swimmers`, `clubs`, and `results` (split into `meet.individual_swims` and `meet.relays`).
-- **Swim**: Has a `.time` (`Time` or `None`) and `.status` (`ResultStatus` e.g., `OK`, `DQ`, `NS`). Scratches and disqualifications are preserved.
-- **`Event`**: An enum of `(distance, stroke, course)`. Filter with `swimmer.swims_in(event)` or `meet.individual_swims_for(event)`.
-- **Relays**: Contain `RelaySwim` legs. Each leg reports its individual event, sorting alongside flat-start swims.
-- **Scoping**: Meets are independent; swimmers and clubs are scoped to their respective meet. Group by `id_short` (or `id_long`) to track athletes across meets.
+- **`Meet`**: Owns `swimmers`, `clubs`, and `results` (accessible via `meet.individual_swims` and `meet.relays`, or filtered via `meet.individual_swims_for(event)` and `meet.relays_for(event)`). Carries metadata including name, dates, location, `course`, `meet_type`, `host` (`MeetHost`), and `source_file` (`SourceFile` for file-level provenance).
+- **`Swimmer`**: Scoped to one meet. Exposes `full_name`, `swims`, `individual_swims`, `relay_swims`, and `swims_in(event)`. Includes identity (`id_short`/`id_long`), `birthday`, `sex`, `citizenship`, and optional contact/registration PII.
+- **`Club`**: Scoped to one meet and keyed by `(team_code, lsc)`. Carries `coach`, `entry_counts`, address, and associated results and swimmers.
+- **`Swim`**: The uniform interface for individual swims (`IndividualSwim`) and relay legs (`RelaySwim`), exposing `swimmer`, `time` (`Time` or `None`), `status` (`ResultStatus`), `session`, `event`, `date`, `meet`, `course`, and `splits`. Scratches and disqualifications are preserved.
+- **`Event`**: A 90+ member enum of `(distance, stroke, course)`, comparable in declaration order, with helpers (`is_relay`, `leg_event`, `leg_strokes`, `Event.find`). Filter with `swimmer.swims_in(event)` or `meet.individual_swims_for(event)`.
+- **Relays**: `Relay` squads contain `RelaySwim` legs (`legs`) and `alternates`. Each leg reports its individual event, so it sorts alongside flat-start swims.
+- **`Time`**: Immutable centisecond value type — `Time.parse("1:04.87")`, ordering, addition/subtraction, and `minute`/`second`/`hundredth`/`total_seconds` accessors.
+- **`Split`**: Per-leg splits (`distance`, `time`, `split_type`) attach to the swim that produced them.
+- **Scoping**: Meets are independent and never merged; swimmers and clubs are scoped to their respective meet. Group by `id_short` (or `id_long`) to track athletes across meets.
 
 ```python
 from tunas import read_cl2, Event
@@ -56,16 +60,27 @@ for meet in meets:
 
 ## Offline Time Standards
 
-USA Swimming motivational standards (B through AAAA) are bundled locally for offline lookup:
+USA Swimming motivational standards (B through AAAA, the bundled 2025–2028 cuts) are
+available locally with no setup or network access. Lookups are keyed by single-year age
+group (`10 & under`, `11-12`, `13-14`, `15-16`, `17-18`) and sex:
 
 ```python
-from tunas import qualifies_for, Sex, Event, Time
+from tunas import qualifies_for, all_qualified, standard_time, Sex, Event, Time
 
-# Get the fastest standard achieved (or None):
+# Fastest standard achieved (or None):
 qualifies_for(Time.parse("1:05.23"), Event.FREE_100_SCY, age=12, sex=Sex.FEMALE)
 # → TimeStandard.BB
+
+# Every standard met, slowest first:
+all_qualified(Time.parse("1:05.23"), Event.FREE_100_SCY, age=12, sex=Sex.FEMALE)
+# → [TimeStandard.B, TimeStandard.BB]
+
+# The cutoff time for a given standard (or None if undefined):
+standard_time(TimeStandard.AAAA, Event.FREE_100_SCY, age=12, sex=Sex.FEMALE)
+# → Time(...)
 ```
-Also supports `all_qualified(...)` and `standard_time(...)` lookups.
+
+Standards are defined for `MALE`/`FEMALE` only; passing `Sex.MIXED` raises `ValueError`.
 
 ## Error Handling
 
@@ -81,22 +96,26 @@ Use `strict=True` to fail fast and raise `ParseError` on the first warning. Stru
 
 ## Features
 
-- **SDIF v3 Parser**: Parses `.cl2` meet result files including relays and splits.
-- **Clean Object Model**: Slotted dataclasses with direct object references and zero global state.
-- **Offline Standards**: Local O(1) lookup of USA Swimming B through AAAA motivational cuts.
-- **Lenient Parsing**: Detailed warning reports by default; strict validation mode available.
-- **Parallel Execution**: Deterministic concurrent parsing of multiple files on thread pool.
-- **Type-Safe**: Fully typed (`py.typed`).
+- **Complete SDIF v3 coverage**: Parses every meet-results record type (`A0`–`G0`, `Z0`), including relays, relay alternates, and per-leg splits. Registration (`D1`/`D2`) and demographic (`D3`) records populate optional PII fields; qualifying-time records (`J0`–`J2`) surface as warnings.
+- **Clean object model**: Slotted dataclasses with pre-wired object references (including back-references) and zero global state. Value types (`Time`, `Split`, `MeetHost`, …) are frozen and hashable.
+- **Zero data loss**: All entered swims are kept — including non-time outcomes (scratches, DQs, no-shows via `ResultStatus`). Missing optional fields become `None`; raw line contents are preserved on validation failures.
+- **Lenient by default, strict on demand**: Recovers from common exporter bugs and reports each issue as a structured `ParseWarning` (with `severity`, `kind`, column, and raw line); `strict=True` fails fast on the first problem.
+- **Offline standards**: Local O(1) lookup of USA Swimming B through AAAA motivational cuts, bundled as JSON — no setup or network.
+- **Robust decoding**: Defaults to CP-1252 (to preserve column alignment and accented names), tolerates BOMs, short/long lines, and mixed line endings.
+- **Parallel execution**: Deterministic concurrent parsing of multiple files on a thread pool (`max_workers`), with output identical to the sequential default.
+- **Type-safe**: Fully type-hinted and marked `py.typed`; passes `mypy --strict`.
 
 ## Documentation
 
-- [Getting Started](docs/getting_started.md)
-- [Parsing & Errors](docs/parsing.md)
-- [Data Model](docs/models.md)
-- [Cookbook / Recipes](docs/cookbook.md)
-- [File Format (SDIF)](docs/cl2_format.md)
-- [API Reference](docs/reference.md)
-- [Architecture & Design](docs/architecture.md)
+- [Getting Started](docs/guide/getting_started.md)
+- [Parsing & Errors](docs/guide/parsing.md)
+- [Data Model](docs/guide/models.md)
+- [Cookbook / Recipes](docs/guide/cookbook.md)
+- [SDIF `.cl2` format reference](docs/formats/cl2_format.md)
+- [Hy-Tek `.hy3` format reference](docs/formats/hy3_format.md)
+- [API Reference](docs/reference/index.md)
+- [Architecture & Design](docs/about/architecture.md)
+- [Changelog](CHANGELOG.md)
 
 Full docs site: <https://ajoe2.github.io/tunas/>
 
@@ -105,11 +124,17 @@ Full docs site: <https://ajoe2.github.io/tunas/>
 Managed with `uv`:
 
 ```bash
-uv sync                                      # Setup environment
+uv sync                                      # Setup environment (incl. dev deps)
 uv run pytest                                # Run offline test suite
 uv run pytest --cov=tunas                    # Run with coverage check (95% gate)
-uv run ruff check && uv run mypy src/tunas   # Lint and type check
+uv run ruff check && uv run ruff format      # Lint and format
+uv run mypy src/tunas                        # Type-check (strict)
+uv run mkdocs serve                          # Preview the docs site locally
 ```
+
+The test suite is fully self-contained and offline — real-world coverage comes from
+committed "golden" `.cl2` files plus hand-verified expected-state JSON under `tests/data/`,
+so no data download is needed.
 
 ## Status
 
