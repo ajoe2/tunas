@@ -2,6 +2,17 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+- **`.hy3` event metadata**: `read_hy3` now populates `event_min_age`, `event_max_age`, and `event_number` on individual (`E1`/`E2`) and relay (`F1`/`F2`) results, decoded from the newly-confirmed `E1`/`F1` columns (age range 23–28, event number 39–42). Open-ended age bounds use the SDIF `None` convention (the `0`/`109` file sentinels map to `None`).
+
+### Fixed
+- **`.hy3` format reference**: Corrected the `E1`/`F1` field map — cols 23–28 are the event age range (min 23–25, max 26–28), and the event number is at cols 39–42, not 25–28 as previously documented.
+
+### Internal
+- Refactored the shared parse engine for readability with **no change** to the public API or parse output: hoisted the duplicated event-resolution and split-appending logic out of `_parser/cl2.py` and `_parser/hy3.py` into `_BaseEngine` (`_resolve_event`, `_append_split`), and unified the generic code-enum helpers on Python 3.12 type-parameter syntax.
+
 ## [0.2.0] — 2026-05-25
 
 ### Added

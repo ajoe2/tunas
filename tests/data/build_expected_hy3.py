@@ -78,6 +78,12 @@ def int_or_none(raw: str) -> int | None:
     return int(raw) if raw.lstrip("-").isdigit() else None
 
 
+def event_age(raw: str, open_sentinel: int) -> int | None:
+    """E1/F1 age bound; open-ended sentinel (0 low / 109 high) -> None."""
+    val = int_or_none(raw)
+    return None if val is None or val == open_sentinel else val
+
+
 def event_name(dist: str, stroke_name: str, course: str, relay: bool) -> str | None:
     d = int_or_none(dist)
     if d is None or stroke_name is None or course is None:
@@ -185,6 +191,9 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
                 "event_sex": _EVENT_SEX.get(fld(line, 15, 1)),
                 "dist": fld(line, 16, 6),
                 "stroke": _STROKE.get(fld(line, 22, 1)),
+                "event_min_age": event_age(fld(line, 23, 3), 0),
+                "event_max_age": event_age(fld(line, 26, 3), 109),
+                "event_number": fld(line, 39, 4) or None,
                 "seed_time": time_str(fld(line, 53, 7)),
                 "converted_seed_time": time_str(fld(line, 44, 7)),
             }
@@ -206,6 +215,9 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
             swim = {
                 "event": event,
                 "event_sex": entry["event_sex"],
+                "event_min_age": entry["event_min_age"],
+                "event_max_age": entry["event_max_age"],
+                "event_number": entry["event_number"],
                 "session": {"P": "PRELIMS", "F": "FINALS", "S": "SWIM_OFFS"}.get(
                     fld(line, 3, 1), "FINALS"
                 ),
@@ -231,6 +243,9 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
                 "event_sex": _EVENT_SEX.get(fld(line, 15, 1)),
                 "dist": fld(line, 19, 3),
                 "stroke": _RELAY_STROKE.get(fld(line, 22, 1)),
+                "event_min_age": event_age(fld(line, 23, 3), 0),
+                "event_max_age": event_age(fld(line, 26, 3), 109),
+                "event_number": fld(line, 39, 4) or None,
                 "seed_time": time_str(fld(line, 53, 7)),
                 "converted_seed_time": time_str(fld(line, 44, 7)),
             }
@@ -252,6 +267,9 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
             relay = {
                 "event": event,
                 "event_sex": entry["event_sex"],
+                "event_min_age": entry["event_min_age"],
+                "event_max_age": entry["event_max_age"],
+                "event_number": entry["event_number"],
                 "relay_letter": entry["relay_letter"],
                 "session": {"P": "PRELIMS", "F": "FINALS", "S": "SWIM_OFFS"}.get(
                     fld(line, 3, 1), "FINALS"

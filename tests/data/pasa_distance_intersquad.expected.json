@@ -67,6 +67,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 15,
+          "event_max_age": 16,
+          "event_number": "4H",
           "session": "FINALS",
           "status": "SCR",
           "time": null,
@@ -93,6 +96,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "3D",
           "session": "FINALS",
           "status": "OK",
           "time": "6:51.14",
@@ -107,6 +113,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "30.21",
@@ -133,6 +142,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2F",
           "session": "FINALS",
           "status": "OK",
           "time": "13:20.05",
@@ -147,6 +159,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "31.58",
@@ -173,6 +188,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 15,
+          "event_max_age": 16,
+          "event_number": "2H",
           "session": "FINALS",
           "status": "OK",
           "time": "11:53.86",
@@ -187,6 +205,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 15,
+          "event_max_age": 16,
+          "event_number": "4H",
           "session": "FINALS",
           "status": "OK",
           "time": "24.99",
@@ -213,6 +234,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "12:52.73",
@@ -227,6 +251,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "27.73",
@@ -253,6 +280,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2D",
           "session": "FINALS",
           "status": "OK",
           "time": "12:35.41",
@@ -267,6 +297,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "28.99",
@@ -293,6 +326,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "31.07",
@@ -307,6 +343,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "14:03.53",
@@ -333,6 +372,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "11:46.27",
@@ -347,6 +389,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "26.45",
@@ -373,6 +418,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "3C",
           "session": "FINALS",
           "status": "OK",
           "time": "6:45.40",
@@ -387,6 +435,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "33.95",
@@ -413,6 +464,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2E",
           "session": "FINALS",
           "status": "OK",
           "time": "12:32.95",
@@ -427,6 +481,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4E",
           "session": "FINALS",
           "status": "OK",
           "time": "28.01",
@@ -453,6 +510,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "3C",
           "session": "FINALS",
           "status": "OK",
           "time": "6:41.30",
@@ -467,6 +527,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "29.98",
@@ -493,6 +556,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "3E",
           "session": "FINALS",
           "status": "OK",
           "time": "6:58.14",
@@ -507,6 +573,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4E",
           "session": "FINALS",
           "status": "OK",
           "time": "30.60",
@@ -533,6 +602,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "27.56",
@@ -547,6 +619,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "3D",
           "session": "FINALS",
           "status": "OK",
           "time": "6:02.06",
@@ -573,6 +648,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2D",
           "session": "FINALS",
           "status": "OK",
           "time": "13:40.19",
@@ -587,6 +665,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "31.18",
@@ -613,6 +694,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2E",
           "session": "FINALS",
           "status": "OK",
           "time": "13:03.41",
@@ -627,6 +711,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4E",
           "session": "FINALS",
           "status": "OK",
           "time": "26.32",
@@ -653,6 +740,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "13:05.51",
@@ -667,6 +757,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "29.84",
@@ -693,6 +786,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2D",
           "session": "FINALS",
           "status": "OK",
           "time": "12:13.46",
@@ -707,6 +803,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "26.84",
@@ -733,6 +832,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2E",
           "session": "FINALS",
           "status": "OK",
           "time": "11:48.99",
@@ -747,6 +849,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4E",
           "session": "FINALS",
           "status": "OK",
           "time": "29.04",
@@ -773,6 +878,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "12:47.63",
@@ -799,6 +907,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "13:03.76",
@@ -813,6 +924,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "30.35",
@@ -839,6 +953,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2D",
           "session": "FINALS",
           "status": "OK",
           "time": "13:36.83",
@@ -853,6 +970,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "27.89",
@@ -879,6 +999,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "26.01",
@@ -893,6 +1016,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2F",
           "session": "FINALS",
           "status": "OK",
           "time": "12:23.18",
@@ -919,6 +1045,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "28.11",
@@ -933,6 +1062,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2F",
           "session": "FINALS",
           "status": "OK",
           "time": "13:04.70",
@@ -959,6 +1091,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "34.89",
@@ -973,6 +1108,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2C",
           "session": "FINALS",
           "status": "OK",
           "time": "16:07.01",
@@ -999,6 +1137,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 15,
+          "event_max_age": 16,
+          "event_number": "2G",
           "session": "FINALS",
           "status": "OK",
           "time": "12:16.45",
@@ -1013,6 +1154,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 15,
+          "event_max_age": 16,
+          "event_number": "4G",
           "session": "FINALS",
           "status": "OK",
           "time": "27.18",
@@ -1039,6 +1183,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2F",
           "session": "FINALS",
           "status": "OK",
           "time": "11:43.99",
@@ -1053,6 +1200,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "25.05",
@@ -1079,6 +1229,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "3C",
           "session": "FINALS",
           "status": "OK",
           "time": "6:48.21",
@@ -1093,6 +1246,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4C",
           "session": "FINALS",
           "status": "OK",
           "time": "31.69",
@@ -1119,6 +1275,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "2D",
           "session": "FINALS",
           "status": "OK",
           "time": "15:19.50",
@@ -1133,6 +1292,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "29.60",
@@ -1159,6 +1321,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2F",
           "session": "FINALS",
           "status": "OK",
           "time": "12:27.90",
@@ -1173,6 +1338,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "28.91",
@@ -1199,6 +1367,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 11,
+          "event_max_age": 12,
+          "event_number": "4D",
           "session": "FINALS",
           "status": "OK",
           "time": "26.26",
@@ -1225,6 +1396,9 @@
         {
           "event": "FREE_1000_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "2E",
           "session": "FINALS",
           "status": "OK",
           "time": "12:34.51",
@@ -1239,6 +1413,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "FEMALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4E",
           "session": "FINALS",
           "status": "OK",
           "time": "28.08",
@@ -1265,6 +1442,9 @@
         {
           "event": "FREE_50_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "4F",
           "session": "FINALS",
           "status": "OK",
           "time": "29.38",
@@ -1279,6 +1459,9 @@
         {
           "event": "FREE_500_SCY",
           "event_sex": "MALE",
+          "event_min_age": 13,
+          "event_max_age": 14,
+          "event_number": "3F",
           "session": "FINALS",
           "status": "OK",
           "time": "7:20.39",
@@ -1297,6 +1480,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "A",
       "session": "FINALS",
       "status": "OK",
@@ -1336,6 +1522,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "B",
       "session": "FINALS",
       "status": "OK",
@@ -1375,6 +1564,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "D",
       "session": "FINALS",
       "status": "OK",
@@ -1414,6 +1606,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "E",
       "session": "FINALS",
       "status": "DQ",
@@ -1449,6 +1644,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "F",
       "session": "FINALS",
       "status": "OK",
@@ -1488,6 +1686,9 @@
     {
       "event": "MEDLEY_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "1",
       "relay_letter": "G",
       "session": "FINALS",
       "status": "OK",
@@ -1518,6 +1719,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "A",
       "session": "FINALS",
       "status": "OK",
@@ -1557,6 +1761,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "B",
       "session": "FINALS",
       "status": "DQ",
@@ -1588,6 +1795,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "C",
       "session": "FINALS",
       "status": "OK",
@@ -1610,6 +1820,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "D",
       "session": "FINALS",
       "status": "OK",
@@ -1649,6 +1862,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "E",
       "session": "FINALS",
       "status": "OK",
@@ -1688,6 +1904,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "F",
       "session": "FINALS",
       "status": "OK",
@@ -1718,6 +1937,9 @@
     {
       "event": "FREE_400_RELAY_SCY",
       "event_sex": "MIXED",
+      "event_min_age": null,
+      "event_max_age": null,
+      "event_number": "5",
       "relay_letter": "G",
       "session": "FINALS",
       "status": "OK",

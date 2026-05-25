@@ -98,7 +98,7 @@ package and runs a single streaming pass per file:
 
 | Module | Responsibility |
 |---|---|
-| `engine.py` | `_BaseEngine` — the format-agnostic core shared by both readers: the streaming line loop, record sizing/padding, structured diagnostics, and the typed field-coercion helpers. |
+| `engine.py` | `_BaseEngine` — the format-agnostic core shared by both readers: the streaming line loop, record sizing/padding, structured diagnostics, the typed field-coercion helpers, and the shared assembly helpers for event resolution and split appending. |
 | `cl2.py` | `_Cl2Engine(_BaseEngine)` — the SDIF engine: dispatches `A0`–`Z0`, holds the `SessionColumns` layouts, per-session result assembly, and the `Z0` count check. |
 | `hy3.py` | `_Hy3Engine(_BaseEngine)` — the Hy-Tek engine: dispatches records `A1` through `H2`, buffering entries (`E1`/`F1`) until their results (`E2`/`F2`). Parses confirmed fields only. |
 | `checksum.py` | The documented `.hy3` line-checksum algorithm and record dimensions (used to build test fixtures; not validated at parse time). |

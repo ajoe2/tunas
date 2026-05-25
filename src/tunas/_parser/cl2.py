@@ -7,7 +7,7 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import StrEnum
-from typing import ClassVar, TypedDict, TypeVar
+from typing import ClassVar, TypedDict
 
 from tunas._parser.diagnostics import IssueKind, Severity
 from tunas._parser.engine import _BaseEngine
@@ -61,8 +61,6 @@ from tunas.models import (
     SwimmerRegistration,
 )
 from tunas.time import Time
-
-_E = TypeVar("_E", bound=StrEnum)
 
 _CONTINUATION = {"D1", "D2", "D3", "G0"}
 _CHAMPIONSHIP = {MeetType.NATIONAL_CHAMPIONSHIP, MeetType.JUNIORS}
@@ -448,9 +446,9 @@ class _Cl2Engine(_BaseEngine):
             )
         return v
 
-    def _m2_code(
-        self, rec: Record, start: int, length: int, enum_cls: type[_E], field: str, column: str
-    ) -> _E | None:
+    def _m2_code[E: StrEnum](
+        self, rec: Record, start: int, length: int, enum_cls: type[E], field: str, column: str
+    ) -> E | None:
         tag, val = code_value(rec.raw(start, length), enum_cls)
         if tag == "blank":
             self._warn(
@@ -606,27 +604,21 @@ class _Cl2Engine(_BaseEngine):
             # fatal M1: one bad/odd record (e.g. a diving event with stroke "H") must
             # not abort an otherwise-valid file.
             course = self._event_course(rec, _D0_COURSE_COLS, st.meet.course)
-            event = (
-                Event.find(dist, stroke, course)
-                if all(present)
-                and esex is not None
-                and dist is not None
-                and stroke is not None
-                and eage_tag != "bad"
-                and course is not None
-                else None
+            event = self._resolve_event(
+                rec,
+                distance=dist,
+                stroke=stroke,
+                sex=esex,
+                course=course,
+                field="event",
+                column="67/1",
+                mandatory="M1#",
+                noun="event",
+                distance_display=repr(rec.raw(68, 4).strip()),
+                stroke_display=repr(rec.raw(72, 1).strip()),
+                extra_ok=all(present) and eage_tag != "bad",
             )
             if event is None:
-                self._warn(
-                    rec,
-                    "event",
-                    "67/1",
-                    "M1#",
-                    Severity.SKIPPED,
-                    IssueKind.UNKNOWN_CODE,
-                    f"unresolvable event (distance={rec.raw(68, 4).strip()!r} "
-                    f"stroke={rec.raw(72, 1).strip()!r} course={course})",
-                )
                 st.current_individual_swims = []
                 st.current_swimmer = None
                 st.last_leaf = None
@@ -857,26 +849,21 @@ class _Cl2Engine(_BaseEngine):
         date_of_swim = self._date(rec, 38, 8, "date", "38/8", "M2")
         # Unresolvable relay event -> skip record (lenient) / raise (strict), not fatal.
         course = self._event_course(rec, _E0_COURSE_COLS, st.meet.course)
-        event = (
-            Event.find(dist, stroke, course)
-            if dist is not None
-            and stroke is not None
-            and esex is not None
-            and eage_tag != "bad"
-            and course is not None
-            else None
+        event = self._resolve_event(
+            rec,
+            distance=dist,
+            stroke=stroke,
+            sex=esex,
+            course=course,
+            field="event",
+            column="22/4",
+            mandatory="M1",
+            noun="relay event",
+            distance_display=repr(rec.raw(22, 4).strip()),
+            stroke_display=repr(rec.raw(26, 1).strip()),
+            extra_ok=eage_tag != "bad",
         )
         if event is None:
-            self._warn(
-                rec,
-                "event",
-                "22/4",
-                "M1",
-                Severity.SKIPPED,
-                IssueKind.UNKNOWN_CODE,
-                f"unresolvable relay event (distance={rec.raw(22, 4).strip()!r} "
-                f"stroke={rec.raw(26, 1).strip()!r} course={course})",
-            )
             st.current_relays = {}
             st.current_relay_legs = {}
             st.last_leaf = None
@@ -1040,21 +1027,9 @@ class _Cl2Engine(_BaseEngine):
                 # cumulative time present) must not discard that real time.
                 continue
             distance = increment * (base + j + 1)
-            if tag == "bad":
-                self._warn(
-                    rec,
-                    "split_time",
-                    f"{start}/8",
-                    None,
-                    Severity.RECOVERED,
-                    IssueKind.MALFORMED,
-                    "malformed split time",
-                )
-                target_splits.append(Split(distance=distance, time=None, split_type=split_type))
-            else:
-                assert isinstance(val, Time)
-                target_splits.append(Split(distance=distance, time=val, split_type=split_type))
-            self.report.splits_parsed += 1
+            self._append_split(
+                rec, target_splits, distance, tag, val, split_type, column=f"{start}/8"
+            )
 
     def _g0_target(self, rec: Record, session: Session | None) -> list[Split] | None:
         st = self.state

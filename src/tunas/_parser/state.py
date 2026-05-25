@@ -60,6 +60,9 @@ class Hy3Entry:
     event_sex: Sex | None
     distance: int | None
     stroke: Stroke | None
+    event_min_age: int | None
+    event_max_age: int | None
+    event_number: str | None
     seed_time: Time | None
     seed_course: Course | None
     converted_seed_time: Time | None
@@ -74,6 +77,9 @@ class Hy3RelayEntry:
     event_sex: Sex | None
     distance: int | None
     stroke: Stroke | None
+    event_min_age: int | None
+    event_max_age: int | None
+    event_number: str | None
     seed_time: Time | None
     seed_course: Course | None
     converted_seed_time: Time | None

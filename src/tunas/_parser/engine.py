@@ -13,7 +13,7 @@ import datetime
 from collections import Counter
 from collections.abc import Iterable
 from enum import StrEnum
-from typing import ClassVar, NoReturn, TypeVar
+from typing import ClassVar, NoReturn
 
 from tunas._parser.diagnostics import IssueKind, ParseReport, ParseWarning, Severity
 from tunas._parser.fields import (
@@ -24,13 +24,12 @@ from tunas._parser.fields import (
     int_value,
     time_value,
 )
-from tunas.enums import Citizenship, Course
+from tunas.enums import Citizenship, Course, ResultStatus, Sex, SplitType, Stroke
+from tunas.event import Event
 from tunas.exceptions import ParseError
 from tunas.geography import Country
-from tunas.models import CitizenshipOrCountry, Meet, SourceFile
+from tunas.models import CitizenshipOrCountry, Meet, SourceFile, Split
 from tunas.time import Time
-
-_E = TypeVar("_E", bound=StrEnum)
 
 
 class _BaseEngine:
@@ -193,9 +192,9 @@ class _BaseEngine:
         assert v is not None  # _fatal raised
         return v
 
-    def _require_code(
-        self, rec: Record, start: int, length: int, enum_cls: type[_E], field: str, column: str
-    ) -> _E:
+    def _require_code[E: StrEnum](
+        self, rec: Record, start: int, length: int, enum_cls: type[E], field: str, column: str
+    ) -> E:
         tag, val = code_value(rec.raw(start, length), enum_cls)
         if tag == "blank":
             self._fatal(rec, field, column, "M1", IssueKind.MISSING, f"missing {field}")
@@ -211,16 +210,16 @@ class _BaseEngine:
         assert val is not None
         return val
 
-    def _code(
+    def _code[E: StrEnum](
         self,
         rec: Record,
         start: int,
         length: int,
-        enum_cls: type[_E],
+        enum_cls: type[E],
         field: str,
         column: str,
         mandatory: str | None,
-    ) -> _E | None:
+    ) -> E | None:
         tag, val = code_value(rec.raw(start, length), enum_cls)
         if tag == "unknown":
             self._warn(
@@ -300,3 +299,83 @@ class _BaseEngine:
                 f"unknown citizenship {v!r}",
             )
             return None
+
+    # -- shared assembly helpers ------------------------------------------- #
+
+    def _resolve_event(
+        self,
+        rec: Record,
+        *,
+        distance: int | None,
+        stroke: Stroke | None,
+        sex: Sex | None,
+        course: Course | None,
+        field: str,
+        column: str,
+        mandatory: str,
+        noun: str,
+        distance_display: str,
+        stroke_display: str,
+        extra_ok: bool = True,
+    ) -> Event | None:
+        """Resolve a `(distance, stroke, course)` event, or warn and return None.
+
+        Every component must be present and resolve to a defined :class:`Event`;
+        any gap (or a falsy ``extra_ok``, for format-specific guards like a bad
+        age range) means the swim can't be modeled, so the record is skipped
+        (lenient) or raises (strict). The caller resets its own per-swim state.
+        """
+        event = (
+            Event.find(distance, stroke, course)
+            if extra_ok
+            and distance is not None
+            and stroke is not None
+            and sex is not None
+            and course is not None
+            else None
+        )
+        if event is None:
+            self._warn(
+                rec,
+                field,
+                column,
+                mandatory,
+                Severity.SKIPPED,
+                IssueKind.UNKNOWN_CODE,
+                f"unresolvable {noun} (distance={distance_display} "
+                f"stroke={stroke_display} course={course})",
+            )
+        return event
+
+    def _append_split(
+        self,
+        rec: Record,
+        target: list[Split],
+        distance: int,
+        tag: str,
+        val: Time | ResultStatus | None,
+        split_type: SplitType,
+        *,
+        column: str | None = None,
+    ) -> None:
+        """Append one parsed split to ``target`` and count it.
+
+        ``tag``/``val`` come from :func:`time_value`; a ``"bad"`` time is recovered
+        as a ``Split`` with ``time=None`` plus a warning, anything else stores the
+        time. Blank/placeholder slots are filtered out by the caller beforehand.
+        """
+        if tag == "bad":
+            self._warn(
+                rec,
+                "split_time",
+                column,
+                None,
+                Severity.RECOVERED,
+                IssueKind.MALFORMED,
+                "malformed split time",
+            )
+            target.append(Split(distance=distance, time=None, split_type=split_type))
+        else:
+            assert isinstance(val, Time)
+            target.append(Split(distance=distance, time=val, split_type=split_type))
+        self.report.splits_parsed += 1

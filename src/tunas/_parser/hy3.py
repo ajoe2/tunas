@@ -28,7 +28,6 @@ from tunas.enums import (
     SplitType,
     Stroke,
 )
-from tunas.event import Event
 from tunas.geography import LSC
 from tunas.models import (
     Club,
@@ -88,6 +87,11 @@ _IGNORED = {"C2", "C8"}
 
 # Backup/watch-time start columns on E2/F2 (each 7 wide).
 _BACKUP_COLS = (38, 46, 54)
+
+# E1/F1 event age range (min cols 23-25, max 26-28). Open-ended groups use
+# sentinels that map to None, matching how `.cl2` represents an open bound.
+_AGE_OPEN_LOW = 0  # "& Under" — no lower bound
+_AGE_OPEN_HIGH = 109  # "& Over" — no upper bound
 
 # G1 split layout: up to eleven 11-char blocks starting at column 3.
 _SPLITS_PER_RECORD = 11
@@ -195,6 +199,11 @@ class _Hy3Engine(_BaseEngine):
     def _rank(self, rec: Record, start: int, length: int) -> int | None:
         val = self._opt_int(rec, start, length)
         return val if val is not None and val > 0 else None
+
+    def _event_age(self, rec: Record, start: int, open_sentinel: int) -> int | None:
+        """Parse a 3-col event age bound; the open-ended sentinel maps to None."""
+        val = self._opt_int(rec, start, 3)
+        return None if val is None or val == open_sentinel else val
 
     def _backup_times(self, rec: Record) -> tuple[Time, ...]:
         return tuple(t for c in _BACKUP_COLS if (t := self._hy3_time(rec, c, 7)) is not None)
@@ -358,6 +367,9 @@ class _Hy3Engine(_BaseEngine):
             event_sex=self._event_sex(rec, 15),
             distance=self._opt_int(rec, 16, 6),
             stroke=self._stroke(rec, 22, _STROKE),
+            event_min_age=self._event_age(rec, 23, _AGE_OPEN_LOW),
+            event_max_age=self._event_age(rec, 26, _AGE_OPEN_HIGH),
+            event_number=rec.text(39, 4),
             seed_time=self._hy3_time(rec, 53, 7),
             seed_course=self._opt_course(rec, 60),
             converted_seed_time=self._hy3_time(rec, 44, 7),
@@ -378,25 +390,20 @@ class _Hy3Engine(_BaseEngine):
             return
 
         course = self._opt_course(rec, 12)
-        event = (
-            Event.find(entry.distance, entry.stroke, course)
-            if entry.distance is not None
-            and entry.stroke is not None
-            and entry.event_sex is not None
-            and course is not None
-            else None
+        event = self._resolve_event(
+            rec,
+            distance=entry.distance,
+            stroke=entry.stroke,
+            sex=entry.event_sex,
+            course=course,
+            field="event",
+            column="12/1",
+            mandatory="M1#",
+            noun="event",
+            distance_display=str(entry.distance),
+            stroke_display=repr(rec.raw(22, 1).strip()),
         )
         if event is None:
-            self._warn(
-                rec,
-                "event",
-                "12/1",
-                "M1#",
-                Severity.SKIPPED,
-                IssueKind.UNKNOWN_CODE,
-                f"unresolvable event (distance={entry.distance} "
-                f"stroke={rec.raw(22, 1).strip()!r} course={course})",
-            )
             st.current_individual_swim = None
             st.current_relay = None
             st.last_leaf = None
@@ -409,9 +416,10 @@ class _Hy3Engine(_BaseEngine):
             club=None if st.unattached else st.current_club,
             organization=Organization.USS,
             event=event,
-            event_min_age=None,
-            event_max_age=None,
+            event_min_age=entry.event_min_age,
+            event_max_age=entry.event_max_age,
             event_sex=entry.event_sex,
+            event_number=entry.event_number,
             session=self._code(rec, 3, 1, Session, "round", "3/1", "M2") or Session.FINALS,
             status=status,
             time=self._hy3_time(rec, 5, 7) if valid else None,
@@ -446,6 +454,9 @@ class _Hy3Engine(_BaseEngine):
             event_sex=self._event_sex(rec, 15),
             distance=self._opt_int(rec, 19, 3),
             stroke=self._stroke(rec, 22, _RELAY_STROKE),
+            event_min_age=self._event_age(rec, 23, _AGE_OPEN_LOW),
+            event_max_age=self._event_age(rec, 26, _AGE_OPEN_HIGH),
+            event_number=rec.text(39, 4),
             seed_time=self._hy3_time(rec, 53, 7),
             seed_course=self._opt_course(rec, 60),
             converted_seed_time=self._hy3_time(rec, 44, 7),
@@ -463,25 +474,20 @@ class _Hy3Engine(_BaseEngine):
             return
 
         course = self._opt_course(rec, 12)
-        event = (
-            Event.find(entry.distance, entry.stroke, course)
-            if entry.distance is not None
-            and entry.stroke is not None
-            and entry.event_sex is not None
-            and course is not None
-            else None
+        event = self._resolve_event(
+            rec,
+            distance=entry.distance,
+            stroke=entry.stroke,
+            sex=entry.event_sex,
+            course=course,
+            field="event",
+            column="12/1",
+            mandatory="M1",
+            noun="relay event",
+            distance_display=str(entry.distance),
+            stroke_display=repr(rec.raw(22, 1).strip()),
         )
         if event is None:
-            self._warn(
-                rec,
-                "event",
-                "12/1",
-                "M1",
-                Severity.SKIPPED,
-                IssueKind.UNKNOWN_CODE,
-                f"unresolvable relay event (distance={entry.distance} "
-                f"stroke={rec.raw(22, 1).strip()!r} course={course})",
-            )
             st.current_relay = None
             st.current_individual_swim = None
             st.last_leaf = None
@@ -494,9 +500,10 @@ class _Hy3Engine(_BaseEngine):
             club=None if st.unattached else st.current_club,
             organization=Organization.USS,
             event=event,
-            event_min_age=None,
-            event_max_age=None,
+            event_min_age=entry.event_min_age,
+            event_max_age=entry.event_max_age,
             event_sex=entry.event_sex,
+            event_number=entry.event_number,
             session=self._code(rec, 3, 1, Session, "round", "3/1", "M2") or Session.FINALS,
             status=status,
             time=self._hy3_time(rec, 6, 6) if valid else None,
@@ -569,21 +576,7 @@ class _Hy3Engine(_BaseEngine):
             tag, val = time_value(block[3:_SPLIT_WIDTH])
             if tag == "blank" or (isinstance(val, Time) and val.centiseconds == 0):
                 continue  # blank or `0.00` placeholder for an unrecorded split
-            if tag == "bad":
-                self._warn(
-                    rec,
-                    "split_time",
-                    None,
-                    None,
-                    Severity.RECOVERED,
-                    IssueKind.MALFORMED,
-                    "malformed split time",
-                )
-                target.append(Split(distance=distance, time=None, split_type=SplitType.CUMULATIVE))
-            else:
-                assert isinstance(val, Time)
-                target.append(Split(distance=distance, time=val, split_type=SplitType.CUMULATIVE))
-            self.report.splits_parsed += 1
+            self._append_split(rec, target, distance, tag, val, SplitType.CUMULATIVE)
 
     def _g1_target(self) -> list[Split] | None:
         st = self.state

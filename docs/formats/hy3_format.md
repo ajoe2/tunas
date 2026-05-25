@@ -305,9 +305,11 @@ E1F 3420AllisFW   200A  0109  0S 11.00 17   114.87Y  114.87Y    0.00    0.00   N
 | 15 | Event Sex | C | Competition category: `W` (Women), `M` (Men), `G` (Girls), `B` (Boys), `X` (Mixed) |
 | 16–21 | Event Distance | C | Distance in yards or meters, right-justified |
 | 22 | Stroke Code | C | Stroke category: `A` (Free), `B` (Back), `C` (Breast), `D` (Fly), `E` (IM), `F`/`G` (Diving) |
-| 25–28 | Event Number | I | Event sequence number |
+| 23–25 | Event Min Age | C | Minimum event age, right-justified; `0` = no lower bound (e.g. "10 & Under") |
+| 26–28 | Event Max Age | C | Maximum event age, right-justified; `109` = no upper bound (e.g. "11 & Over") |
 | 31–32 | Time-Standard Class | I | Col 32 denotes the classification tier (e.g., `S` for Senior/Open, `A`, `B`, `U`) |
 | 34–38 | Event Fee | ? | Event fee amount (`NN.NN` format) |
+| 39–42 | Event Number | C | Event sequence number, right-justified |
 | 44–50 | Converted Seed Time | C | Seed time converted to the meet's primary course (seconds as a decimal, e.g., `114.87`) |
 | 51 | Converted Seed Course | C | Course code for converted seed time |
 | 53–59 | Original Seed Time | C | Original entered seed time (seconds as a decimal, e.g., `114.87`) |
@@ -323,6 +325,9 @@ The event sex character (col 15) represents competition categorization conventio
 - `G` (Girls) / `B` (Boys): Typically used in age-group divisions.
 - `W` (Women) / `M` (Men): Typically used in senior or open divisions.
 - `X` (Mixed): Used for co-ed events.
+
+#### Event Age Range
+The event's age group is two right-justified integers: minimum age (cols 23–25) and maximum age (cols 26–28). Open-ended groups use sentinels — `0` for no lower bound and `109` for no upper bound — so `0`/`8` is "8 & Under", `11`/`109` is "11 & Over", and `0`/`109` is an open event. (Earlier revisions of this document mislabeled cols 25–28 as the event number; the event number is at cols 39–42.)
 
 #### Springboard Diving Entries
 For diving events, the stroke code is `F` (1-meter springboard) or `G` (3-meter springboard). The event distance field contains the required number of dives (typically `6` or `11`).
@@ -388,7 +393,9 @@ F1ALPH A   0FFW   400E  0109  0S 24.00 11   243.30Y  243.30Y    0.00    0.00   N
 | 15 | Event Sex | C | Event category: `W`, `M`, `G`, `B`, `X` |
 | 19–21 | Relay Distance | C | Total relay distance (e.g., `400`, `800`) |
 | 22 | Relay Stroke Code | C | Stroke code: `A` (Freestyle Relay), `E` (Medley Relay) |
-| 25–28 | Event Number | I | Event sequence number |
+| 23–25 | Event Min Age | C | Minimum event age, right-justified; `0` = no lower bound |
+| 26–28 | Event Max Age | C | Maximum event age, right-justified; `109` = no upper bound |
+| 39–42 | Event Number | C | Event sequence number, right-justified |
 | 44–50 | Converted Seed Time | C | Converted seed time in seconds |
 | 51 | Converted Seed Course | C | Course code for converted seed time |
 | 53–59 | Original Seed Time | C | Original entered seed time in seconds |
@@ -523,7 +530,7 @@ The first digit of the DQ code represents the stroke category:
 
 The following fields in the `.hy3` format are not represented in the SDIF format and remain unmapped or partially resolved:
 - **Result Code (`E2` col 96 / `F2` col 111):** Contains `{blank, A, K, ?}`. The precise meaning is undetermined, though `K`/`?` entries correlate with a lack of backup watch times.
-- **Meet Host Config (`B2` cols 93–98):** Triple 2-digit numeric block of undetermined config details.
+- **Meet Host Config (`B2` cols 93–98):** Triple 2-digit numeric block of undetermined config details. The third pair (cols 97–98) is a plausible candidate for a 2-digit meet-type code (`00`–`09`, `0A`–`0C`); the external [SwimComm/hytek-parser](https://github.com/SwimComm/hytek-parser) decodes it as such and reads a "masters" flag near cols 94–95. This is unverified against the SDIF cross-reference corpus (and the masters read straddles the field boundary), so it remains a gap here.
 - **Team Registry Counts (`C1` cols 118, 119, 122):** Small integers tracking unverified team metrics.
 - **Entry Surcharges (`E1` cols 34–38, 64–76):** Financial or administrative charge structures.
 - **Record Structure `C8`:** A rare, near-empty team-block record type whose internal columns are undocumented.
@@ -546,12 +553,13 @@ D1      sex 3 | num 4-8 | last 9-28 | first 29-48 | pref 49-68 | middle-init 69 
         member-id 70-83 | sec-idx 85-88 | dob 89-96 (MMDDYYYY, blank if WODOB) |
         age 98-99 | class 100-101 | citizen 113-115 | flags 105='0' 125='N'
 E1      sex 3 | num 4-8 | last5 9-13 | sex 14 | evsex 15 | dist 16-21 | stroke 22 |
-        event# 25-28 | seed_conv 44-50 course 51 | seed_entered 53-59 course 60 |
-        team-level 77-78 (JV/VR)
+        agemin 23-25 (0=open) | agemax 26-28 (109=open) | event# 39-42 |
+        seed_conv 44-50 course 51 | seed_entered 53-59 course 60 | team-level 77-78 (JV/VR)
 E2      round 3 (P/F/S) | time 5-11 | course 12 | status 13 | dqcode 14-15 |
         heat 22-23 | lane 25-26 | place_in_heat 28-29 | place 31-33 |
         watch1 38-44 | watch2 46-52 | watch3 54-60 | date 88-95 (MMDDYYYY) | code96
-F1      team 3-6 | relay 8 | evsex 15 | dist 19-21 | stroke 22 (A/E) | event# 25-28 |
+F1      team 3-6 | relay 8 | evsex 15 | dist 19-21 | stroke 22 (A/E) |
+        agemin 23-25 (0=open) | agemax 26-28 (109=open) | event# 39-42 |
         seed_conv 44-50 course 51 | seed_entered 53-59 course 60 | swimmers 85='4'
 F2      round 3 | time 6-11 | course 12 | status 13 | heat 22-23 | lane 25-26 |
         place 31-33 | takeoffs ~83-102 | date 103-110 (MMDDYYYY) | code 111

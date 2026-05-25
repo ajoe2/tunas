@@ -35,6 +35,9 @@ def _swim(swim: IndividualSwim) -> dict:
     return {
         "event": swim.event.name,
         "event_sex": swim.event_sex.name,
+        "event_min_age": swim.event_min_age,
+        "event_max_age": swim.event_max_age,
+        "event_number": swim.event_number,
         "session": swim.session.name,
         "status": swim.status.name,
         "time": str(swim.time) if swim.time is not None else None,
@@ -80,6 +83,9 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
         {
             "event": r.event.name,
             "event_sex": r.event_sex.name,
+            "event_min_age": r.event_min_age,
+            "event_max_age": r.event_max_age,
+            "event_number": r.event_number,
             "relay_letter": r.relay_letter,
             "session": r.session.name,
             "status": r.status.name,
