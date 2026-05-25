@@ -82,9 +82,11 @@ def _cutoff(standard: TimeStandard, event: Event, age: int, sex: Sex) -> int | N
 
 
 def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard | None:
-    """Determine the fastest USA Swimming motivational standard achieved for the given event, age, and sex.
+    """Determine the fastest USA Swimming motivational standard achieved for the given event,
+    age, and sex.
 
-    Uses a youngest-first lookup for the swimmer's age group (10 & Under, 11-12, 13-14, 15-16, 17-18).
+    Uses a youngest-first lookup for the swimmer's age group (10 & Under, 11-12, 13-14, 15-16,
+    17-18).
 
     Args:
         time: The swimmer's time.

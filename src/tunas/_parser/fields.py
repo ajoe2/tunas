@@ -101,7 +101,8 @@ def time_value(raw: str) -> tuple[str, Time | ResultStatus | None]:
     Returns:
         A tuple of `(status, value)` where `status` is one of:
         - `"time"`: Successfully parsed; `value` is a `Time` instance.
-        - `"status"`: Recognized non-time outcome (e.g. `"NS"`, `"DQ"`); `value` is a `ResultStatus`.
+        - `"status"`: Recognized non-time outcome (e.g. `"NS"`, `"DQ"`); `value` is a
+          `ResultStatus`.
         - `"blank"`: The field was blank; `value` is `None`.
         - `"bad"`: An unparseable or invalid time string; `value` is `None`.
     """
