@@ -210,4 +210,6 @@ def test_splits_live_on_leg_with_none_time() -> None:
     leg = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_1)
     leg.splits.append(Split(distance=50, time=None, split_type=SplitType.INTERVAL))
     assert leg.splits[0].time is None
-    assert not hasattr(relay, "splits")
+    # SDIF leaves the relay-level splits empty (they live on the legs); the
+    # whole-relay `Relay.splits` list is only populated by the `.hy3` reader.
+    assert relay.splits == []

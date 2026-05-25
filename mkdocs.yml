@@ -1,5 +1,5 @@
 site_name: tunas
-site_description: USA Swimming meet result (.cl2 / SDIF v3) parser and analysis library
+site_description: USA Swimming meet result (.cl2 / SDIF v3 and Hy-Tek .hy3) parser and analysis library
 site_url: https://ajoe2.github.io/tunas/
 repo_url: https://github.com/ajoe2/tunas
 repo_name: ajoe2/tunas

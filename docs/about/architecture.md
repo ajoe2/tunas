@@ -4,7 +4,8 @@ This document describes the design decisions and parser internals of `tunas`.
 
 ## Scope
 
-- **SDIF v3 Parsing:** Parses all results-related record types, including relays and splits.
+- **SDIF v3 (`.cl2`) Parsing:** Parses all results-related record types, including relays and splits.
+- **Hy-Tek (`.hy3`) Parsing:** `read_hy3` parses the reverse-engineered `.hy3` results format (confirmed fields only) into the same domain model.
 - **Domain Model:** Dataclasses representing `Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`, and supporting structures.
 - **Value Types:** Immutable representation of `Time`, `Event`, and enums.
 - **Offline Standards:** Motivational time standard lookups.
@@ -28,7 +29,7 @@ tunas/
 │   ├── event.py                Event enum and helper properties
 │   ├── exceptions.py           Error hierarchy
 │   ├── models.py               Slotted domain dataclasses
-│   ├── parser.py               read_cl2, ParseReport, and ParseWarning
+│   ├── parser.py               read_cl2, read_hy3, ParseReport, and ParseWarning
 │   ├── standards.py            Time-standards lookups
 │   ├── _parser/                Per-record parsing logic (internal)
 │   └── _data/                  Bundled package data (JSON standards, spec doc)
@@ -91,26 +92,31 @@ Data is exposed via plain attributes and properties rather than getter/setter me
 
 ## Parser internals
 
-`read_cl2` is a thin entry point in `parser.py`; the engine lives in the internal `_parser/`
+`read_cl2` and `read_hy3` are thin entry points in `parser.py` that share one generic driver
+(path resolution, sequential/parallel execution); each engine lives in the internal `_parser/`
 package and runs a single streaming pass per file:
 
 | Module | Responsibility |
 |---|---|
-| `handlers.py` | The `_Engine`: reads lines, dispatches on the 2-char record code, and assembles the object graph. Holds the `SessionColumns` layouts, per-session result assembly, and the `Z0` count check. |
-| `state.py` | `ParserState` — per-meet mutable context (current club/swimmer/relay, pending records), reset at every `B1`. |
-| `fields.py` | Fixed-width field extraction: slicing SDIF `start/length` columns and coercing to `int` / `date` / `Time` / code enums, emitting diagnostics on failure. |
+| `engine.py` | `_BaseEngine` — the format-agnostic core shared by both readers: the streaming line loop, record sizing/padding, structured diagnostics, and the typed field-coercion helpers. |
+| `cl2.py` | `_Cl2Engine(_BaseEngine)` — the SDIF engine: dispatches `A0`–`Z0`, holds the `SessionColumns` layouts, per-session result assembly, and the `Z0` count check. |
+| `hy3.py` | `_Hy3Engine(_BaseEngine)` — the Hy-Tek engine: dispatches records `A1` through `H2`, buffering entries (`E1`/`F1`) until their results (`E2`/`F2`). Parses confirmed fields only. |
+| `checksum.py` | The documented `.hy3` line-checksum algorithm and record dimensions (used to build test fixtures; not validated at parse time). |
+| `state.py` | `ParserState` (SDIF) and `Hy3State` — per-meet mutable context (current club/swimmer/relay, pending records), reset at every meet record. |
+| `fields.py` | Fixed-width field extraction: slicing `start/length` columns and coercing to `int` / `date` / `Time` / code enums, emitting diagnostics on failure. |
 | `names.py` | SDIF `NAME` parsing (`Last, First MI` → components). |
 | `ids.py` | Member-ID (USS#) normalization and the `id_short` → `id_long` identity rule. |
 | `diagnostics.py` | `Severity`, `IssueKind`, `ParseWarning`, `ParseReport` (re-exported from `parser.py`). |
 
 **Data flow.** Each line is decoded (CP-1252 by default), normalised (BOM and line endings
-stripped, short lines right-padded), and routed to a handler. `A0`/`Z0` populate the shared
-`SourceFile`; `B1` opens a `Meet` and resets state; `C1`/`C2` establish club context;
-`D0`/`E0` create result rows; `D1`/`D2`/`D3`/`G0` are continuation records that enrich the
-most recent swimmer/result; `F0` adds relay legs. Cross-references are wired as objects are
-created, so the returned graph needs no post-processing.
+stripped, short lines right-padded), and routed to a handler that wires cross-references as
+objects are created, so the returned graph needs no post-processing. For SDIF, `A0`/`Z0`
+populate the shared `SourceFile`; `B1` opens a `Meet`; `C1`/`C2` establish club context;
+`D0`/`E0` create result rows; `D1`/`D2`/`D3`/`G0` enrich the most recent swimmer/result; `F0`
+adds relay legs. The `.hy3` flow is analogous but splits athlete/entry/result across `D1`
+(athlete), `E1` (entry/seed), and `E2` (result), with relays in `F1`/`F2`/`F3`.
 
-In parallel mode (`max_workers > 1`) each file gets its own `_Engine`; the per-file meets and
+In parallel mode (`max_workers > 1`) each file gets its own engine; the per-file meets and
 `ParseReport`s are merged back in submission order via `ParseReport.merge`, producing output
 identical to the sequential pass.
 

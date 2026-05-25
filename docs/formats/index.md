@@ -1,11 +1,11 @@
 # File Format
 
-This section documents the fixed-width text formats used to distribute swim meet entries and results. While `tunas` parses only **SDIF v3 (`.cl2`)**, a reference for the proprietary **Hy-Tek (`.hy3`)** format is also included for comparison.
+This section documents the fixed-width text formats used to distribute swim meet entries and results. `tunas` parses both **SDIF v3 (`.cl2`)** via [`read_cl2`](../guide/parsing.md) and the proprietary **Hy-Tek (`.hy3`)** format via [`read_hy3`](../guide/parsing.md#read_hy3).
 
 ### Supported Formats
 
 - **[SDIF (`.cl2`)](cl2_format.md)** — The open **Standard Data Interchange Format v3** established by USA Swimming and produced by Hy-Tek Meet Manager and TeamUnify. This guide is a complete field-level reference (covering all record types `A0`–`Z0`, registration `D1`/`D2`, and time-standard `J0`–`J2` records) derived from the official spec.
-- **[Hy-Tek (`.hy3`)](hy3_format.md)** — The proprietary, **reverse-engineered** results format used across Hy-Tek Meet Manager and Team Manager. It serves as the cross-validated sibling to `.cl2`; `tunas` does not parse it.
+- **[Hy-Tek (`.hy3`)](hy3_format.md)** — The proprietary, **reverse-engineered** results format used across Hy-Tek Meet Manager and Team Manager — the cross-validated sibling to `.cl2`. `read_hy3` parses the fields confirmed in this reference into the same object graph.
 
 ### Methodology
 

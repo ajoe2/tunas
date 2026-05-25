@@ -1,21 +1,21 @@
-"""SDIF parse engine that dispatches record types and assembles the object graph."""
+"""SDIF (`.cl2`) parse engine: dispatches record types and assembles the object graph."""
 
 from __future__ import annotations
 
 import datetime
 from collections import Counter
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import StrEnum
-from typing import NoReturn, TypedDict, TypeVar
+from typing import ClassVar, TypedDict, TypeVar
 
-from tunas._parser.diagnostics import IssueKind, ParseReport, ParseWarning, Severity
+from tunas._parser.diagnostics import IssueKind, Severity
+from tunas._parser.engine import _BaseEngine
 from tunas._parser.fields import (
     RECORD_WIDTH,
     Record,
     code_value,
     course_value,
-    date_value,
     decimal_value,
     event_age_value,
     int_value,
@@ -27,7 +27,6 @@ from tunas._parser.state import ParserState, PendingIndividual
 from tunas.enums import (
     Affiliation,
     AttachStatus,
-    Citizenship,
     Course,
     Ethnicity,
     EventTimeClass,
@@ -45,7 +44,6 @@ from tunas.enums import (
     Stroke,
 )
 from tunas.event import Event
-from tunas.exceptions import ParseError
 from tunas.geography import LSC, Country, State
 from tunas.models import (
     CitizenshipOrCountry,
@@ -183,64 +181,31 @@ _Z0_CHECKS = (
 )
 
 
-class _Engine:
-    """Stateful parser. One instance per ``read_cl2`` call, reused across files."""
+class _Cl2Engine(_BaseEngine):
+    """Stateful SDIF parser. One instance per ``read_cl2`` call, reused across files."""
+
+    RECORD_WIDTH: ClassVar[int] = RECORD_WIDTH
+    READER: ClassVar[str] = "read_cl2"
 
     def __init__(self, *, strict: bool) -> None:
-        self.strict = strict
-        self.report = ParseReport()
-        self.meets: list[Meet] = []
-        self.source = "<stream>"
-        self.source_file: SourceFile | None = None
-        self.file_counts: Counter[str] = Counter()
-        self.meets_this_file = 0
+        super().__init__(strict=strict)
         self.state: ParserState | None = None
 
-    # -- public driver ----------------------------------------------------- #
+    # -- per-file hooks ---------------------------------------------------- #
 
-    def parse_source(self, lines: Iterable[object], source: str) -> None:
-        """Parse one file/stream's lines, accumulating into ``self.meets``."""
-        self.source = source
-        self.report.files_read += 1
-        self.source_file = None
-        self.file_counts = Counter()
-        self.meets_this_file = 0
+    def _reset_state(self) -> None:
         self.state = None
 
-        first = True
-        for line_no, raw in enumerate(lines, start=1):
-            if not isinstance(raw, str):
-                raise TypeError("read_cl2 requires a text source yielding str, not bytes")
-            if first:
-                raw = raw.lstrip("﻿")
-                first = False
-            self._feed(raw, line_no)
+    def _finish_file(self) -> None:
         self._commit_pending()
-
-    # -- line handling ----------------------------------------------------- #
 
     def _feed(self, raw: str, line_no: int) -> None:
         line = raw.rstrip("\r\n")
         if not line.strip():
             return
-        if len(line) > RECORD_WIDTH:
-            self._emit(
-                self.source,
-                line_no,
-                line[0:2] or None,
-                None,
-                None,
-                None,
-                Severity.SKIPPED,
-                IssueKind.BAD_LENGTH,
-                f"line is {len(line)} chars (> {RECORD_WIDTH})",
-                line,
-            )
+        rec = self._sized_record(line, line_no)
+        if rec is None:
             return
-        if len(line) < RECORD_WIDTH:
-            line = line.ljust(RECORD_WIDTH)
-
-        rec = Record(line, line_no, self.source)
         self.file_counts[rec.type] += 1
 
         if rec.type not in _CONTINUATION and self.state and self.state.pending_individual:
@@ -260,187 +225,7 @@ class _Engine:
             return
         handler(self, rec)
 
-    # -- diagnostics ------------------------------------------------------- #
-
-    def _emit(
-        self,
-        source: str,
-        line_no: int,
-        record_type: str | None,
-        field: str | None,
-        column: str | None,
-        mandatory: str | None,
-        severity: Severity,
-        kind: IssueKind,
-        reason: str,
-        raw_line: str,
-    ) -> None:
-        w = ParseWarning(
-            source=source,
-            line_no=line_no,
-            record_type=record_type,
-            field=field,
-            column=column,
-            mandatory=mandatory,
-            severity=severity,
-            kind=kind,
-            reason=reason,
-            raw_line=raw_line[:200],
-        )
-        if severity is Severity.FATAL or self.strict:
-            raise ParseError(w)
-        self.report.warnings.append(w)
-        if severity is Severity.SKIPPED:
-            self.report.records_skipped += 1
-        elif severity is Severity.RECOVERED and kind is not IssueKind.COUNT_MISMATCH:
-            self.report.fields_recovered += 1
-
-    def _warn(
-        self,
-        rec: Record,
-        field: str | None,
-        column: str | None,
-        mandatory: str | None,
-        severity: Severity,
-        kind: IssueKind,
-        reason: str,
-    ) -> None:
-        self._emit(
-            rec.source,
-            rec.line_no,
-            rec.type,
-            field,
-            column,
-            mandatory,
-            severity,
-            kind,
-            reason,
-            rec.line,
-        )
-
-    def _skip_orphan(self, rec: Record, reason: str) -> None:
-        """Skip a record that arrived without its required parent context."""
-        self._warn(rec, None, None, None, Severity.SKIPPED, IssueKind.ORPHANED, reason)
-
-    def _fatal(
-        self, rec: Record, field: str, column: str, mandatory: str, kind: IssueKind, reason: str
-    ) -> NoReturn:
-        raise ParseError(
-            ParseWarning(
-                source=rec.source,
-                line_no=rec.line_no,
-                record_type=rec.type,
-                field=field,
-                column=column,
-                mandatory=mandatory,
-                severity=Severity.FATAL,
-                kind=kind,
-                reason=reason,
-                raw_line=rec.line[:200],
-            )
-        )
-
-    # -- typed field helpers ----------------------------------------------- #
-
-    def _require_text(self, rec: Record, start: int, length: int, field: str, column: str) -> str:
-        v = rec.text(start, length)
-        if v is None:
-            self._fatal(rec, field, column, "M1", IssueKind.MISSING, f"missing {field}")
-        assert v is not None  # _fatal raised
-        return v
-
-    def _require_code(
-        self, rec: Record, start: int, length: int, enum_cls: type[_E], field: str, column: str
-    ) -> _E:
-        tag, val = code_value(rec.raw(start, length), enum_cls)
-        if tag == "blank":
-            self._fatal(rec, field, column, "M1", IssueKind.MISSING, f"missing {field}")
-        if tag == "unknown":
-            self._fatal(
-                rec,
-                field,
-                column,
-                "M1",
-                IssueKind.UNKNOWN_CODE,
-                f"unknown {field} code {rec.raw(start, length).strip()!r}",
-            )
-        assert val is not None
-        return val
-
-    def _code(
-        self,
-        rec: Record,
-        start: int,
-        length: int,
-        enum_cls: type[_E],
-        field: str,
-        column: str,
-        mandatory: str | None,
-    ) -> _E | None:
-        tag, val = code_value(rec.raw(start, length), enum_cls)
-        if tag == "unknown":
-            self._warn(
-                rec,
-                field,
-                column,
-                mandatory,
-                Severity.RECOVERED,
-                IssueKind.UNKNOWN_CODE,
-                f"unknown {field} code {rec.raw(start, length).strip()!r}",
-            )
-        return val
-
-    def _date(
-        self, rec: Record, start: int, length: int, field: str, column: str, mandatory: str | None
-    ) -> datetime.date | None:
-        tag, val = date_value(rec.raw(start, length))
-        if tag == "bad":
-            self._warn(
-                rec,
-                field,
-                column,
-                mandatory,
-                Severity.RECOVERED,
-                IssueKind.MALFORMED,
-                f"malformed {field} date {rec.raw(start, length).strip()!r}",
-            )
-        elif tag == "blank" and mandatory == "M2":
-            self._warn(
-                rec,
-                field,
-                column,
-                mandatory,
-                Severity.RECOVERED,
-                IssueKind.MISSING,
-                f"missing {field}",
-            )
-        return val
-
-    def _opt_int(self, rec: Record, start: int, length: int) -> int | None:
-        _, val = int_value(rec.raw(start, length))
-        return val
-
-    def _citizenship(self, rec: Record, start: int, length: int) -> CitizenshipOrCountry | None:
-        v = rec.raw(start, length).strip()
-        if not v:
-            return None
-        try:
-            return Citizenship(v)
-        except ValueError:
-            pass
-        try:
-            return Country(v)
-        except ValueError:
-            self._warn(
-                rec,
-                "citizenship",
-                f"{start}/{length}",
-                None,
-                Severity.RECOVERED,
-                IssueKind.UNKNOWN_CODE,
-                f"unknown citizenship {v!r}",
-            )
-            return None
+    # -- typed field helpers (cl2-specific) -------------------------------- #
 
     def _time_classes(
         self, rec: Record, start: int
@@ -975,14 +760,6 @@ class _Engine:
                 return course
         return default
 
-    def _opt_time(self, rec: Record, start: int) -> Time | None:
-        tag, val = time_value(rec.raw(start, 8))
-        return val if tag == "time" and isinstance(val, Time) else None
-
-    def _opt_course(self, rec: Record, start: int) -> Course | None:
-        tag, val = course_value(rec.raw(start, 1))
-        return val if tag == "ok" else None
-
     def _h_d1(self, rec: Record) -> None:
         st = self.state
         if st is None or st.current_swimmer is None:
@@ -1279,13 +1056,6 @@ class _Engine:
                 target_splits.append(Split(distance=distance, time=val, split_type=split_type))
             self.report.splits_parsed += 1
 
-    def _require_int(self, rec: Record, start: int, length: int, field: str, column: str) -> int:
-        tag, val = int_value(rec.raw(start, length))
-        if tag != "int" or val is None:
-            self._fatal(rec, field, column, "M1", IssueKind.MALFORMED, f"missing/malformed {field}")
-        assert val is not None
-        return val
-
     def _g0_target(self, rec: Record, session: Session | None) -> list[Split] | None:
         st = self.state
         assert st is not None
@@ -1338,18 +1108,18 @@ class _Engine:
 
 
 # Dispatch table — every modeled record type.
-_HANDLERS: dict[str, Callable[[_Engine, Record], None]] = {
-    "A0": _Engine._h_a0,
-    "B1": _Engine._h_b1,
-    "B2": _Engine._h_b2,
-    "C1": _Engine._h_c1,
-    "C2": _Engine._h_c2,
-    "D0": _Engine._h_d0,
-    "D1": _Engine._h_d1,
-    "D2": _Engine._h_d2,
-    "D3": _Engine._h_d3,
-    "E0": _Engine._h_e0,
-    "F0": _Engine._h_f0,
-    "G0": _Engine._h_g0,
-    "Z0": _Engine._h_z0,
+_HANDLERS: dict[str, Callable[[_Cl2Engine, Record], None]] = {
+    "A0": _Cl2Engine._h_a0,
+    "B1": _Cl2Engine._h_b1,
+    "B2": _Cl2Engine._h_b2,
+    "C1": _Cl2Engine._h_c1,
+    "C2": _Cl2Engine._h_c2,
+    "D0": _Cl2Engine._h_d0,
+    "D1": _Cl2Engine._h_d1,
+    "D2": _Cl2Engine._h_d2,
+    "D3": _Cl2Engine._h_d3,
+    "E0": _Cl2Engine._h_e0,
+    "F0": _Cl2Engine._h_f0,
+    "G0": _Cl2Engine._h_g0,
+    "Z0": _Cl2Engine._h_z0,
 }

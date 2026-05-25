@@ -1,0 +1,1758 @@
+{
+  "file": "pasa_distance_intersquad.hy3",
+  "report": {
+    "files_read": 1,
+    "meets_parsed": 1,
+    "swimmers_parsed": 32,
+    "individual_swims_parsed": 61,
+    "relays_parsed": 13,
+    "splits_parsed": 20,
+    "records_skipped": 2,
+    "fields_recovered": 0
+  },
+  "warnings": [
+    {
+      "record_type": "F2",
+      "field": "event",
+      "kind": "UNKNOWN_CODE",
+      "severity": "SKIPPED",
+      "count": 1
+    },
+    {
+      "record_type": "F3",
+      "field": null,
+      "kind": "ORPHANED",
+      "severity": "SKIPPED",
+      "count": 1
+    }
+  ],
+  "meet": {
+    "name": "2021 PASA SC Distance Intersquad Meet",
+    "venue": "Rinconada",
+    "start_date": "2021-05-01",
+    "end_date": "2021-05-01",
+    "age_up_date": "2021-05-01",
+    "altitude": 0,
+    "course": "SCY",
+    "sanction_number": null
+  },
+  "source_file": {
+    "hy3_file_type": "MEET_RESULTS",
+    "software_name": "MM5 7.0Gb",
+    "created": "2021-05-02",
+    "created_time": "12:14:00",
+    "licensee": "Central Coast Section Championship Meet"
+  },
+  "clubs": [
+    {
+      "team_code": "PASA",
+      "lsc": "PACIFIC",
+      "full_name": "PALO ALTO STANFORD AQUATICS",
+      "email": null,
+      "swimmer_count": 32,
+      "result_count": 74
+    }
+  ],
+  "swimmers": [
+    {
+      "sex": "MALE",
+      "last_name": "Abucejo",
+      "first_name": "Gregory",
+      "preferred_first_name": "Gregory",
+      "middle_initial": "L",
+      "id_short": "031005GRELABUC",
+      "birthday": "2005-03-10",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "SCR",
+          "time": null,
+          "rank": null,
+          "seed_time": "25.49",
+          "converted_seed_time": "25.49",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "16",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Abucejo",
+      "first_name": "Martin",
+      "preferred_first_name": "Martin",
+      "middle_initial": "R",
+      "id_short": "061409MARRABUC",
+      "birthday": "2009-06-14",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:51.14",
+          "rank": 2,
+          "seed_time": "7:24.38",
+          "converted_seed_time": "7:24.38",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "30.21",
+          "rank": 7,
+          "seed_time": "31.39",
+          "converted_seed_time": "31.39",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Adwere-Boamah",
+      "first_name": "Jason",
+      "preferred_first_name": "Jason",
+      "middle_initial": "D",
+      "id_short": "052507JASDADWE",
+      "birthday": "2007-05-25",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:20.05",
+          "rank": 5,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "31.58",
+          "rank": 6,
+          "seed_time": "30.09",
+          "converted_seed_time": "30.09",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Anagnoson",
+      "first_name": "Gabriel",
+      "preferred_first_name": "Gabriel",
+      "middle_initial": "A",
+      "id_short": "042906GABAANAG",
+      "birthday": "2006-04-29",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "11:53.86",
+          "rank": 1,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "15",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "24.99",
+          "rank": 1,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "15",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Anagnoson",
+      "first_name": "Lily",
+      "preferred_first_name": "Lily",
+      "middle_initial": "K",
+      "id_short": "062008LILKANAG",
+      "birthday": "2008-06-20",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:52.73",
+          "rank": 3,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "27.73",
+          "rank": 2,
+          "seed_time": "27.31",
+          "converted_seed_time": "27.31",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Balva",
+      "first_name": "Maxwell Luke",
+      "preferred_first_name": "Maxwell",
+      "middle_initial": null,
+      "id_short": "080808MAXABALV",
+      "birthday": "2008-08-08",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:35.41",
+          "rank": 2,
+          "seed_time": "12:07.56",
+          "converted_seed_time": "12:07.56",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "28.99",
+          "rank": 5,
+          "seed_time": "29.16",
+          "converted_seed_time": "29.16",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Bora",
+      "first_name": "Isha",
+      "preferred_first_name": "Isha",
+      "middle_initial": "P",
+      "id_short": "100708ISHPBORA",
+      "birthday": "2008-10-07",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "31.07",
+          "rank": 6,
+          "seed_time": "29.31",
+          "converted_seed_time": "29.31",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "14:03.53",
+          "rank": 6,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Byrne",
+      "first_name": "Maren",
+      "preferred_first_name": "Maren",
+      "middle_initial": "C",
+      "id_short": "110308MARCBYRN",
+      "birthday": "2008-11-03",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "11:46.27",
+          "rank": 1,
+          "seed_time": "12:19.37",
+          "converted_seed_time": "12:19.37",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "26.45",
+          "rank": 1,
+          "seed_time": "25.91",
+          "converted_seed_time": "25.91",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Chow",
+      "first_name": "Brooklynn",
+      "preferred_first_name": "Brooklynn",
+      "middle_initial": "S",
+      "id_short": "021209BROSCHOW",
+      "birthday": "2009-02-12",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:45.40",
+          "rank": 2,
+          "seed_time": "6:45.84",
+          "converted_seed_time": "6:45.84",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "33.95",
+          "rank": 8,
+          "seed_time": "32.15",
+          "converted_seed_time": "32.15",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Chow",
+      "first_name": "Erin",
+      "preferred_first_name": "Erin",
+      "middle_initial": "K",
+      "id_short": "030108ERIKCHOW",
+      "birthday": "2008-03-01",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:32.95",
+          "rank": 2,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "28.01",
+          "rank": 2,
+          "seed_time": "28.40",
+          "converted_seed_time": "28.40",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Chuang",
+      "first_name": "Luyi",
+      "preferred_first_name": "Luyi",
+      "middle_initial": "Z",
+      "id_short": "090509LUYZCHUA",
+      "birthday": "2009-09-05",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:41.30",
+          "rank": 1,
+          "seed_time": "6:52.65",
+          "converted_seed_time": "6:52.65",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "29.98",
+          "rank": 4,
+          "seed_time": "30.80",
+          "converted_seed_time": "30.80",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Czajkowska",
+      "first_name": "Kinga",
+      "preferred_first_name": "Kinga",
+      "middle_initial": "P",
+      "id_short": "061707KINPCZAJ",
+      "birthday": "2007-06-17",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:58.14",
+          "rank": 1,
+          "seed_time": "7:30.83",
+          "converted_seed_time": "7:30.83",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "30.60",
+          "rank": 5,
+          "seed_time": "33.71",
+          "converted_seed_time": "33.71",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Czajkowski",
+      "first_name": "Tomasz",
+      "preferred_first_name": "Tomasz",
+      "middle_initial": "P",
+      "id_short": "011909TOMPCZAJ",
+      "birthday": "2009-01-19",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "27.56",
+          "rank": 3,
+          "seed_time": "30.05",
+          "converted_seed_time": "30.05",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:02.06",
+          "rank": 1,
+          "seed_time": "6:39.35",
+          "converted_seed_time": "6:39.35",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Dizitser",
+      "first_name": "Milan",
+      "preferred_first_name": "Milan",
+      "middle_initial": "S",
+      "id_short": "061909MILSDIZI",
+      "birthday": "2009-06-19",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:40.19",
+          "rank": 4,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "31.18",
+          "rank": 8,
+          "seed_time": "30.07",
+          "converted_seed_time": "30.07",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Doan",
+      "first_name": "Tran",
+      "preferred_first_name": "Tran",
+      "middle_initial": "B",
+      "id_short": "102407TRABDOAN",
+      "birthday": "2007-10-24",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:03.41",
+          "rank": 4,
+          "seed_time": "13:09.95",
+          "converted_seed_time": "13:09.95",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "26.32",
+          "rank": 1,
+          "seed_time": "27.63",
+          "converted_seed_time": "27.63",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Dye",
+      "first_name": "Kira",
+      "preferred_first_name": "Kira",
+      "middle_initial": "L",
+      "id_short": "051208KIRLDYE*",
+      "birthday": "2008-05-12",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:05.51",
+          "rank": 5,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "29.84",
+          "rank": 3,
+          "seed_time": "32.40",
+          "converted_seed_time": "32.40",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Faraboschi",
+      "first_name": "Alessandro",
+      "preferred_first_name": "Alessandro",
+      "middle_initial": null,
+      "id_short": "050708ALE*FARA",
+      "birthday": "2008-05-07",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:13.46",
+          "rank": 1,
+          "seed_time": "12:16.86",
+          "converted_seed_time": "12:16.86",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "26.84",
+          "rank": 2,
+          "seed_time": "26.33",
+          "converted_seed_time": "26.33",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Hara",
+      "first_name": "Yuka",
+      "preferred_first_name": "Yuka",
+      "middle_initial": null,
+      "id_short": "020808YUK*HARA",
+      "birthday": "2008-02-08",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "11:48.99",
+          "rank": 1,
+          "seed_time": "12:45.04",
+          "converted_seed_time": "12:45.04",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "29.04",
+          "rank": 4,
+          "seed_time": "31.00",
+          "converted_seed_time": "31.00",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Karachiwala",
+      "first_name": "Akariko",
+      "preferred_first_name": "Akariko",
+      "middle_initial": null,
+      "id_short": "062209AKA*KARA",
+      "birthday": "2009-06-22",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:47.63",
+          "rank": 2,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "11",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Kirk",
+      "first_name": "Katherine",
+      "preferred_first_name": "Katherine",
+      "middle_initial": "M",
+      "id_short": "040409KATMKIRK",
+      "birthday": "2009-04-04",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:03.76",
+          "rank": 4,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "30.35",
+          "rank": 5,
+          "seed_time": "32.82",
+          "converted_seed_time": "32.82",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Lee",
+      "first_name": "Edison",
+      "preferred_first_name": "Edison",
+      "middle_initial": "S",
+      "id_short": "052808EDISLEE*",
+      "birthday": "2008-05-28",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:36.83",
+          "rank": 3,
+          "seed_time": "13:04.80",
+          "converted_seed_time": "13:04.80",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "27.89",
+          "rank": 4,
+          "seed_time": "29.29",
+          "converted_seed_time": "29.29",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Lin",
+      "first_name": "Hongyu",
+      "preferred_first_name": "Hongyu",
+      "middle_initial": null,
+      "id_short": "011908HON*LIN*",
+      "birthday": "2008-01-19",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "26.01",
+          "rank": 2,
+          "seed_time": "25.94",
+          "converted_seed_time": "25.94",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:23.18",
+          "rank": 2,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "NI",
+      "first_name": "Eric",
+      "preferred_first_name": "Eric",
+      "middle_initial": null,
+      "id_short": "090607ERI*NI**",
+      "birthday": "2007-09-06",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "28.11",
+          "rank": 3,
+          "seed_time": "29.39",
+          "converted_seed_time": "29.39",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "13:04.70",
+          "rank": 4,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "OH",
+      "first_name": "Kristen",
+      "preferred_first_name": "Kristen",
+      "middle_initial": "S",
+      "id_short": "031809KRISOH**",
+      "birthday": "2009-03-18",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "34.89",
+          "rank": 9,
+          "seed_time": "32.41",
+          "converted_seed_time": "32.41",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "16:07.01",
+          "rank": 7,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Pargett",
+      "first_name": "Alexandria",
+      "preferred_first_name": "Alexandria",
+      "middle_initial": "S",
+      "id_short": "062905ALESPARG",
+      "birthday": "2005-06-29",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:16.45",
+          "rank": 1,
+          "seed_time": "12:36.29",
+          "converted_seed_time": "12:36.29",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "15",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "27.18",
+          "rank": 1,
+          "seed_time": "27.01",
+          "converted_seed_time": "27.01",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "15",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Sharma",
+      "first_name": "Sahir",
+      "preferred_first_name": "Sahir",
+      "middle_initial": "S",
+      "id_short": "100407SAHSSHAR",
+      "birthday": "2007-10-04",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "11:43.99",
+          "rank": 1,
+          "seed_time": "12:12.84",
+          "converted_seed_time": "12:12.84",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "25.05",
+          "rank": 1,
+          "seed_time": "24.87",
+          "converted_seed_time": "24.87",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Stonich",
+      "first_name": "Julianna",
+      "preferred_first_name": "Julianna",
+      "middle_initial": "R",
+      "id_short": "040809JULRSTON",
+      "birthday": "2009-04-08",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "6:48.21",
+          "rank": 3,
+          "seed_time": "7:25.20",
+          "converted_seed_time": "7:25.20",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "31.69",
+          "rank": 7,
+          "seed_time": "34.08",
+          "converted_seed_time": "34.08",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Thiyagarajan",
+      "first_name": "Tilak",
+      "preferred_first_name": "Tilak",
+      "middle_initial": null,
+      "id_short": "080608TIL*THIY",
+      "birthday": "2008-08-06",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "15:19.50",
+          "rank": 5,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "29.60",
+          "rank": 6,
+          "seed_time": "32.25",
+          "converted_seed_time": "32.25",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Wei",
+      "first_name": "Matthew",
+      "preferred_first_name": "Matthew",
+      "middle_initial": null,
+      "id_short": "040308MAT*WEI*",
+      "birthday": "2008-04-03",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:27.90",
+          "rank": 3,
+          "seed_time": "12:16.61",
+          "converted_seed_time": "12:16.61",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "28.91",
+          "rank": 4,
+          "seed_time": "28.84",
+          "converted_seed_time": "28.84",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "WU",
+      "first_name": "Andrew",
+      "preferred_first_name": "Andrew",
+      "middle_initial": null,
+      "id_short": "080908AND*WU**",
+      "birthday": "2008-08-09",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "26.26",
+          "rank": 1,
+          "seed_time": "26.89",
+          "converted_seed_time": "26.89",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "12",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "FEMALE",
+      "last_name": "Yuan",
+      "first_name": "Amelia",
+      "preferred_first_name": "Amelia",
+      "middle_initial": "P",
+      "id_short": "110107AMEPYUAN",
+      "birthday": "2007-11-01",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_1000_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "12:34.51",
+          "rank": 3,
+          "seed_time": "13:03.19",
+          "converted_seed_time": "13:03.19",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "FEMALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "28.08",
+          "rank": 3,
+          "seed_time": "27.87",
+          "converted_seed_time": "27.87",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    },
+    {
+      "sex": "MALE",
+      "last_name": "Zhang",
+      "first_name": "Gavin",
+      "preferred_first_name": "Gavin",
+      "middle_initial": "M",
+      "id_short": "022708GAVMZHAN",
+      "birthday": "2008-02-27",
+      "club_team_code": "PASA",
+      "swims": [
+        {
+          "event": "FREE_50_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "29.38",
+          "rank": 5,
+          "seed_time": "40.36",
+          "converted_seed_time": "40.36",
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        },
+        {
+          "event": "FREE_500_SCY",
+          "event_sex": "MALE",
+          "session": "FINALS",
+          "status": "OK",
+          "time": "7:20.39",
+          "rank": 1,
+          "seed_time": null,
+          "converted_seed_time": null,
+          "dq_code": null,
+          "dq_reason": null,
+          "swimmer_age_class": "13",
+          "splits": []
+        }
+      ]
+    }
+  ],
+  "relays": [
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "A",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:14.89",
+      "rank": 1,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:17.57"
+        },
+        {
+          "distance": 200,
+          "time": "4:14.89"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "062008LILKANAG"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "050708ALE*FARA"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "080908AND*WU**"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "110308MARCBYRN"
+        }
+      ]
+    },
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "B",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:22.81",
+      "rank": 2,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:08.01"
+        },
+        {
+          "distance": 150,
+          "time": "4:22.81"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "030108ERIKCHOW"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "102407TRABDOAN"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "011908HON*LIN*"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "100407SAHSSHAR"
+        }
+      ]
+    },
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "D",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:40.67",
+      "rank": 3,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:09.20"
+        },
+        {
+          "distance": 150,
+          "time": "4:40.67"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "110107AMEPYUAN"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "040308MAT*WEI*"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "020808YUK*HARA"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "052507JASDADWE"
+        }
+      ]
+    },
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "E",
+      "session": "FINALS",
+      "status": "DQ",
+      "time": null,
+      "rank": null,
+      "dq_code": "6T",
+      "dq_reason": "Other",
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:17.70"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "021209BROSCHOW"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "031809KRISOH**"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "040809JULRSTON"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "040409KATMKIRK"
+        }
+      ]
+    },
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "F",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "5:00.34",
+      "rank": 5,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:17.57"
+        },
+        {
+          "distance": 150,
+          "time": "5:00.34"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "100708ISHPBORA"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "051208KIRLDYE*"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "061409MARRABUC"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "011909TOMPCZAJ"
+        }
+      ]
+    },
+    {
+      "event": "MEDLEY_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "G",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:51.57",
+      "rank": 4,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "042906GABAANAG"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "061707KINPCZAJ"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "062905ALESPARG"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "090607ERI*NI**"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "A",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "3:52.21",
+      "rank": 1,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "58.42"
+        },
+        {
+          "distance": 150,
+          "time": "3:52.21"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "050708ALE*FARA"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "062008LILKANAG"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "080908AND*WU**"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "110308MARCBYRN"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "B",
+      "session": "FINALS",
+      "status": "DQ",
+      "time": null,
+      "rank": null,
+      "dq_code": "6T",
+      "dq_reason": "Other",
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:10.84"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "030108ERIKCHOW"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "061909MILSDIZI"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "040308MAT*WEI*"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "C",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:22.81",
+      "rank": 3,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "56.41"
+        },
+        {
+          "distance": 200,
+          "time": "4:22.81"
+        }
+      ],
+      "legs": []
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "D",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:27.93",
+      "rank": 4,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:14.23"
+        },
+        {
+          "distance": 150,
+          "time": "4:27.93"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "080608TIL*THIY"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "062209AKA*KARA"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "052808EDISLEE*"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "080808MAXABALV"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "E",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "4:06.44",
+      "rank": 2,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:12.11"
+        },
+        {
+          "distance": 200,
+          "time": "4:06.44"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "090509LUYZCHUA"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "051208KIRLDYE*"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "040809JULRSTON"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "021209BROSCHOW"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "F",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "5:32.47",
+      "rank": 6,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "022708GAVMZHAN"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "031809KRISOH**"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "061707KINPCZAJ"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "052507JASDADWE"
+        }
+      ]
+    },
+    {
+      "event": "FREE_400_RELAY_SCY",
+      "event_sex": "MIXED",
+      "relay_letter": "G",
+      "session": "FINALS",
+      "status": "OK",
+      "time": "5:21.34",
+      "rank": 5,
+      "dq_code": null,
+      "dq_reason": null,
+      "splits": [
+        {
+          "distance": 100,
+          "time": "1:08.19"
+        },
+        {
+          "distance": 200,
+          "time": "5:21.34"
+        }
+      ],
+      "legs": [
+        {
+          "order": "LEG_1",
+          "swimmer_id_short": "020808YUK*HARA"
+        },
+        {
+          "order": "LEG_2",
+          "swimmer_id_short": "090607ERI*NI**"
+        },
+        {
+          "order": "LEG_3",
+          "swimmer_id_short": "062905ALESPARG"
+        },
+        {
+          "order": "LEG_4",
+          "swimmer_id_short": "042906GABAANAG"
+        }
+      ]
+    }
+  ]
+}

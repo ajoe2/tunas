@@ -9,6 +9,7 @@ from tunas import (
     Ethnicity,
     EventTimeClass,
     FileType,
+    Hy3FileType,
     MeetType,
     Organization,
     Region,
@@ -36,6 +37,7 @@ from tunas.geography import LSC, Country, State
         EventTimeClass,
         Organization,
         FileType,
+        Hy3FileType,
         Citizenship,
         SplitType,
         ResultStatus,
@@ -54,7 +56,18 @@ def test_no_value_collisions(enum_cls: type[enum.Enum]) -> None:
 
 @pytest.mark.parametrize(
     "enum_cls",
-    [Sex, Stroke, Course, MeetType, Region, Organization, FileType, Citizenship, Season],
+    [
+        Sex,
+        Stroke,
+        Course,
+        MeetType,
+        Region,
+        Organization,
+        FileType,
+        Hy3FileType,
+        Citizenship,
+        Season,
+    ],
 )
 def test_roundtrip_by_code(enum_cls: type[enum.Enum]) -> None:
     for m in enum_cls:
@@ -83,6 +96,17 @@ def test_citizenship_codes() -> None:
 
 def test_filetype_meet_results() -> None:
     assert FileType("02") is FileType.MEET_RESULTS
+
+
+def test_hy3_filetype_distinct_from_sdif() -> None:
+    # The `.hy3` code space differs from SDIF's: "07" means meet results here,
+    # but national records/rankings in SDIF.
+    assert Hy3FileType("07") is Hy3FileType.MEET_RESULTS
+    assert FileType("07") is FileType.NATIONAL_RECORDS_RANKINGS
+
+
+def test_result_status_exhibition() -> None:
+    assert ResultStatus("EX") is ResultStatus.EXHIBITION
 
 
 def test_stroke_display() -> None:

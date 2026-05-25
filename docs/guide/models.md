@@ -91,6 +91,15 @@ A timed swim has `status == ResultStatus.OK` and a [`Time`][tunas.time.Time]. No
 
 The [API reference](../reference/models.md) lists every field with its type; the tables below summarize what each type carries and which SDIF record populates it. Aggregates (`Meet`, `Club`, `Swimmer`, result types) are mutable, slotted dataclasses with identity equality; value types are frozen and hashable.
 
+!!! note "`.hy3`-only fields"
+    The following fields are populated only by [`read_hy3`](parsing.md#read_hy3) (they remain `None` or default under `read_cl2`):
+
+    * **`SourceFile`**: `hy3_file_type`, `created_time`, `licensee`
+    * **`Meet`**: `venue`, `age_up_date`, `sanction_number`
+    * **`Club`**: `email`
+    * **`MeetResult`**: `dq_code`, `dq_reason`, `converted_seed_time`, `converted_seed_course`, `backup_times`
+    * **`Relay`**: `splits`
+
 ### `Meet` — and its metadata
 
 A [`Meet`][tunas.models.Meet] represents one `B1` block and all elements beneath it.
@@ -114,10 +123,7 @@ Convenience accessors: `meet.individual_swims`, `meet.relays`,
 `city`, `state`, `postal_code`, `country`, `phone`. Real `.cl2` files never emit `B2`, so
 `host` is usually `None` (host details live in the sibling `.hy3` file).
 
-[`SourceFile`][tunas.models.SourceFile] (frozen) captures the `A0`/`Z0` file header:
-`path`, `file_type` ([`FileType`][tunas.enums.FileType]), `sdif_version`, `software_name`,
-`software_version`, `contact_name`, `contact_phone`, `created` (date), `submitted_by_lsc`
-([`LSC`][tunas.geography.LSC]), and free-text `notes`.
+[`SourceFile`][tunas.models.SourceFile] (frozen) captures the file header (SDIF `A0`/`Z0` or Hy-Tek `A1`): `path`, `file_type` ([`FileType`][tunas.enums.FileType]), `sdif_version`, `software_name`, `software_version`, `contact_name`, `contact_phone`, `created` (date), `submitted_by_lsc` ([`LSC`][tunas.geography.LSC]), and `notes`. For `.hy3` files, it also carries `hy3_file_type` ([`Hy3FileType`][tunas.enums.Hy3FileType]), `created_time`, and `licensee`.
 
 ### `Club` — and entry counts
 

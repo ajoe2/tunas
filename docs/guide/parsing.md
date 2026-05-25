@@ -1,12 +1,12 @@
 # Parsing & errors
 
-The parser is exposed as a single top-level function that parses `.cl2` files into structured [`Meet`](models.md) objects:
+The parser is exposed as two top-level functions that parse `.cl2` (SDIF) and `.hy3` (Hy-Tek) result files into structured [`Meet`](models.md) objects:
 
 ```python
-from tunas import read_cl2
+from tunas import read_cl2, read_hy3
 ```
 
-`read_cl2` returns `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
+Both return `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
 
 ## `read_cl2`
 
@@ -62,6 +62,56 @@ try:
 except ParseError as exc:
     print(f"Failed at line {exc.warning.line_no}: {exc.warning.reason}")
 ```
+
+## `read_hy3`
+
+`read_hy3` parses Hy-Tek's proprietary `.hy3` format into the same [`Meet`](models.md) structure as `read_cl2`. Its signature, options, and source handling behavior are identical to `read_cl2`:
+
+```python
+def read_hy3(
+    source: str | os.PathLike | Iterable[str | os.PathLike] | TextIO,
+    *,
+    strict: bool = False,
+    encoding: str = "cp1252",
+    errors: str = "replace",
+    max_workers: int = 1,
+) -> tuple[list[Meet], ParseReport]: ...
+```
+
+```python
+from tunas import read_hy3
+
+meets, report = read_hy3("Meet Results-Winter Champs-001.hy3")
+```
+
+### Supported records and fields
+
+`read_hy3` parses only the confirmed fields (marked **C**) documented in the [`.hy3` reference](../formats/hy3_format.md). It processes `A1`, `B1`/`B2`, `C1`/`C3`, `D1`, `E1`/`E2`, `F1`/`F2`/`F3`, `G1`, and `H1`/`H2` records. Unconfirmed or unmapped records (like `C2` and `C8`) are skipped silently.
+
+The following model fields are populated exclusively by `read_hy3` (remaining `None` or at their defaults under `read_cl2`):
+
+| Field | Source |
+|---|---|
+| [`SourceFile`][tunas.models.SourceFile]`.hy3_file_type` / `.created_time` / `.licensee` | `A1` |
+| [`Meet`][tunas.models.Meet]`.venue` / `.age_up_date` / `.sanction_number` | `B1` / `B2` |
+| [`Club`][tunas.models.Club]`.email` | `C3` |
+| [`MeetResult`][tunas.models.MeetResult]`.dq_code` / `.dq_reason` | `E2`/`F2` + `H1`/`H2` |
+| `MeetResult.converted_seed_time` / `.converted_seed_course` | `E1`/`F1` (converted seed) |
+| `MeetResult.backup_times` | `E2`/`F2` manual watch times |
+| [`Relay`][tunas.models.Relay]`.splits` | `G1` (whole-relay cumulative splits) |
+
+Exhibition swims (status `S`) are parsed as [`ResultStatus`][tunas.ResultStatus]`.EXHIBITION`.
+
+### Differences from `read_cl2`
+
+These differences reflect genuine format variation, not parser limitations:
+
+- **Zero times**: A `.hy3` time of `0.00` ("no time") is parsed as `None`.
+- **Disqualifications**: Preserves the swum `time` (SDIF sets it to `None`) and populates `dq_code` and `dq_reason`.
+- **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields.
+- **Relay splits**: Parsed into `Relay.splits` as whole-relay cumulative splits. Individual splits attach to `IndividualSwim.splits` as usual. `0.00` placeholders are ignored.
+- **Swimmer IDs**: Populates `Swimmer.id_short` with the 14-character `.hy3` member ID. `id_long` is unused.
+- **Checksums**: Line checksums (columns 129–130) are not validated, as they are omitted in some exports (e.g. `USAS Club Times Export`).
 
 ## Per-meet scope
 

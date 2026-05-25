@@ -29,6 +29,7 @@ __all__ = [
     "Season",
     "Ethnicity",
     "Affiliation",
+    "Hy3FileType",
 ]
 
 
@@ -212,6 +213,7 @@ class ResultStatus(StrEnum):
     DNF = "DNF"  # Did Not Finish
     DQ = "DQ"  # Disqualified
     SCR = "SCR"  # Scratch
+    EXHIBITION = "EX"  # Hy-Tek exhibition swim — a valid, recorded time that does not score
 
 
 class RelayLegOrder(StrEnum):
@@ -265,3 +267,15 @@ class Affiliation(Enum):
     MASTERS = auto()
     DISABLED_SPORTS = auto()
     WATER_POLO = auto()
+
+
+class Hy3FileType(StrEnum):
+    """Hy-Tek `.hy3` file-type code (``A1`` cols 3-4).
+
+    A distinct code space from the SDIF :class:`FileType`; only `MEET_RESULTS`
+    files carry meet results (and are what :func:`~tunas.read_hy3` parses).
+    """
+
+    MEET_RESULTS = "07"
+    MERGED_RESULTS = "04"
+    CLUB_TIMES_EXPORT = "17"

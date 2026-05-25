@@ -14,6 +14,7 @@ from tunas.enums import (
     Ethnicity,
     EventTimeClass,
     FileType,
+    Hy3FileType,
     MeetType,
     MemberStatus,
     Organization,
@@ -45,7 +46,7 @@ from tunas.models import (
     SwimmerContact,
     SwimmerRegistration,
 )
-from tunas.parser import IssueKind, ParseReport, ParseWarning, Severity, read_cl2
+from tunas.parser import IssueKind, ParseReport, ParseWarning, Severity, read_cl2, read_hy3
 from tunas.standards import TimeStandard, all_qualified, qualifies_for, standard_time
 from tunas.time import Time
 
@@ -53,6 +54,7 @@ __all__ = [
     "__version__",
     # parsing
     "read_cl2",
+    "read_hy3",
     "ParseReport",
     "ParseWarning",
     "Severity",
@@ -90,6 +92,7 @@ __all__ = [
     "EventTimeClass",
     "Organization",
     "FileType",
+    "Hy3FileType",
     "SplitType",
     "ResultStatus",
     "RelayLegOrder",

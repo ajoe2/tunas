@@ -21,6 +21,7 @@ from tunas.enums import (
     Ethnicity,
     EventTimeClass,
     FileType,
+    Hy3FileType,
     MeetType,
     MemberStatus,
     Organization,
@@ -129,7 +130,13 @@ class MeetHost:
 
 @dataclass(frozen=True)
 class SourceFile:
-    """File-level metadata from A0/Z0, shared by all meets in the file."""
+    """File-level metadata from a results file's header/terminator.
+
+    Fields are sourced from SDIF `A0`/`Z0` records or, for `.hy3` files, the
+    `A1` record. The `hy3_*` fields and `created_time`/`licensee` are only
+    populated by :func:`~tunas.read_hy3`; the SDIF-only fields are only
+    populated by :func:`~tunas.read_cl2`.
+    """
 
     path: str | None = None
     file_type: FileType | None = None
@@ -141,6 +148,10 @@ class SourceFile:
     created: datetime.date | None = None
     submitted_by_lsc: LSC | None = None
     notes: str | None = None
+    # `.hy3`-only (A1 record)
+    hy3_file_type: Hy3FileType | None = None
+    created_time: datetime.time | None = None
+    licensee: str | None = None
 
 
 @dataclass(frozen=True)
@@ -204,6 +215,13 @@ class MeetResult:
     seed_course: Course | None = None
     event_min_time_class: EventTimeClass | None = None
     event_max_time_class: EventTimeClass | None = None
+    dq_code: str | None = None  # 2-char Hy-Tek DQ code (e.g. "3D"); see `dq_reason`
+    dq_reason: str | None = None  # human-readable DQ text (`.hy3` H1/H2 records)
+    # `.hy3` carries both an as-entered seed (`seed_time`) and a copy converted to
+    # the meet's course; SDIF stores only the as-entered seed.
+    converted_seed_time: Time | None = None
+    converted_seed_course: Course | None = None
+    backup_times: tuple[Time, ...] = ()  # manual watch/backup times (`.hy3`-only)
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -234,6 +252,7 @@ class Relay(MeetResult):
     total_age: int | None = None
     legs: list[RelaySwim] = field(default_factory=list)
     alternates: list[RelaySwim] = field(default_factory=list)
+    splits: list[Split] = field(default_factory=list)  # whole-relay cumulative splits
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -352,6 +371,7 @@ class Club:
     coach: str | None = None
     coach_phone: str | None = None
     short_name: str | None = None
+    email: str | None = None  # contact email (`.hy3` C3 record)
     entry_counts: ClubEntryCounts | None = None
     results: list[MeetResult] = field(default_factory=list)
     swimmers: list[Swimmer] = field(default_factory=list)
@@ -384,6 +404,9 @@ class Meet:
     course: Course | None = None
     altitude: int | None = None
     meet_type: MeetType | None = None
+    venue: str | None = None  # facility / location name (`.hy3` B1 record)
+    age_up_date: datetime.date | None = None  # age-determination date (`.hy3` B1 record)
+    sanction_number: str | None = None  # sanction number (`.hy3` B2 record)
     host: MeetHost | None = None
     source_file: SourceFile | None = None
     results: list[MeetResult] = field(default_factory=list)

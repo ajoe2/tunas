@@ -1,7 +1,7 @@
 [project]
 name = "tunas"
 dynamic = ["version"]
-description = "USA Swimming meet result (.cl2 / SDIF v3) parser and analysis library"
+description = "USA Swimming meet result (.cl2 / SDIF v3 and Hy-Tek .hy3) parser and analysis library"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"

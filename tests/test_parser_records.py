@@ -336,7 +336,8 @@ def test_g0_splits_after_f0_on_leg_not_relay() -> None:
     gr = g0(times=("26.50",), total="1", session="F")
     meets, _ = parse_lines([A0, B1, C1, e0(), f0(), gr, Z0])
     relay = meets[0].relays[0]
-    assert not hasattr(relay, "splits")
+    # SDIF relay splits live on the leg (RelaySwim), never on the Relay itself.
+    assert relay.splits == []
     assert [str(s.time) for s in relay.legs[0].splits] == ["26.50"]
 
 

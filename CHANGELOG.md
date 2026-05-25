@@ -2,9 +2,17 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
-## [Unreleased]
+## [0.2.0] — 2026-05-25
+
+### Added
+- **`read_hy3`**: A reader for Hy-Tek `.hy3` result files, mirroring `read_cl2`'s signature and producing the same `Meet` object graph. Parses confirmed fields from `A1` through `H2` records.
+- **`.hy3`-only model fields**: Added fields for data carried only by `.hy3` files (defaulting to `None`/empty for `read_cl2`): `SourceFile` (`hy3_file_type`, `created_time`, `licensee`), `Meet` (`venue`, `age_up_date`, `sanction_number`), `Club` (`email`), `MeetResult` (`dq_code`, `dq_reason`, `converted_seed_time`, `converted_seed_course`, `backup_times`), and `Relay.splits` (whole-relay cumulative splits). Added `Hy3FileType` enum and `ResultStatus.EXHIBITION`.
+
+### Changed
+- **Parser refactoring**: Shared a common parsing core (`_BaseEngine` in `_parser/engine.py`) between SDIF (`_parser/cl2.py`) and Hy-Tek (`_parser/hy3.py`) formats, with no change to `read_cl2` output.
 
 ### Documentation
+- **`.hy3` parsing**: Updated guides, API references, and format documentation to cover `read_hy3` and `.hy3` support.
 - **Expanded `.hy3` format reference:** Reverse-engineered the `.hy3` format using meet results from Pacific Swimming (2013–2026, ~1,680 meets) and Michigan Swimming (425 meets) matched against `.cl2` siblings. Decoded the line checksum, athlete numbering, springboard diving strokes, watch-time columns, exhibition statuses, and relay structures.
 - **Complete `.cl2` / SDIF v3 reference:** Rewrote the `.cl2` guide into a comprehensive field-level reference covering all record types (`A0`–`Z0`, registration `D1`/`D2`, time-standards `J0`–`J2`), column ranges, and code tables. Documented empirically-verified deviations of real-world Hy-Tek/TeamUnify output (measured over 2,190 files).
 - **Guide & API Reference Updates:** Expanded the data model guide with PII value types, `Time` accessors, and event helpers. Added cookbook recipes for split arithmetic, concurrent parsing, and standards lookups. Added a parser-internals breakdown to the architecture page and a public symbol index.

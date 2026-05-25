@@ -14,6 +14,8 @@ def test_version_string() -> None:
 def test_key_public_api_present() -> None:
     for name in (
         "read_cl2",
+        "read_hy3",
+        "Hy3FileType",
         "Meet",
         "Swimmer",
         "IndividualSwim",

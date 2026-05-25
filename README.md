@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/tunas.svg)](https://pypi.org/project/tunas/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A Python library for parsing USA Swimming meet result files (`.cl2` / Hy-Tek SDIF v3) into structured Python objects and performing offline qualifying time standard lookups.
+A Python library for parsing USA Swimming meet result files (`.cl2` / SDIF v3 and Hy-Tek `.hy3`) into structured Python objects and performing offline qualifying time standard lookups.
 
 📖 **Documentation: <https://ajoe2.github.io/tunas/>**
 
@@ -33,6 +33,14 @@ for meet in meets:
 
 if report.warnings:
     print(f"{len(report.warnings)} records flagged — inspect report.warnings")
+```
+
+Hy-Tek `.hy3` results parse the same way via `read_hy3`, producing the identical `Meet` object graph:
+
+```python
+from tunas import read_hy3
+
+meets, report = read_hy3("Meet Results-Winter Champs-001.hy3")
 ```
 
 ## Core Concepts
@@ -97,6 +105,7 @@ Use `strict=True` to fail fast and raise `ParseError` on the first warning. Stru
 ## Features
 
 - **Complete SDIF v3 coverage**: Parses every meet-results record type (`A0`–`G0`, `Z0`), including relays, relay alternates, and per-leg splits. Registration (`D1`/`D2`) and demographic (`D3`) records populate optional PII fields; qualifying-time records (`J0`–`J2`) surface as warnings.
+- **Hy-Tek `.hy3` support**: `read_hy3` parses the reverse-engineered `.hy3` results format (confirmed fields only) into the same `Meet` object graph, capturing data SDIF omits — disqualification codes/reasons, converted seed times, and meet sanction numbers.
 - **Clean object model**: Slotted dataclasses with pre-wired object references (including back-references) and zero global state. Value types (`Time`, `Split`, `MeetHost`, …) are frozen and hashable.
 - **Zero data loss**: All entered swims are kept — including non-time outcomes (scratches, DQs, no-shows via `ResultStatus`). Missing optional fields become `None`; raw line contents are preserved on validation failures.
 - **Lenient by default, strict on demand**: Recovers from common exporter bugs and reports each issue as a structured `ParseWarning` (with `severity`, `kind`, column, and raw line); `strict=True` fails fast on the first problem.

@@ -3,7 +3,7 @@
 `.hy3` is Hy-Tek's proprietary results format, the counterpart to the open [`.cl2` / SDIF v3](cl2_format.md) interchange format. Lacking an official public specification, this document provides a reverse-engineered specification of the format.
 
 !!! note "Reference Documentation"
-    This page serves as a format reference. `tunas` currently parses only `.cl2` / SDIF v3; it does not parse `.hy3` directly.
+    This page is the field-level reference behind [`read_hy3`](../guide/parsing.md#read_hy3), which parses the fields documented here (those marked **C** for *confirmed* in the tables below) into the same [`Meet`](../guide/models.md) object graph as `read_cl2`.
 
 ### Specification Context
 The details in this document are derived from empirical analysis of `.hy3` files and their corresponding SDIF `.cl2` files:
