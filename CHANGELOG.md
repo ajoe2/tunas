@@ -14,6 +14,8 @@ All notable changes to `tunas` are documented here in Keep a Changelog format, a
 
 ### Fixed
 - **`.hy3` format reference**: Corrected the `E1`/`F1` field map — cols 23–28 are the event age range (min 23–25, max 26–28), and the event number is at cols 39–42, not 25–28 as previously documented.
+- **SDIF club back-reference**: when a swimmer appears unattached and then attached to a real team under the same USS# within one file, merging now registers the swimmer on `club.swimmers` (not just `swimmer.club`), so the two sides of the graph stay consistent.
+- **`.hy3` unresolvable-event diagnostic**: the skip warning for an `E2`/`F2` result now reports the parsed entry stroke instead of mis-reading the result record's heat column (the stroke lives on the `E1`/`F1` entry, not the result).
 
 ### Internal
 - Reworked the `parser.py` driver into a lazy archive iterator: eager argument validation, a per-file engine, and a bounded order-preserving `_imap_ordered` look-ahead over the thread pool (at most `2 * max_workers` files in flight) in place of the old map-and-merge parallel path.

@@ -60,6 +60,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
+# Tests are grouped into unit/ cl2/ hy3/ golden/ subfolders; put tests/ on the
+# import path so each can still `from conftest import ...` for the shared builders.
+pythonpath = ["tests"]
 
 [tool.coverage.run]
 source = ["tunas"]

@@ -8,8 +8,8 @@ routing, E0 relays, F0 relay legs (leg event, leg splits), and blank-``id_short`
 swimmers resolved from a later ``D3`` long ID.
 
 The committed ``aaa_league_championship.expected.json`` was produced here and
-cross-checked against the raw records; ``test_golden_relay.py`` compares the real
-``tunas`` parse against it.
+cross-checked against the raw records; ``cl2/test_cl2_golden_relay.py`` compares the
+real ``tunas`` parse against it.
 
 Re-generate with:  uv run python tests/data/build_expected_aaa.py
 """

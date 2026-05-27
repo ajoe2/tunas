@@ -398,7 +398,7 @@ class _Hy3Engine(_BaseEngine):
             mandatory="M1#",
             noun="event",
             distance_display=str(entry.distance),
-            stroke_display=repr(rec.raw(22, 1).strip()),
+            stroke_display=str(entry.stroke),
         )
         if event is None:
             st.current_individual_swim = None
@@ -480,7 +480,7 @@ class _Hy3Engine(_BaseEngine):
             mandatory="M1",
             noun="relay event",
             distance_display=str(entry.distance),
-            stroke_display=repr(rec.raw(22, 1).strip()),
+            stroke_display=str(entry.stroke),
         )
         if event is None:
             st.current_relay = None

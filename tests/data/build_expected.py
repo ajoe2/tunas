@@ -3,7 +3,7 @@
 This is an INDEPENDENT reference decoder: it reads the SDIF v3 columns directly
 and does NOT import ``tunas``. The committed ``reno_walk_on_meet.expected.json``
 was produced by this script and then hand-verified against the raw records; the
-test (`test_golden_file.py`) compares the real `tunas` parse against that static
+test (`cl2/test_cl2_golden_meet.py`) compares the real `tunas` parse against that static
 JSON, so a parser regression makes the test fail.
 
 Re-generate with:  uv run python tests/data/build_expected.py

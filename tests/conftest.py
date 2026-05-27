@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +14,10 @@ from tunas.parser import read_cl2, read_hy3
 from tunas.standards import _load_index
 
 RECORD_WIDTH = 160
+
+# Committed golden-file fixtures (`.cl2`/`.hy3` + their `.expected.json`), resolved
+# here so tests reference them independent of which subfolder they live in.
+DATA_DIR = Path(__file__).resolve().parent / "data"
 
 
 def rec(*fields: tuple[int, str]) -> str:

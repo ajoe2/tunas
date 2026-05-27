@@ -16,12 +16,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from conftest import A0, B1, C1, Z0, d0, rec
+from conftest import A0, B1, C1, DATA_DIR, Z0, d0, rec
 
 from tunas import MeetArchive, ParseError, ParseReport, read_cl2
 
-_DATA = Path(__file__).parent / "data"
-_GOLDEN = [str(_DATA / "reno_walk_on_meet.cl2"), str(_DATA / "aaa_league_championship.cl2")]
+_GOLDEN = [str(DATA_DIR / "reno_walk_on_meet.cl2"), str(DATA_DIR / "aaa_league_championship.cl2")]
 
 
 def _single_meet_text(name: str = "Winter Champs") -> str:

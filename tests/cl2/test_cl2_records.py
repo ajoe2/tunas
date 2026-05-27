@@ -80,6 +80,21 @@ def test_c1_unattached() -> None:
     assert archive.meets[0].individual_swims[0].club is None
 
 
+def test_swimmer_unattached_then_attached_keeps_club_backref_consistent() -> None:
+    # The same swimmer (one USS#) swims unattached, then attached to a real team.
+    # Backfilling the merged swimmer's club must also register it on the club, so
+    # `swimmer.club` and `club.swimmers` stay in sync.
+    c1u = rec((1, "C1"), (3, "1"), (12, "PCUN  "), (18, "Unattached"))
+    archive = parse_lines(
+        [A0, B1, c1u, d0(name="Doe, John"), C1, d0(name="Doe, John", dist="200"), Z0]
+    )
+    meet = archive.meets[0]
+    (swimmer,) = meet.swimmers  # one swimmer, merged across the two records
+    (club,) = meet.clubs  # only the real (attached) team is a club
+    assert swimmer.club is club
+    assert swimmer in club.swimmers
+
+
 def test_c2_team_entry() -> None:
     c2 = rec(
         (1, "C2"),

@@ -297,10 +297,15 @@ class _Cl2Engine(_BaseEngine):
             "citizenship",
             "contact",
             "registration",
-            "club",
         ):
             if getattr(existing, attr) is None and getattr(other, attr) is not None:
                 setattr(existing, attr, getattr(other, attr))
+        # Backfilling the club of a previously-unattached swimmer must also add the
+        # back-reference, or the swimmer ends up on `swimmer.club` yet missing from
+        # `club.swimmers` — breaking the invariant `_attach_swimmer` guarantees.
+        if existing.club is None and other.club is not None:
+            existing.club = other.club
+            other.club.swimmers.append(existing)
 
     def _commit_pending(self) -> None:
         st = self.state

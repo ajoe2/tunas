@@ -323,6 +323,17 @@ def test_e2_blank_course_unresolvable_skipped() -> None:
     assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
+def test_unresolvable_event_warning_reports_entry_stroke_not_heat() -> None:
+    # The stroke lives on E1; the E2 result record has a heat number at col 22. The
+    # skip warning must report the parsed entry stroke, not whatever digit sits in
+    # the E2 heat column. Here the stroke maps (A->Free) but the blank course makes
+    # the event unresolvable.
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(stroke="A"), e2(course="", heat="25")])
+    warning = archive.report.warnings_for(field="event", severity=Severity.SKIPPED)[0]
+    assert f"stroke={Stroke.FREESTYLE}" in warning.reason  # parsed stroke, e.g. "stroke=1"
+    assert "stroke=2" not in warning.reason  # the heat tens digit must not leak in
+
+
 def test_e2_orphan_without_e1() -> None:
     archive = parse_hy3_lines([*_HEAD, d1(), e2()])
     assert archive.meets[0].individual_swims == []

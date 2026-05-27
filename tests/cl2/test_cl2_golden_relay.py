@@ -18,12 +18,12 @@ from __future__ import annotations
 import json
 from collections import Counter
 from enum import Enum
-from pathlib import Path
+
+from conftest import DATA_DIR as DATA
 
 from tunas import IndividualSwim, Meet, RelaySwim, read_cl2
 from tunas.parser import ParseReport
 
-DATA = Path(__file__).resolve().parent / "data"
 CL2 = DATA / "aaa_league_championship.cl2"
 EXPECTED = json.loads((DATA / "aaa_league_championship.expected.json").read_text())
 

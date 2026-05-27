@@ -34,7 +34,11 @@ tunas/
 │   ├── _parser/                Per-record parsing logic (internal)
 │   └── _data/                  Bundled package data (JSON standards, spec doc)
 ├── tests/                  Pytest suite (fully self-contained, no network)
-│   └── data/                   Committed real `.cl2` meets + golden expected JSON
+│   ├── conftest.py             Shared record builders + fixtures
+│   ├── unit/                   Value types, enums, models, standards (no file I/O)
+│   ├── cl2/                    `read_cl2` records, I/O, parallelism, diagnostics, golden meets
+│   ├── hy3/                    `read_hy3` records, I/O, golden meet
+│   └── data/                   Committed real `.cl2`/`.hy3` meets + golden expected JSON
 ├── scripts/                Developer tools (e.g., standard sheets parser)
 ├── docs/                   Markdown documentation
 └── .github/workflows/      CI (test.yml) and PyPI release (publish.yml)
