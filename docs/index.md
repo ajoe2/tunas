@@ -4,9 +4,9 @@
 
 # tunas
 
-A Python library for parsing USA Swimming meet result files (`.cl2` / Hy-Tek SDIF v3) into structured Python objects and querying offline motivational time standards.
+A Python library for parsing USA Swimming meet result files (`.cl2` / SDIF v3 and Hy-Tek `.hy3`) into structured Python objects and querying offline motivational time standards.
 
-`tunas` parses `.cl2` files into clean, idiomatic objects — [`Meet`][tunas.models.Meet], [`Club`][tunas.models.Club], [`Swimmer`][tunas.models.Swimmer], [`IndividualSwim`][tunas.models.IndividualSwim], and [`Relay`][tunas.models.Relay]. Parsing is lenient by default, collecting warnings in a [`ParseReport`][tunas.ParseReport] to prevent data loss.
+`tunas` parses results files into clean, idiomatic objects — [`Meet`][tunas.models.Meet], [`Club`][tunas.models.Club], [`Swimmer`][tunas.models.Swimmer], [`IndividualSwim`][tunas.models.IndividualSwim], and [`Relay`][tunas.models.Relay]. Parsing is lenient by default, collecting warnings in a [`ParseReport`][tunas.ParseReport] to prevent data loss.
 
 ## Install
 
@@ -19,7 +19,7 @@ Requires Python 3.12+. At present the runtime depends only on the Python standar
 ## Quick example
 
 ```python
-from tunas import read_cl2
+from tunas import read_cl2, read_hy3
 
 # read_cl2 yields one MeetArchive (meets + a parse report) per source file
 for archive in read_cl2("results.cl2"):
@@ -28,8 +28,10 @@ for archive in read_cl2("results.cl2"):
         for swim in meet.individual_swims:
             print(swim.swimmer.full_name, swim.event.name, swim.time)
 
-    report = archive.report
-    print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swims")
+# read_hy3 parses Hy-Tek files into the exact same object graph
+for archive in read_hy3("results.hy3"):
+    for meet in archive.meets:
+        print(meet.name, "—", len(meet.swimmers), "swimmers")
 ```
 
 ## Where to next

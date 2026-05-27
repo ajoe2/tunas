@@ -41,3 +41,47 @@ jobs:
         # committed golden files under tests/data/, so no network is needed.
         # `fail_under = 95` (pyproject [tool.coverage.report]) gates the result.
         run: uv run pytest --cov=tunas
+
+  package:
+    # Guards the *built distribution* — the editable install the `test` job uses
+    # can't catch a data file dropped from the wheel. Builds the sdist + wheel,
+    # validates their metadata, then installs the wheel into a clean environment
+    # and confirms the package imports and ships its bundled `_data/` files.
+    name: package (build + install smoke test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Check distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Install the built wheel into a clean environment
+        run: |
+          uv venv "$RUNNER_TEMP/wheel-env"
+          uv pip install --python "$RUNNER_TEMP/wheel-env" dist/*.whl
+
+      - name: Smoke-test the installed wheel
+        # Run from outside the repo so the *installed* wheel is exercised, not
+        # the working-tree source, and confirm the bundled data files shipped.
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/wheel-env/bin/python" - <<'PY'
+          import importlib.resources as res
+          import tunas
+          from tunas import read_cl2, read_hy3  # noqa: F401  (import-surface check)
+          from tunas.standards import _load_index
+          rows = len(_load_index())
+          assert rows > 0, "bundled time-standards failed to load"
+          assert res.files("tunas._data").joinpath("sdif-v3.txt").is_file()
+          assert res.files("tunas._data").joinpath("standards-2025-2028.json").is_file()
+          print(f"OK: tunas {tunas.__version__} imports; {rows} standards rows; data packaged")
+          PY

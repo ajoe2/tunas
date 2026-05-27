@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Keep the GitHub Actions used by the test / publish / docs workflows current
+  # and patched for security advisories. The library has no runtime dependencies,
+  # and dev tools are pinned via uv.lock and bumped manually.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # One grouped PR per week instead of one per action, to cut review noise.
+    groups:
+      github-actions:
+        patterns: ["*"]

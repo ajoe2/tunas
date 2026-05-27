@@ -146,6 +146,9 @@ The test suite is fully self-contained and offline — real-world coverage comes
 committed "golden" `.cl2` files plus hand-verified expected-state JSON under `tests/data/`,
 so no data download is needed.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the test layout, golden-file regeneration,
+and the release process.
+
 ## Status
 
 `tunas` is in **alpha**. The public API is stable, but subject to revision before 1.0.

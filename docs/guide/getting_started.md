@@ -96,7 +96,7 @@ Ages are bucketed into single-year groups (10 & under, 11-12, 13-14, 15-16, 17-1
 
 | Concept | Class | Where to read more |
 |---|---|---|
-| Reading a file | [`read_cl2`][tunas.read_cl2] | [parsing.md](parsing.md) |
+| Reading a file | [`read_cl2`][tunas.read_cl2], [`read_hy3`][tunas.read_hy3] | [parsing.md](parsing.md) |
 | A meet | [`Meet`][tunas.models.Meet] | [models.md](models.md) |
 | A swimmer | [`Swimmer`][tunas.models.Swimmer] | [models.md](models.md) |
 | A club | [`Club`][tunas.models.Club] | [models.md](models.md) |
