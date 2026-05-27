@@ -2,6 +2,11 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [0.3.1] — 2026-05-27
+
+### Fixed
+- **Model `repr()`/`str()` no longer blow up**: the aggregates form a cyclic graph (`Meet` ↔ `Club` ↔ `Swimmer` ↔ result, plus `RelaySwim.relay`), so the dataclass-generated `__repr__` walked the back-references and expanded combinatorially — a populated meet rendered into megabytes and effectively hung (and could hit `RecursionError`). `Meet`, `Club`, `Swimmer`, `MeetResult`, `IndividualSwim`, `Relay`, and `RelaySwim` now define a concise `__repr__`/`__str__` that summarises collections by count and names related objects by a short label (a club's `team_code`, a swimmer's `full_name`) instead of recursing, so each renders as a single short line.
+
 ## [0.3.0] — 2026-05-26
 
 ### Changed

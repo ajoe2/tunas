@@ -52,6 +52,37 @@ _LEG_NUMBERS: dict[RelayLegOrder, int] = {
     RelayLegOrder.LEG_4: 4,
 }
 
+
+# --------------------------------------------------------------------------- #
+# repr / str helpers
+# --------------------------------------------------------------------------- #
+#
+# The aggregates form a cyclic graph (Meet <-> Club <-> Swimmer <-> result),
+# so the dataclass-generated ``__repr__`` walks the back-references and explodes
+# combinatorially -- a populated meet renders into megabytes and effectively
+# hangs. Each aggregate therefore defines a concise ``__repr__``/``__str__`` that
+# summarises collections by count and references related objects by a short
+# label (below) rather than recursing into their full repr, which breaks the
+# cycle.
+
+
+def _enum_name(value: object) -> str:
+    """Render an enum member by its bare ``name`` (or ``"None"``).
+
+    Avoids the verbose default enum repr (e.g. ``<Organization.USS: '1'>``).
+    """
+    return value.name if value is not None else "None"  # type: ignore[attr-defined]
+
+
+def _club_label(club: Club | None) -> str | None:
+    """A club's identifying ``team_code`` (or ``None``), without recursing into it."""
+    return club.team_code if club is not None else None
+
+
+def _swimmer_label(swimmer: Swimmer | None) -> str | None:
+    """A swimmer's ``full_name`` (or ``None``), without recursing into it."""
+    return swimmer.full_name if swimmer is not None else None
+
 __all__ = [
     "Swim",
     "MeetResult",
@@ -223,6 +254,16 @@ class MeetResult:
     converted_seed_course: Course | None = None
     backup_times: tuple[Time, ...] = ()  # manual watch/backup times (`.hy3`-only)
 
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}(event={_enum_name(self.event)}, "
+            f"session={_enum_name(self.session)}, status={_enum_name(self.status)}, "
+            f"time={self.time}, club={_club_label(self.club)!r})"
+        )
+
+    def __str__(self) -> str:
+        return f"{_enum_name(self.event)} {_enum_name(self.status)} {self.time}"
+
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class IndividualSwim(MeetResult, Swim):
@@ -232,6 +273,16 @@ class IndividualSwim(MeetResult, Swim):
     swimmer_age_class: str | None = None
     attach_status: AttachStatus = AttachStatus.ATTACHED
     splits: list[Split] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        return (
+            f"IndividualSwim(swimmer={_swimmer_label(self.swimmer)!r}, "
+            f"event={_enum_name(self.event)}, status={_enum_name(self.status)}, "
+            f"time={self.time}, splits={len(self.splits)})"
+        )
+
+    def __str__(self) -> str:
+        return f"{self.swimmer.full_name} {_enum_name(self.event)} {self.time}"
 
     @property
     def is_relay_leg(self) -> bool:
@@ -254,6 +305,17 @@ class Relay(MeetResult):
     alternates: list[RelaySwim] = field(default_factory=list)
     splits: list[Split] = field(default_factory=list)  # whole-relay cumulative splits
 
+    def __repr__(self) -> str:
+        return (
+            f"Relay(relay_letter={self.relay_letter!r}, event={_enum_name(self.event)}, "
+            f"club={_club_label(self.club)!r}, status={_enum_name(self.status)}, "
+            f"time={self.time}, legs={len(self.legs)})"
+        )
+
+    def __str__(self) -> str:
+        club = _club_label(self.club) or "?"
+        return f"{club} {self.relay_letter} {_enum_name(self.event)} {self.time}"
+
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class RelaySwim(Swim):
@@ -269,6 +331,16 @@ class RelaySwim(Swim):
     swimmer_age_class: str | None = None
     citizenship: CitizenshipOrCountry | None = None
     splits: list[Split] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        return (
+            f"RelaySwim(swimmer={_swimmer_label(self.swimmer)!r}, "
+            f"order={_enum_name(self.order)}, time={self.time}, "
+            f"status={_enum_name(self.status)}, relay={self.relay.relay_letter!r})"
+        )
+
+    def __str__(self) -> str:
+        return f"{_swimmer_label(self.swimmer)} {_enum_name(self.order)} {self.time}"
 
     @property
     def is_relay_leg(self) -> bool:
@@ -329,6 +401,16 @@ class Swimmer:
     club: Club | None = None
     swims: list[IndividualSwim | RelaySwim] = field(default_factory=list)
 
+    def __repr__(self) -> str:
+        return (
+            f"Swimmer(full_name={self.full_name!r}, id_short={self.id_short!r}, "
+            f"sex={_enum_name(self.sex)}, club={_club_label(self.club)!r}, "
+            f"swims={len(self.swims)})"
+        )
+
+    def __str__(self) -> str:
+        return self.full_name
+
     @property
     def individual_swims(self) -> list[IndividualSwim]:
         """Swimmer's individual swims."""
@@ -376,6 +458,16 @@ class Club:
     results: list[MeetResult] = field(default_factory=list)
     swimmers: list[Swimmer] = field(default_factory=list)
 
+    def __repr__(self) -> str:
+        return (
+            f"Club(team_code={self.team_code!r}, lsc={_enum_name(self.lsc)}, "
+            f"full_name={self.full_name!r}, swimmers={len(self.swimmers)}, "
+            f"results={len(self.results)})"
+        )
+
+    def __str__(self) -> str:
+        return self.full_name or self.team_code
+
     @property
     def individual_swims(self) -> list[IndividualSwim]:
         """Club's individual-event results at the meet."""
@@ -412,6 +504,16 @@ class Meet:
     results: list[MeetResult] = field(default_factory=list)
     swimmers: list[Swimmer] = field(default_factory=list)
     clubs: list[Club] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        return (
+            f"Meet(name={self.name!r}, organization={_enum_name(self.organization)}, "
+            f"start_date={self.start_date.isoformat()}, clubs={len(self.clubs)}, "
+            f"swimmers={len(self.swimmers)}, results={len(self.results)})"
+        )
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.start_date.isoformat()})"
 
     @property
     def individual_swims(self) -> list[IndividualSwim]:

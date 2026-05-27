@@ -39,6 +39,19 @@ list[Meet]                                ← one Meet per .cl2 file
 The parser wires every reference (including back-references like `RelaySwim.relay`)
 in a single pass, so traversals are plain attribute reads.
 
+Because those back-references make the graph cyclic, each aggregate defines a
+**concise `repr()`/`str()`** that summarises its collections by count and names
+related objects by a short label (a club's `team_code`, a swimmer's `full_name`)
+rather than expanding them. Printing a `Meet` therefore stays a single line and
+never walks the whole graph:
+
+```python
+>>> meet
+Meet(name='Champs', organization=USS, start_date=2025-01-01, clubs=12, swimmers=480, results=2310)
+>>> print(meet)
+Champs (2025-01-01)
+```
+
 ## Two ways to look at a result
 
 The same row can be viewed through two lenses, which is why there are two base
