@@ -25,7 +25,7 @@ Everything below is exported from the top-level `tunas` package (and re-exported
 
 | Group | Symbols |
 |---|---|
-| Parsing | [`read_cl2`][tunas.read_cl2], [`ParseReport`][tunas.ParseReport], [`ParseWarning`][tunas.ParseWarning], [`Severity`][tunas.Severity], [`IssueKind`][tunas.IssueKind] |
+| Parsing | [`read_cl2`][tunas.read_cl2], [`read_hy3`][tunas.read_hy3], [`MeetArchive`][tunas.MeetArchive], [`ParseReport`][tunas.ParseReport], [`ParseWarning`][tunas.ParseWarning], [`Severity`][tunas.Severity], [`IssueKind`][tunas.IssueKind] |
 | Exceptions | [`TunasError`][tunas.exceptions.TunasError], [`ParseError`][tunas.exceptions.ParseError], [`StandardsError`][tunas.exceptions.StandardsError] |
 | Aggregates | [`Meet`][tunas.models.Meet], [`Club`][tunas.models.Club], [`Swimmer`][tunas.models.Swimmer] |
 | Results | [`Swim`][tunas.models.Swim], [`MeetResult`][tunas.models.MeetResult], [`IndividualSwim`][tunas.models.IndividualSwim], [`Relay`][tunas.models.Relay], [`RelaySwim`][tunas.models.RelaySwim], [`Split`][tunas.models.Split] |

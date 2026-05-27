@@ -18,29 +18,30 @@ Requires Python 3.12+. Currently, the runtime depends only on the Python standar
 
 ## Quick Start
 
-`read_cl2` is the primary entry point. It parses file paths, directories, lists of paths, or text streams, returning a list of `Meet` objects and a `ParseReport`:
+`read_cl2` is the primary entry point. It parses file paths, directories, lists of paths, or text streams, yielding one `MeetArchive` per source file — each holding that file's `meets` and its own `ParseReport`:
 
 ```python
 from tunas import read_cl2
 
-meets, report = read_cl2("results.cl2")
+for archive in read_cl2("results.cl2"):
+    for meet in archive.meets:
+        print(f"{meet.name} ({meet.start_date})")
+        for swim in meet.individual_swims:
+            outcome = swim.time if swim.time is not None else swim.status.value
+            print(f"  {swim.swimmer.full_name:<24} {swim.event.name:<16} {outcome}")
 
-for meet in meets:
-    print(f"{meet.name} ({meet.start_date})")
-    for swim in meet.individual_swims:
-        outcome = swim.time if swim.time is not None else swim.status.value
-        print(f"  {swim.swimmer.full_name:<24} {swim.event.name:<16} {outcome}")
-
-if report.warnings:
-    print(f"{len(report.warnings)} records flagged — inspect report.warnings")
+    if archive.report.warnings:
+        print(f"{len(archive.report.warnings)} records flagged — inspect archive.report.warnings")
 ```
+
+The reader is lazy, so a large directory is parsed one file at a time. To pull everything into memory, flatten the archives: `meets = [m for arc in read_cl2(src) for m in arc.meets]`.
 
 Hy-Tek `.hy3` results parse the same way via `read_hy3`, producing the identical `Meet` object graph:
 
 ```python
 from tunas import read_hy3
 
-meets, report = read_hy3("Meet Results-Winter Champs-001.hy3")
+(archive,) = read_hy3("Meet Results-Winter Champs-001.hy3")  # a single file -> one archive
 ```
 
 ## Core Concepts
@@ -60,7 +61,7 @@ All parsed data is contained in independent `Meet` objects:
 ```python
 from tunas import read_cl2, Event
 
-meets, _ = read_cl2("season/")
+meets = [m for arc in read_cl2("season/") for m in arc.meets]
 for meet in meets:
     for swim in meet.swimmers[0].swims_in(Event.FREE_100_SCY):
         print(meet.name, swim.session.value, swim.time)
@@ -95,12 +96,12 @@ Standards are defined for `MALE`/`FEMALE` only; passing `Sex.MIXED` raises `Valu
 Parsing is **lenient by default** to recover from common exporter bugs; warnings are collected in a `ParseReport`.
 
 ```python
-meets, report = read_cl2("messy/")
-for w in report.warnings:
-    print(f"{w.source}:{w.line_no} [{w.severity.value}] {w.record_type}: {w.reason}")
+for archive in read_cl2("messy/"):
+    for w in archive.report.warnings:
+        print(f"{w.source}:{w.line_no} [{w.severity.value}] {w.record_type}: {w.reason}")
 ```
 
-Use `strict=True` to fail fast and raise `ParseError` on the first warning. Structural violations always raise.
+Use `strict=True` to fail fast and raise `ParseError` on the first warning (surfaced as the iterator is consumed). Structural violations always raise.
 
 ## Features
 
@@ -111,7 +112,7 @@ Use `strict=True` to fail fast and raise `ParseError` on the first warning. Stru
 - **Lenient by default, strict on demand**: Recovers from common exporter bugs and reports each issue as a structured `ParseWarning` (with `severity`, `kind`, column, and raw line); `strict=True` fails fast on the first problem.
 - **Offline standards**: Local O(1) lookup of USA Swimming B through AAAA motivational cuts, bundled as JSON — no setup or network.
 - **Robust decoding**: Defaults to CP-1252 (to preserve column alignment and accented names), tolerates BOMs, short/long lines, and mixed line endings.
-- **Parallel execution**: Deterministic concurrent parsing of multiple files on a thread pool (`max_workers`), with output identical to the sequential default.
+- **Streaming, parallel-ready execution**: Readers yield one `MeetArchive` per file lazily, so large corpora parse one file at a time with bounded memory. `max_workers` dispatches files across a thread pool behind an order-preserving look-ahead window (output identical to sequential), parsing in genuine parallel on free-threaded Python.
 - **Type-safe**: Fully type-hinted and marked `py.typed`; passes `mypy --strict`.
 
 ## Documentation

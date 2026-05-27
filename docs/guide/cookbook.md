@@ -9,7 +9,13 @@ from tunas import (
     qualifies_for, all_qualified, standard_time,
 )
 ```
-`read_cl2` returns `(meets, report)`. Because swimmers and clubs are scoped to single meets, cross-meet analysis requires explicit iteration or indexing.
+`read_cl2` yields one [`MeetArchive`](parsing.md#meetarchive) per source file, each holding that file's `meets` and its own `report`. Many recipes below just want every meet, so they flatten the archives up front:
+
+```python
+meets = [m for arc in read_cl2("season/") for m in arc.meets]
+```
+
+Because swimmers and clubs are scoped to single meets, cross-meet analysis requires explicit iteration or indexing.
 
 ## Helper Functions
 
@@ -35,7 +41,7 @@ def fastest(swims):
 Print every individual swim across all meets:
 
 ```python
-meets, _ = read_cl2("season/")
+meets = [m for arc in read_cl2("season/") for m in arc.meets]
 
 for meet in meets:
     for r in meet.individual_swims:
@@ -56,7 +62,7 @@ def top_ten(club, event):
     bests.sort(key=lambda pair: pair[1])
     return bests[:10]
 
-meets, _ = read_cl2("meet.cl2")
+meets = [m for arc in read_cl2("meet.cl2") for m in arc.meets]
 club = meets[0].clubs[0]                              # pick a club in this meet
 for swimmer, time in top_ten(club, Event.FREE_100_SCY):
     print(f"{swimmer.full_name:<28} {time}")
@@ -77,7 +83,7 @@ def has_qualified(swimmer, event, standard):
     std = qualifies_for(best.time, event, age, swimmer.sex)
     return std is not None and std >= standard
 
-meets, _ = read_cl2("champs.cl2")
+meets = [m for arc in read_cl2("champs.cl2") for m in arc.meets]
 qualifiers = [
     s
     for meet in meets
@@ -94,7 +100,7 @@ Reconcile and track a swimmer across multiple meets using `id_short`:
 ```python
 from collections import defaultdict
 
-meets, _ = read_cl2("season/")
+meets = [m for arc in read_cl2("season/") for m in arc.meets]
 
 # id_short -> list of (meet, swimmer) for that person
 by_id = defaultdict(list)
@@ -121,7 +127,7 @@ Export all parsed individual swims to a CSV file (including DQs and scratches):
 ```python
 import csv
 
-meets, _ = read_cl2("results/")
+meets = [m for arc in read_cl2("results/") for m in arc.meets]
 
 with open("results.csv", "w", newline="") as f:
     w = csv.writer(f)
@@ -159,7 +165,7 @@ def all_relay_swims(meet, event):
                 continue
             yield leg.swimmer, leg.time
 
-meets, _ = read_cl2("champs.cl2")
+meets = [m for arc in read_cl2("champs.cl2") for m in arc.meets]
 legs = [pair for meet in meets
         for pair in all_relay_swims(meet, Event.FREE_400_RELAY_SCY)]
 legs.sort(key=lambda pair: pair[1])
@@ -191,7 +197,13 @@ def standards_table(swimmer):
 Summarize parsing metrics and warning counts:
 
 ```python
-meets, report = read_cl2("messy_data/")
+from tunas import ParseReport
+
+# Fold the per-file reports into one running total.
+report = ParseReport()
+for arc in read_cl2("messy_data/"):
+    report.merge(arc.report)
+
 print(f"Read {report.files_read} files")
 print(f"  {report.meets_parsed} meets")
 print(f"  {report.swimmers_parsed} swimmers")
@@ -211,11 +223,11 @@ if report.has_warnings:
 Treat parsing warnings as fatal errors post-parse:
 
 ```python
-meets, report = read_cl2("results.cl2")
-if report.warnings:
+warnings = [w for arc in read_cl2("results.cl2") for w in arc.report.warnings]
+if warnings:
     raise RuntimeError(
-        f"{len(report.warnings)} bad records: "
-        + ", ".join(f"line {w.line_no}: {w.reason}" for w in report.warnings[:3])
+        f"{len(warnings)} bad records: "
+        + ", ".join(f"line {w.line_no}: {w.reason}" for w in warnings[:3])
     )
 ```
 
@@ -247,7 +259,7 @@ def dq_rate(meet):
     dqs = sum(1 for r in swims if r.status is ResultStatus.DQ)
     return dqs / len(swims) if swims else 0.0
 
-meets, _ = read_cl2("champs.cl2")
+meets = [m for arc in read_cl2("champs.cl2") for m in arc.meets]
 for meet in meets:
     print(meet.name, status_breakdown(meet), f"DQ {dq_rate(meet):.1%}")
 ```
@@ -273,7 +285,7 @@ def interval_splits(swim):
             yield sp.distance, sp.time if prev is None else sp.time - prev
             prev = sp.time
 
-meets, _ = read_cl2("champs.cl2")
+meets = [m for arc in read_cl2("champs.cl2") for m in arc.meets]
 for r in meets[0].individual_swims:
     if r.splits:
         print(r.swimmer.full_name, r.event.name)
@@ -320,19 +332,24 @@ def prelim_final(swimmer, event):
 ## Parse a whole season concurrently
 
 ```python
-meets, report = read_cl2("season_archive/", max_workers=8)
-print(report.files_read, "files,", report.meets_parsed, "meets")
+files = meets = 0
+for arc in read_cl2("season_archive/", max_workers=8):
+    files += 1
+    meets += len(arc.meets)
+print(files, "files,", meets, "meets")
 ```
 
-Results are merged in source order — identical output to the sequential default; the speed-up
-comes from overlapping file I/O across threads.
+Archives are yielded in source order — identical output to the sequential default. On a standard
+(GIL) interpreter the speed-up comes from overlapping file I/O; on a free-threaded build the files
+are parsed in genuine parallel, though the gain is sublinear and plateaus (keep `max_workers` around
+8–32, not your core count). See [parsing.md](parsing.md#parallel-parsing) for the full caveats.
 
 ## Inspect file provenance
 
 Each meet links back to its `A0`/`Z0` file header through `meet.source_file`:
 
 ```python
-meets, _ = read_cl2("results.cl2")
+meets = [m for arc in read_cl2("results.cl2") for m in arc.meets]
 src = meets[0].source_file
 if src is not None:
     print("software:", src.software_name, src.software_version)

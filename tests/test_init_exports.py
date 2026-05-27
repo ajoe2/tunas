@@ -15,6 +15,7 @@ def test_key_public_api_present() -> None:
     for name in (
         "read_cl2",
         "read_hy3",
+        "MeetArchive",
         "Hy3FileType",
         "Meet",
         "Swimmer",

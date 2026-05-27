@@ -6,7 +6,30 @@ The parser is exposed as two top-level functions that parse `.cl2` (SDIF) and `.
 from tunas import read_cl2, read_hy3
 ```
 
-Both return `(list[Meet], ParseReport)`. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
+Both return a **lazy iterator** of [`MeetArchive`](#meetarchive) objects — one per source file. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
+
+## `MeetArchive`
+
+Each item yielded by a reader is the parse result for a single source file (or stream):
+
+```python
+@dataclass(slots=True)
+class MeetArchive:
+    source: str                # file path, or "<stream>" for a text stream
+    meets: list[Meet]          # a file may hold more than one meet
+    report: ParseReport        # diagnostics and counts for THIS source only
+```
+
+Because the readers yield archives lazily and per file, a large corpus is parsed one file at a time — the whole object graph is never held in memory at once, and each file's diagnostics stay attached to that file rather than being merged into one global report. To pull everything into memory, drain the iterator:
+
+```python
+# all meets, flattened across files
+meets = [m for arc in read_cl2("season/") for m in arc.meets]
+
+# or process and discard one file at a time (bounded memory)
+for arc in read_cl2("season/"):
+    handle(arc.source, arc.meets, arc.report)
+```
 
 ## `read_cl2`
 
@@ -18,7 +41,7 @@ def read_cl2(
     encoding: str = "cp1252",
     errors: str = "replace",
     max_workers: int = 1,
-) -> tuple[list[Meet], ParseReport]: ...
+) -> Iterator[MeetArchive]: ...
 ```
 
 ### Parameters
@@ -29,36 +52,47 @@ def read_cl2(
 | `strict` | `bool` | If `True`, any warning raises a `ParseError`. If `False` (default), collects warnings and continues. **M1 structural violations always raise.** |
 | `encoding` | `str` | Text encoding for file paths. Defaults to `"cp1252"` (common for SDIF/DOS files) to preserve alignments and accented names. |
 | `errors` | `str` | Encoding error policy. Defaults to `"replace"`. |
-| `max_workers` | `int` | Maximum parser threads. Defaults to `1` (sequential). With `max_workers > 1`, files are parsed concurrently — one file per task — and results are merged back **in source order**, so the output is identical to the sequential default. Must be `>= 1`. |
+| `max_workers` | `int` | Thread-pool size for concurrent file parsing. Defaults to `1` (sequential). Archives are always yielded **in source order**, so the output is identical regardless of `max_workers`. At most `2 * max_workers` files are parsed ahead of the consumer, bounding peak memory. Must be `>= 1`. |
 
 ### Parallel parsing
 
 Pass `max_workers > 1` to parse a directory or list of files concurrently using a thread pool:
 
 ```python
-meets, report = read_cl2("season_archive/", max_workers=8)
+for arc in read_cl2("season_archive/", max_workers=8):
+    handle(arc.meets, arc.report)
 ```
 
-Results are deterministically merged in source order, matching sequential execution. The speed-up is largest when parsing many files due to overlapping file I/O. In `strict` mode, the earliest encountered `ParseError` is raised.
+Archives are yielded deterministically in source order, matching sequential execution, and at most `2 * max_workers` files are parsed ahead of the consumer. In `strict` mode, the earliest failing file raises first.
+
+!!! warning "Limitations of `max_workers`"
+    Parsing is CPU-bound pure Python, and the speed-up from threads is bounded by the interpreter you run on:
+
+    - **Standard (GIL) interpreter:** the global interpreter lock serializes the parse, so `max_workers > 1` does **not** make parsing faster — it only overlaps file I/O. Under contention it can be measurably *slower* than `max_workers=1`. Leave it at `1` unless you are on a free-threaded build.
+    - **Free-threaded build (3.13t+):** the same code parses files in genuine parallel with no pickling, since each file is independent. But the speed-up is **sublinear and plateaus** — on an 80-core box parsing 200 files it peaks at roughly **2.4× around 24–32 threads**, then *regresses*: at 64+ threads it can drop below single-threaded. The wall is not cores but cross-thread contention — atomic reference-count traffic on shared immutables (`Event`/`Stroke`/`Course` enum members, the `Time` class, interned strings), allocator pressure from millions of objects, and stop-the-world cyclic-GC coordination over the cross-referenced meet graph.
+
+    **Guidance:** keep `max_workers=1` on a standard interpreter; on a free-threaded build set it to roughly **8–32**, not your core count. Higher values waste cores and can slow the parse down. For corpus-scale work, the lazy iterator (one archive per file, bounded look-ahead) keeps peak memory flat regardless of corpus size — that, not raw thread count, is the main scaling lever.
 
 ### Source types
 
-1. **File path:** Single `.cl2` file is parsed.
-2. **Directory path:** Walked recursively for `*.cl2` files (case-insensitive).
-3. **Iterable of paths:** Each path is parsed; meets are concatenated.
-4. **Text stream:** Parsed from the buffer (uses `"<stream>"` as warning source). Stream must yield `str`, not `bytes`.
+1. **File path:** Single `.cl2` file → one archive.
+2. **Directory path:** Walked recursively for `*.cl2` files (case-insensitive) → one archive per file, in sorted path order.
+3. **Iterable of paths:** One archive per path, in the given order.
+4. **Text stream:** One archive (uses `"<stream>"` as its `source`). Stream must yield `str`, not `bytes`.
 
-Concatenating multi-file lists performs no cross-file merging or deduplication.
+No cross-file merging or deduplication is performed: each file's meets, swimmers, and clubs stay in their own archive.
 
 ### Examples
 
 ```python
-# Directory walk
-meets, report = read_cl2("results_dir/")
+# Directory walk — one archive per file
+for arc in read_cl2("results_dir/"):
+    print(arc.source, len(arc.meets))
 
-# Strict validation
+# Strict validation (errors surface as the iterator is consumed)
 try:
-    meets, report = read_cl2("messy.cl2", strict=True)
+    for arc in read_cl2("messy.cl2", strict=True):
+        ...
 except ParseError as exc:
     print(f"Failed at line {exc.warning.line_no}: {exc.warning.reason}")
 ```
@@ -75,13 +109,14 @@ def read_hy3(
     encoding: str = "cp1252",
     errors: str = "replace",
     max_workers: int = 1,
-) -> tuple[list[Meet], ParseReport]: ...
+) -> Iterator[MeetArchive]: ...
 ```
 
 ```python
 from tunas import read_hy3
 
-meets, report = read_hy3("Meet Results-Winter Champs-001.hy3")
+(archive,) = read_hy3("Meet Results-Winter Champs-001.hy3")  # a single file -> one archive
+meets, report = archive.meets, archive.report
 ```
 
 ### Supported records and fields
@@ -175,7 +210,7 @@ Outcome codes in time fields are kept as official results with `status` set to t
 
 Lenient parsing never silently loses data: every problem is recorded as a
 [`ParseWarning`][tunas.ParseWarning] on the [`ParseReport`][tunas.ParseReport]
-returned alongside the meets.
+carried by each file's [`MeetArchive`](#meetarchive) (`arc.report`).
 
 `ParseReport` carries the full `warnings` list plus running counts — `files_read`,
 `meets_parsed`, `swimmers_parsed`, `individual_swims_parsed`, `relays_parsed`,
@@ -204,9 +239,9 @@ Every warning is tagged with a **severity** and a **kind**:
 | `COUNT_MISMATCH` | `Z0` declared count ≠ parsed total. |
 
 ```python
-meets, report = read_cl2("messy_data/")
-for w in report.warnings:
-    print(f"{w.source}:{w.line_no} ({w.record_type}) [{w.severity.value}]: {w.reason}")
+for arc in read_cl2("messy_data/"):
+    for w in arc.report.warnings:
+        print(f"{w.source}:{w.line_no} ({w.record_type}) [{w.severity.value}]: {w.reason}")
 ```
 
 ## Exceptions
@@ -219,7 +254,8 @@ All library errors subclass [`TunasError`][tunas.exceptions.TunasError], so a si
 
   ```python
   try:
-      meets, _ = read_cl2(path, strict=True)
+      for arc in read_cl2(path, strict=True):
+          ...
   except ParseError as exc:
       w = exc.warning
       print(f"{w.source}:{w.line_no} {w.record_type}.{w.field}: {w.reason}")
@@ -311,3 +347,4 @@ Detailed structural contracts enforced by the parser:
 - Performs **O(1)** swimmer and club lookups.
 - Scales linearly with file size.
 - Streams files line-by-line.
+- Yields archives lazily, one file at a time: a consumer that processes and discards each archive keeps peak memory bounded by a single file's object graph, not the whole corpus.

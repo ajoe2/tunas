@@ -21,14 +21,15 @@ Requires Python 3.12+. At present the runtime depends only on the Python standar
 ```python
 from tunas import read_cl2
 
-meets, report = read_cl2("results.cl2")
+# read_cl2 yields one MeetArchive (meets + a parse report) per source file
+for archive in read_cl2("results.cl2"):
+    for meet in archive.meets:
+        print(meet.name, "—", len(meet.swimmers), "swimmers")
+        for swim in meet.individual_swims:
+            print(swim.swimmer.full_name, swim.event.name, swim.time)
 
-for meet in meets:
-    print(meet.name, "—", len(meet.swimmers), "swimmers")
-    for swim in meet.individual_swims:
-        print(swim.swimmer.full_name, swim.event.name, swim.time)
-
-print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swims")
+    report = archive.report
+    print(report.swimmers_parsed, "swimmers,", report.individual_swims_parsed, "swims")
 ```
 
 ## Where to next

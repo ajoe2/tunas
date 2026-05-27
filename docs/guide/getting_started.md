@@ -19,16 +19,16 @@ uv add tunas
 ```python
 from tunas import read_cl2, Event
 
-meets, report = read_cl2("results/")        # path, dir, list of paths, or file-like
-
-for meet in meets:
-    swimmer = next((s for s in meet.swimmers
-                    if s.id_short == "ABC123456789"), None)
-    if swimmer is None:
-        continue
-    for swim in swimmer.swims_in(Event.FLY_200_LCM):
-        outcome = swim.time if swim.time is not None else swim.status.value
-        print(f"{meet.name}: {swimmer.full_name} {swim.session.value} {outcome}")
+# read_cl2 yields one MeetArchive per source file (path, dir, list of paths, or file-like)
+for archive in read_cl2("results/"):
+    for meet in archive.meets:
+        swimmer = next((s for s in meet.swimmers
+                        if s.id_short == "ABC123456789"), None)
+        if swimmer is None:
+            continue
+        for swim in swimmer.swims_in(Event.FLY_200_LCM):
+            outcome = swim.time if swim.time is not None else swim.status.value
+            print(f"{meet.name}: {swimmer.full_name} {swim.session.value} {outcome}")
 ```
 
 Every `tunas` program parses input into self-contained [`Meet`](models.md) objects and traverses the resulting data graph.
@@ -37,22 +37,23 @@ Every `tunas` program parses input into self-contained [`Meet`](models.md) objec
 
 ### 1. Parsing
 
-`read_cl2` parses a file path, directory, list of paths, or text stream, returning a tuple of `(list[Meet], ParseReport)`.
+`read_cl2` parses a file path, directory, list of paths, or text stream, yielding a lazy iterator of [`MeetArchive`](parsing.md#meetarchive) objects — one per file. Each archive carries that file's `meets` and its own `report`.
 
-Parsing is lenient by default. Malformed records are skipped or recovered, and recorded as warnings in the report:
-
-```python
-for warning in report.warnings:
-    print(f"{warning.source}:{warning.line_no}: {warning.reason}")
-```
-
-The report aggregates running metrics like `files_read`, `meets_parsed`, `swimmers_parsed`, and `individual_swims_parsed`:
+Parsing is lenient by default. Malformed records are skipped or recovered, and recorded as warnings in the per-file report:
 
 ```python
-print(report.meets_parsed, "meets,", report.individual_swims_parsed, "individual swims")
+for archive in read_cl2("results/"):
+    for warning in archive.report.warnings:
+        print(f"{warning.source}:{warning.line_no}: {warning.reason}")
 ```
 
-Pass `strict=True` to fail fast and raise `ParseError` on the first warning. For large datasets, specify `max_workers > 1` to enable concurrent parsing. See [parsing.md](parsing.md) for more details.
+Each `report` aggregates running metrics for its file like `files_read`, `meets_parsed`, `swimmers_parsed`, and `individual_swims_parsed`:
+
+```python
+print(archive.report.meets_parsed, "meets,", archive.report.individual_swims_parsed, "swims")
+```
+
+Pass `strict=True` to fail fast and raise `ParseError` on the first warning. For large datasets, specify `max_workers > 1` to dispatch files across a thread pool (the iterator still yields in source order). See [parsing.md](parsing.md) for more details.
 
 ### 2. Finding a Swimmer
 

@@ -344,12 +344,9 @@ class _Hy3Engine(_BaseEngine):
             preferred_first_name=rec.text(49, 20),
             birthday=self._date(rec, 89, 8, "birthday", "89/8", "M2"),
             citizenship=self._citizenship(rec, 113, 3),
-            club=None if st.unattached else st.current_club,
+            club=st.attached_club,
         )
-        st.meet.swimmers.append(swimmer)
-        if swimmer.club is not None:
-            swimmer.club.swimmers.append(swimmer)
-        self.report.swimmers_parsed += 1
+        self._attach_swimmer(st.meet, swimmer)
         st.swimmers_by_number[number] = swimmer
         st.current_swimmer = swimmer
         st.current_age_class = rec.text(98, 2)
@@ -413,7 +410,7 @@ class _Hy3Engine(_BaseEngine):
         status, valid = self._result_status(rec)
         swim = IndividualSwim(
             meet=st.meet,
-            club=None if st.unattached else st.current_club,
+            club=st.attached_club,
             organization=Organization.USS,
             event=event,
             event_min_age=entry.event_min_age,
@@ -437,9 +434,7 @@ class _Hy3Engine(_BaseEngine):
             swimmer_age_class=st.current_age_class,
         )
         entry.swimmer.swims.append(swim)
-        st.meet.results.append(swim)
-        if swim.club is not None:
-            swim.club.results.append(swim)
+        self._attach_result(st.meet, swim)
         self.report.individual_swims_parsed += 1
         st.current_individual_swim = swim
         st.current_relay = None
@@ -497,7 +492,7 @@ class _Hy3Engine(_BaseEngine):
         status, valid = self._result_status(rec)
         relay = Relay(
             meet=st.meet,
-            club=None if st.unattached else st.current_club,
+            club=st.attached_club,
             organization=Organization.USS,
             event=event,
             event_min_age=entry.event_min_age,
@@ -519,9 +514,7 @@ class _Hy3Engine(_BaseEngine):
             backup_times=self._backup_times(rec),
             relay_letter=entry.relay_letter,
         )
-        st.meet.results.append(relay)
-        if relay.club is not None:
-            relay.club.results.append(relay)
+        self._attach_result(st.meet, relay)
         self.report.relays_parsed += 1
         st.current_relay = relay
         st.current_individual_swim = None

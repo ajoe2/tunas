@@ -44,6 +44,11 @@ class ParserState:
     current_relay_legs: dict[Session, RelaySwim] = field(default_factory=dict)
     last_leaf: str | None = None  # "individual" | "relay"
 
+    @property
+    def attached_club(self) -> Club | None:
+        """The current club, or None while parsing unattached entries."""
+        return None if self.unattached else self.current_club
+
 
 # --------------------------------------------------------------------------- #
 # Hy-Tek `.hy3` state — entry/result are split across separate records
@@ -53,10 +58,9 @@ class ParserState:
 
 
 @dataclass
-class Hy3Entry:
-    """A parsed `E1` individual entry, awaiting its `E2` result."""
+class _Hy3EntryBase:
+    """Event/seed fields shared by an individual (`E1`) and a relay (`F1`) entry."""
 
-    swimmer: Swimmer | None
     event_sex: Sex | None
     distance: int | None
     stroke: Stroke | None
@@ -70,20 +74,17 @@ class Hy3Entry:
 
 
 @dataclass
-class Hy3RelayEntry:
+class Hy3Entry(_Hy3EntryBase):
+    """A parsed `E1` individual entry, awaiting its `E2` result."""
+
+    swimmer: Swimmer | None
+
+
+@dataclass
+class Hy3RelayEntry(_Hy3EntryBase):
     """A parsed `F1` relay entry, awaiting its `F2` result."""
 
     relay_letter: str
-    event_sex: Sex | None
-    distance: int | None
-    stroke: Stroke | None
-    event_min_age: int | None
-    event_max_age: int | None
-    event_number: str | None
-    seed_time: Time | None
-    seed_course: Course | None
-    converted_seed_time: Time | None
-    converted_seed_course: Course | None
 
 
 @dataclass
@@ -102,3 +103,8 @@ class Hy3State:
     current_individual_swim: IndividualSwim | None = None
     current_relay: Relay | None = None
     last_leaf: str | None = None  # "individual" | "relay"
+
+    @property
+    def attached_club(self) -> Club | None:
+        """The current club, or None while parsing unattached entries."""
+        return None if self.unattached else self.current_club

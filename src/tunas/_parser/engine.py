@@ -28,7 +28,7 @@ from tunas.enums import Citizenship, Course, ResultStatus, Sex, SplitType, Strok
 from tunas.event import Event
 from tunas.exceptions import ParseError
 from tunas.geography import Country
-from tunas.models import CitizenshipOrCountry, Meet, SourceFile, Split
+from tunas.models import CitizenshipOrCountry, Meet, MeetResult, SourceFile, Split, Swimmer
 from tunas.time import Time
 
 
@@ -301,6 +301,28 @@ class _BaseEngine:
             return None
 
     # -- shared assembly helpers ------------------------------------------- #
+
+    def _attach_swimmer(self, meet: Meet, swimmer: Swimmer) -> None:
+        """Link a new swimmer into its meet (and club, if attached) and count it.
+
+        Centralizes the meet/club back-references so a swimmer can never end up
+        registered on one side of the graph but missing from the other.
+        """
+        meet.swimmers.append(swimmer)
+        if swimmer.club is not None:
+            swimmer.club.swimmers.append(swimmer)
+        self.report.swimmers_parsed += 1
+
+    @staticmethod
+    def _attach_result(meet: Meet, result: MeetResult) -> None:
+        """Link a result into its meet (and club, if attached).
+
+        Counting is left to the caller because the metric differs by result type
+        (``individual_swims_parsed`` vs ``relays_parsed``).
+        """
+        meet.results.append(result)
+        if result.club is not None:
+            result.club.results.append(result)
 
     def _resolve_event(
         self,

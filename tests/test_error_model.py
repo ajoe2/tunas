@@ -32,9 +32,9 @@ def test_partial_event_fields_skipped_not_fatal() -> None:
     # Partial/odd event fields are a data-quality issue, not structural corruption:
     # the record is skipped in lenient mode and raises only under strict.
     line = d0(esex="", dist="100", stroke="1", eage="1314")
-    meets, report = parse_lines([A0, B1, C1, line, Z0])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
+    archive = parse_lines([A0, B1, C1, line, Z0])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
     with pytest.raises(ParseError):
         parse_lines([A0, B1, C1, line, Z0], strict=True)
 
@@ -55,18 +55,18 @@ def test_m1_missing_meet_start_date() -> None:
 
 
 def test_m2_identity_d0_skipped() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(uss=""), Z0])
-    assert meets[0].swimmers == []
-    assert report.records_skipped == 1
-    w = report.warnings_for(record_type="D0", severity=Severity.SKIPPED)[0]
+    archive = parse_lines([A0, B1, C1, d0(uss=""), Z0])
+    assert archive.meets[0].swimmers == []
+    assert archive.report.records_skipped == 1
+    w = archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)[0]
     assert w.kind is IssueKind.MISSING
     assert w.raw_line.startswith("D0")
 
 
 def test_m2_identity_f0_keeps_leg() -> None:
-    meets, report = parse_lines([A0, B1, C1, e0(), f0(uss="", id_long=""), Z0])
-    assert meets[0].relays[0].legs[0].swimmer is None
-    assert report.warnings_for(record_type="F0", severity=Severity.RECOVERED)
+    archive = parse_lines([A0, B1, C1, e0(), f0(uss="", id_long=""), Z0])
+    assert archive.meets[0].relays[0].legs[0].swimmer is None
+    assert archive.report.warnings_for(record_type="F0", severity=Severity.RECOVERED)
 
 
 # -- Other M2: keep + null + RECOVERED --------------------------------------- #
@@ -76,15 +76,15 @@ def test_m2_blank_city_kept() -> None:
     b1 = rec(
         (1, "B1"), (3, "1"), (12, "Meet"), (106, "CA"), (121, "1"), (122, "01012025"), (150, "2")
     )  # no city
-    meets, report = parse_lines([A0, b1, C1, d0(), Z0])
-    assert meets[0].city is None
-    assert report.warnings_for(record_type="B1", field="city", severity=Severity.RECOVERED)
+    archive = parse_lines([A0, b1, C1, d0(), Z0])
+    assert archive.meets[0].city is None
+    assert archive.report.warnings_for(record_type="B1", field="city", severity=Severity.RECOVERED)
 
 
 def test_m2_blank_birthdate_kept() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(birth=""), Z0])
-    assert meets[0].swimmers[0].birthday is None
-    assert report.fields_recovered >= 1
+    archive = parse_lines([A0, B1, C1, d0(birth=""), Z0])
+    assert archive.meets[0].swimmers[0].birthday is None
+    assert archive.report.fields_recovered >= 1
 
 
 # -- Unresolvable event: skip (lenient) / raise (strict) --------------------- #
@@ -92,9 +92,9 @@ def test_m2_blank_birthdate_kept() -> None:
 
 def test_unresolvable_event_skipped_lenient() -> None:
     line = d0(dist="25", stroke="3", finals="30.00", finals_course="L", seed="", seed_course="")
-    meets, report = parse_lines([A0, B1, C1, line, Z0])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
+    archive = parse_lines([A0, B1, C1, line, Z0])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
 
 
 def test_unresolvable_event_raises_strict() -> None:
@@ -110,20 +110,20 @@ def test_unresolvable_event_raises_strict() -> None:
 def test_outcome_codes_kept_no_warning(code: str) -> None:
     from tunas import ResultStatus
 
-    meets, report = parse_lines([A0, B1, C1, d0(finals=code), Z0])
-    res = meets[0].swimmers[0].individual_swims[0]
+    archive = parse_lines([A0, B1, C1, d0(finals=code), Z0])
+    res = archive.meets[0].swimmers[0].individual_swims[0]
     assert res.status is ResultStatus[code]
     assert res.time is None
-    assert not report.warnings_for(record_type="D0", field="finals_time")
+    assert not archive.report.warnings_for(record_type="D0", field="finals_time")
 
 
 # -- Conditionals ------------------------------------------------------------ #
 
 
 def test_conditional_star_missing_course() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(finals="1:00.00", finals_course=""), Z0])
-    assert len(meets[0].individual_swims) == 1
-    assert [w for w in report.warnings if w.mandatory == "*"]
+    archive = parse_lines([A0, B1, C1, d0(finals="1:00.00", finals_course=""), Z0])
+    assert len(archive.meets[0].individual_swims) == 1
+    assert [w for w in archive.report.warnings if w.mandatory == "*"]
 
 
 def test_conditional_starstar_no_raise_at_championship() -> None:
@@ -138,9 +138,9 @@ def test_conditional_starstar_no_raise_at_championship() -> None:
         (122, "01012025"),
         (150, "2"),
     )
-    meets, report = parse_lines([A0, champ_b1, C1, d0(finals_place=""), Z0])
-    assert len(meets[0].individual_swims) == 1  # not raised
-    assert [w for w in report.warnings if w.mandatory == "**"]
+    archive = parse_lines([A0, champ_b1, C1, d0(finals_place=""), Z0])
+    assert len(archive.meets[0].individual_swims) == 1  # not raised
+    assert [w for w in archive.report.warnings if w.mandatory == "**"]
 
 
 def test_conditional_hash_relay_only() -> None:
@@ -155,47 +155,47 @@ def test_conditional_hash_relay_only() -> None:
         finals_course="",
         finals_place="",
     )
-    meets, _ = parse_lines([A0, B1, C1, line, Z0])
-    assert len(meets[0].swimmers) == 1
-    assert meets[0].individual_swims == []
+    archive = parse_lines([A0, B1, C1, line, Z0])
+    assert len(archive.meets[0].swimmers) == 1
+    assert archive.meets[0].individual_swims == []
 
 
 # -- Lines and unknown records ----------------------------------------------- #
 
 
 def test_overlong_line_skipped() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(), "X" * 200, Z0])
-    assert report.warnings_for(kind=IssueKind.BAD_LENGTH)
+    archive = parse_lines([A0, B1, C1, d0(), "X" * 200, Z0])
+    assert archive.report.warnings_for(kind=IssueKind.BAD_LENGTH)
 
 
 def test_short_line_padded_and_parsed() -> None:
-    meets, _ = parse_lines([A0, B1, C1, d0()[:130], Z0])
-    assert len(meets[0].swimmers) == 1
+    archive = parse_lines([A0, B1, C1, d0()[:130], Z0])
+    assert len(archive.meets[0].swimmers) == 1
 
 
 def test_unknown_code_field() -> None:
     # Unknown ATTACH code on D0 (52/1) -> RECOVERED UNKNOWN_CODE, record kept.
     line = d0()
     line = line[:51] + "Z" + line[52:]
-    meets, report = parse_lines([A0, B1, C1, line, Z0])
-    assert len(meets[0].swimmers) == 1
-    assert report.warnings_for(kind=IssueKind.UNKNOWN_CODE)
+    archive = parse_lines([A0, B1, C1, line, Z0])
+    assert len(archive.meets[0].swimmers) == 1
+    assert archive.report.warnings_for(kind=IssueKind.UNKNOWN_CODE)
 
 
 # -- Orphans ----------------------------------------------------------------- #
 
 
 def test_orphan_f0_without_e0() -> None:
-    meets, report = parse_lines([A0, B1, C1, f0(), Z0])
-    assert meets[0].relays == []
-    assert report.warnings_for(record_type="F0", kind=IssueKind.ORPHANED)
+    archive = parse_lines([A0, B1, C1, f0(), Z0])
+    assert archive.meets[0].relays == []
+    assert archive.report.warnings_for(record_type="F0", kind=IssueKind.ORPHANED)
 
 
 def test_orphan_g0_without_swim() -> None:
     from conftest import g0
 
-    meets, report = parse_lines([A0, B1, C1, g0(), Z0])
-    assert report.warnings_for(record_type="G0", kind=IssueKind.ORPHANED)
+    archive = parse_lines([A0, B1, C1, g0(), Z0])
+    assert archive.report.warnings_for(record_type="G0", kind=IssueKind.ORPHANED)
 
 
 # -- Strict mode escalation -------------------------------------------------- #
@@ -221,8 +221,8 @@ def test_strict_escalates_unknown_record() -> None:
 
 
 def test_parse_warning_shape() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(birth=""), Z0])
-    w = report.warnings_for(record_type="D0", field="birthday")[0]
+    archive = parse_lines([A0, B1, C1, d0(birth=""), Z0])
+    w = archive.report.warnings_for(record_type="D0", field="birthday")[0]
     assert w.source == "<stream>"
     assert w.line_no > 0
     assert w.column == "56/8"
@@ -232,9 +232,9 @@ def test_parse_warning_shape() -> None:
 
 
 def test_report_by_severity_and_filters() -> None:
-    meets, report = parse_lines([A0, B1, C1, d0(uss=""), d0(birth=""), Z0])
-    by_sev = report.by_severity
+    archive = parse_lines([A0, B1, C1, d0(uss=""), d0(birth=""), Z0])
+    by_sev = archive.report.by_severity
     assert by_sev[Severity.SKIPPED]
     assert by_sev[Severity.RECOVERED]
-    assert report.warnings_for(severity=Severity.SKIPPED)
-    assert report.has_warnings
+    assert archive.report.warnings_for(severity=Severity.SKIPPED)
+    assert archive.report.has_warnings

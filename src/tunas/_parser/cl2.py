@@ -274,10 +274,7 @@ class _Cl2Engine(_BaseEngine):
                 break
         if target is None:
             target = swimmer
-            st.meet.swimmers.append(target)
-            if target.club is not None:
-                target.club.swimmers.append(target)
-            self.report.swimmers_parsed += 1
+            self._attach_swimmer(st.meet, target)
         else:
             self._merge_swimmer(target, swimmer)
         for k in keys:
@@ -285,9 +282,7 @@ class _Cl2Engine(_BaseEngine):
         for r in results:
             r.swimmer = target
             target.swims.append(r)
-            st.meet.results.append(r)
-            if r.club is not None:
-                r.club.results.append(r)
+            self._attach_result(st.meet, r)
             self.report.individual_swims_parsed += 1
         return target
 
@@ -367,12 +362,9 @@ class _Cl2Engine(_BaseEngine):
             preferred_first_name=preferred,
             birthday=birthday,
             citizenship=citizenship,
-            club=None if st.unattached else st.current_club,
+            club=st.attached_club,
         )
-        st.meet.swimmers.append(swimmer)
-        if swimmer.club is not None:
-            swimmer.club.swimmers.append(swimmer)
-        self.report.swimmers_parsed += 1
+        self._attach_swimmer(st.meet, swimmer)
         for k in keys:
             st.swimmers_by_id[k] = swimmer
         return swimmer
@@ -594,7 +586,7 @@ class _Cl2Engine(_BaseEngine):
             middle_initial=middle,
             birthday=birthday,
             citizenship=citizenship,
-            club=None if st.unattached else st.current_club,
+            club=st.attached_club,
         )
 
         results: list[IndividualSwim] = []
@@ -628,7 +620,7 @@ class _Cl2Engine(_BaseEngine):
             champ = st.meet.meet_type in _CHAMPIONSHIP
             common: _CommonResultFields = {
                 "meet": st.meet,
-                "club": None if st.unattached else st.current_club,
+                "club": st.attached_club,
                 "organization": org,
                 "event": event,
                 "event_min_age": emin,
@@ -875,7 +867,7 @@ class _Cl2Engine(_BaseEngine):
         champ = st.meet.meet_type in _CHAMPIONSHIP
         common: _CommonResultFields = {
             "meet": st.meet,
-            "club": None if st.unattached else st.current_club,
+            "club": st.attached_club,
             "organization": org,
             "event": event,
             "event_min_age": emin,
@@ -905,9 +897,7 @@ class _Cl2Engine(_BaseEngine):
                 points=sr.points,
                 **common,
             )
-            st.meet.results.append(relay)
-            if relay.club is not None:
-                relay.club.results.append(relay)
+            self._attach_result(st.meet, relay)
             self.report.relays_parsed += 1
             st.current_relays[sr.session] = relay
         st.current_relay_legs = {}

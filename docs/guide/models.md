@@ -1,6 +1,6 @@
 # Data model
 
-`read_cl2` returns a list of self-contained [`Meet`][tunas.models.Meet] objects. This page explains the object graph and its scoping rules. For field-by-field reference, see the [API Reference](../reference/models.md).
+`read_cl2` yields one [`MeetArchive`](parsing.md#meetarchive) per file, each wrapping a list of self-contained [`Meet`][tunas.models.Meet] objects. This page explains the object graph and its scoping rules. For field-by-field reference, see the [API Reference](../reference/models.md).
 
 ## Object graph
 
@@ -265,7 +265,7 @@ file resolves directly (`Sex("F")`, `Course("3")`, `Stroke("5")`); an unknown co
 ```python
 from tunas import read_cl2, Event
 
-meets, _ = read_cl2("results/")
+meets = [m for arc in read_cl2("results/") for m in arc.meets]
 
 for meet in meets:
     print(f"== {meet.name} ({meet.start_date}) ==")

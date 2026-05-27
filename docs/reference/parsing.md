@@ -6,6 +6,8 @@ Detailed references for the parse functions and issue diagnostics.
 
 ::: tunas.read_hy3
 
+::: tunas.MeetArchive
+
 ::: tunas.ParseReport
 
 ::: tunas.ParseWarning

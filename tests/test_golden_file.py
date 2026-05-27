@@ -145,8 +145,8 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
 
 
 def _actual() -> dict:
-    meets, report = read_cl2(str(CL2))
-    return _actual_state(meets, report)
+    archive = next(iter(read_cl2(str(CL2))))  # a single file -> a single archive
+    return _actual_state(archive.meets, archive.report)
 
 
 def test_report_counts() -> None:

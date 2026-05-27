@@ -7,7 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tunas import Meet, ParseReport
+from tunas import MeetArchive
 from tunas._parser.checksum import hy3_checksum
 from tunas.parser import read_cl2, read_hy3
 from tunas.standards import _load_index
@@ -24,9 +24,13 @@ def rec(*fields: tuple[int, str]) -> str:
     return "".join(buf)
 
 
-def parse_lines(lines: list[str], *, strict: bool = False) -> tuple[list[Meet], ParseReport]:
-    """Parse a list of record lines from an in-memory stream."""
-    return read_cl2(io.StringIO("\n".join(lines) + "\n"), strict=strict)
+def parse_lines(lines: list[str], *, strict: bool = False) -> MeetArchive:
+    """Parse record lines from an in-memory stream into its single MeetArchive.
+
+    A stream is one source, so the reader yields exactly one archive — this returns
+    it directly, the way a caller of a single source would consume the iterator.
+    """
+    return next(iter(read_cl2(io.StringIO("\n".join(lines) + "\n"), strict=strict)))
 
 
 # -- Reusable building blocks -------------------------------------------------
@@ -223,9 +227,9 @@ def hy3_rec(*fields: tuple[int, str]) -> str:
     return body + hy3_checksum(body.encode("cp1252"))
 
 
-def parse_hy3_lines(lines: list[str], *, strict: bool = False) -> tuple[list[Meet], ParseReport]:
-    """Parse a list of `.hy3` record lines from an in-memory stream."""
-    return read_hy3(io.StringIO("\n".join(lines) + "\n"), strict=strict)
+def parse_hy3_lines(lines: list[str], *, strict: bool = False) -> MeetArchive:
+    """Parse `.hy3` record lines from an in-memory stream into its single MeetArchive."""
+    return next(iter(read_hy3(io.StringIO("\n".join(lines) + "\n"), strict=strict)))
 
 
 A1 = hy3_rec(

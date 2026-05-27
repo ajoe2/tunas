@@ -55,8 +55,8 @@ def _one_swim(**e2_kw: str) -> list[str]:
 
 
 def test_a1_source_file() -> None:
-    meets, _ = parse_hy3_lines(_one_swim())
-    sf = meets[0].source_file
+    archive = parse_hy3_lines(_one_swim())
+    sf = archive.meets[0].source_file
     assert sf is not None
     assert sf.hy3_file_type is Hy3FileType.MEET_RESULTS
     assert sf.software_name == "MM5 7.0Gb"
@@ -74,22 +74,22 @@ def test_a1_file_type_variants() -> None:
         (merged, Hy3FileType.MERGED_RESULTS),
         (export, Hy3FileType.CLUB_TIMES_EXPORT),
     ):
-        meets, _ = parse_hy3_lines([line, B1_HY3, C1_HY3, d1(), e1(), e2()])
-        assert meets[0].source_file is not None
-        assert meets[0].source_file.hy3_file_type is expected
+        archive = parse_hy3_lines([line, B1_HY3, C1_HY3, d1(), e1(), e2()])
+        assert archive.meets[0].source_file is not None
+        assert archive.meets[0].source_file.hy3_file_type is expected
 
 
 def test_a1_malformed_time_recovers() -> None:
     bad = hy3_rec((1, "A1"), (3, "07"), (45, "MM5"), (68, "99:99 ZZ"))
-    meets, report = parse_hy3_lines([bad, B1_HY3, C1_HY3, d1(), e1(), e2()])
-    assert meets[0].source_file is not None
-    assert meets[0].source_file.created_time is None
-    assert report.warnings_for(field="created_time", kind=IssueKind.MALFORMED)
+    archive = parse_hy3_lines([bad, B1_HY3, C1_HY3, d1(), e1(), e2()])
+    assert archive.meets[0].source_file is not None
+    assert archive.meets[0].source_file.created_time is None
+    assert archive.report.warnings_for(field="created_time", kind=IssueKind.MALFORMED)
 
 
 def test_b1_meet_metadata() -> None:
-    meets, _ = parse_hy3_lines(_one_swim())
-    m = meets[0]
+    archive = parse_hy3_lines(_one_swim())
+    m = archive.meets[0]
     assert m.name == "Winter Distance Classic"
     assert m.venue == "Rinconada Pool"
     assert m.start_date == datetime.date(2021, 5, 1)
@@ -111,18 +111,18 @@ def test_b1_missing_name_is_fatal() -> None:
 
 
 def test_b2_course_and_sanction() -> None:
-    meets, _ = parse_hy3_lines(_one_swim())
-    assert meets[0].course is Course.SCY
-    assert meets[0].sanction_number == "21-042"
+    archive = parse_hy3_lines(_one_swim())
+    assert archive.meets[0].course is Course.SCY
+    assert archive.meets[0].sanction_number == "21-042"
 
 
 def test_b2_lcm_course() -> None:
     b2 = hy3_rec((1, "B2"), (99, "L"))
-    meets, _ = parse_hy3_lines(
+    archive = parse_hy3_lines(
         [A1, B1_HY3, b2, C1_HY3, d1(), e1(stroke="A", dist="100"), e2(course="L")]
     )
-    assert meets[0].course is Course.LCM
-    assert meets[0].individual_swims[0].event is Event.FREE_100_LCM
+    assert archive.meets[0].course is Course.LCM
+    assert archive.meets[0].individual_swims[0].event is Event.FREE_100_LCM
 
 
 # --------------------------------------------------------------------------- #
@@ -131,8 +131,8 @@ def test_b2_lcm_course() -> None:
 
 
 def test_c1_club() -> None:
-    meets, _ = parse_hy3_lines(_one_swim())
-    club = meets[0].clubs[0]
+    archive = parse_hy3_lines(_one_swim())
+    club = archive.meets[0].clubs[0]
     assert club.team_code == "PASA"
     assert club.full_name == "Palo Alto Stanford Aquatics"
     assert club.lsc is not None and club.lsc.name == "PACIFIC"
@@ -141,21 +141,21 @@ def test_c1_club() -> None:
 
 def test_c3_email() -> None:
     c3 = hy3_rec((1, "C3"), (93, "coach@pasa.org"))
-    meets, _ = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c3, d1(), e1(), e2()])
-    assert meets[0].clubs[0].email == "coach@pasa.org"
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c3, d1(), e1(), e2()])
+    assert archive.meets[0].clubs[0].email == "coach@pasa.org"
 
 
 def test_c2_ignored_without_warning() -> None:
     c2 = hy3_rec((1, "C2"), (3, "123 Pool St"), (63, "Palo Alto"))
-    meets, report = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c2, d1(), e1(), e2()])
-    assert len(meets[0].clubs) == 1
-    assert not report.warnings_for(record_type="C2")
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c2, d1(), e1(), e2()])
+    assert len(archive.meets[0].clubs) == 1
+    assert not archive.report.warnings_for(record_type="C2")
 
 
 def test_c8_ignored_without_warning() -> None:
     c8 = hy3_rec((1, "C8"))
-    _, report = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c8, d1(), e1(), e2()])
-    assert not report.warnings_for(record_type="C8")
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c8, d1(), e1(), e2()])
+    assert not archive.report.warnings_for(record_type="C8")
 
 
 def test_c1_repeated_team_reused() -> None:
@@ -172,15 +172,15 @@ def test_c1_repeated_team_reused() -> None:
         e1(number="2"),
         e2(),
     ]
-    meets, _ = parse_hy3_lines(lines)
-    assert len(meets[0].clubs) == 1
-    assert len(meets[0].clubs[0].swimmers) == 2
+    archive = parse_hy3_lines(lines)
+    assert len(archive.meets[0].clubs) == 1
+    assert len(archive.meets[0].clubs[0].swimmers) == 2
 
 
 def test_unattached_team_creates_no_club() -> None:
     un = hy3_rec((1, "C1"), (3, "UN"), (8, "Unattached"), (54, "PC"))
-    meets, _ = parse_hy3_lines([A1, B1_HY3, B2_HY3, un, d1(), e1(), e2()])
-    m = meets[0]
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, un, d1(), e1(), e2()])
+    m = archive.meets[0]
     assert m.clubs == []
     assert m.swimmers[0].club is None
     assert m.individual_swims[0].club is None
@@ -204,8 +204,8 @@ def test_d1_swimmer_fields() -> None:
         age="17",
         citizen="USA",
     )
-    meets, _ = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(number="7"), e2()])
-    sw = meets[0].swimmers[0]
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(number="7"), e2()])
+    sw = archive.meets[0].swimmers[0]
     assert sw.sex is Sex.MALE
     assert (sw.last_name, sw.first_name) == ("Lim", "Adrian")
     assert sw.preferred_first_name == "AJ"
@@ -219,24 +219,26 @@ def test_d1_swimmer_fields() -> None:
 
 def test_d1_wodob_blank_birthday() -> None:
     line = d1(birth="", age="11")
-    meets, report = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
-    sw = meets[0].swimmers[0]
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
+    sw = archive.meets[0].swimmers[0]
     assert sw.birthday is None
     assert sw.individual_swims[0].swimmer_age_class == "11"
-    assert report.warnings_for(record_type="D1", field="birthday")
+    assert archive.report.warnings_for(record_type="D1", field="birthday")
 
 
 def test_d1_no_number_skipped() -> None:
     line = d1(number="")
-    meets, report = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(number=""), e2()])
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(number=""), e2()])
     # No swimmer registered; the following E2 has no athlete to attach to.
-    assert meets[0].swimmers == []
-    assert report.warnings_for(record_type="D1", field="athlete_number", severity=Severity.SKIPPED)
+    assert archive.meets[0].swimmers == []
+    assert archive.report.warnings_for(
+        record_type="D1", field="athlete_number", severity=Severity.SKIPPED
+    )
 
 
 def test_d1_orphan_without_meet() -> None:
-    _, report = parse_hy3_lines([A1, d1()])
-    assert report.warnings_for(record_type="D1", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([A1, d1()])
+    assert archive.report.warnings_for(record_type="D1", kind=IssueKind.ORPHANED)
 
 
 # --------------------------------------------------------------------------- #
@@ -258,8 +260,8 @@ def test_e1_e2_individual_swim() -> None:
         ),
         e2(rnd="F", time="61.64", course="Y", heat="4", lane="7", place="3"),
     ]
-    meets, _ = parse_hy3_lines(lines)
-    swim = meets[0].individual_swims[0]
+    archive = parse_hy3_lines(lines)
+    swim = archive.meets[0].individual_swims[0]
     assert swim.event is Event.FREE_100_SCY
     assert swim.event_sex is Sex.FEMALE  # event-sex 'G' (Girls) -> FEMALE
     assert swim.session.name == "FINALS"
@@ -282,8 +284,8 @@ def test_e1_e2_individual_swim() -> None:
     ],
 )
 def test_e1_stroke_letters(letter: str, stroke: Stroke, sex: object) -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(dist="100", stroke=letter), e2(course="Y")])
-    assert meets[0].individual_swims[0].event.stroke is stroke
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(dist="100", stroke=letter), e2(course="Y")])
+    assert archive.meets[0].individual_swims[0].event.stroke is stroke
 
 
 @pytest.mark.parametrize(
@@ -291,47 +293,47 @@ def test_e1_stroke_letters(letter: str, stroke: Stroke, sex: object) -> None:
     [("W", Sex.FEMALE), ("G", Sex.FEMALE), ("M", Sex.MALE), ("B", Sex.MALE), ("X", Sex.MIXED)],
 )
 def test_e1_event_sex_mapping(code: str, sex: Sex) -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=code), e2()])
-    assert meets[0].individual_swims[0].event_sex is sex
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=code), e2()])
+    assert archive.meets[0].individual_swims[0].event_sex is sex
 
 
 def test_e1_unknown_event_sex_skips_swim() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(event_sex="Z"), e2()])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(field="event_sex", kind=IssueKind.UNKNOWN_CODE)
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(event_sex="Z"), e2()])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(field="event_sex", kind=IssueKind.UNKNOWN_CODE)
 
 
 def test_e1_blank_event_sex_skips_swim_silently() -> None:
     # A blank event-sex is not a code error; the swim is skipped (no event_sex warning).
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=" "), e2()])
-    assert meets[0].individual_swims == []
-    assert not report.warnings_for(field="event_sex")
-    assert report.warnings_for(field="event", severity=Severity.SKIPPED)
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=" "), e2()])
+    assert archive.meets[0].individual_swims == []
+    assert not archive.report.warnings_for(field="event_sex")
+    assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
 def test_e1_diving_stroke_unresolvable_skipped() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(dist="6", stroke="F"), e2()])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(field="event", severity=Severity.SKIPPED)
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(dist="6", stroke="F"), e2()])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
 def test_e2_blank_course_unresolvable_skipped() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(), e2(course="")])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(field="event", severity=Severity.SKIPPED)
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(course="")])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
 def test_e2_orphan_without_e1() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e2()])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(record_type="E2", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([*_HEAD, d1(), e2()])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(record_type="E2", kind=IssueKind.ORPHANED)
 
 
 def test_e2_no_athlete_skipped() -> None:
     # E1 references an unknown athlete number, so its E2 cannot attach.
-    meets, report = parse_hy3_lines([*_HEAD, d1(number="1"), e1(number="999"), e2()])
-    assert meets[0].individual_swims == []
-    assert report.warnings_for(record_type="E2", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([*_HEAD, d1(number="1"), e1(number="999"), e2()])
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(record_type="E2", kind=IssueKind.ORPHANED)
 
 
 @pytest.mark.parametrize(
@@ -346,41 +348,41 @@ def test_e2_no_athlete_skipped() -> None:
     ],
 )
 def test_e2_status_flags(flag: str, status: ResultStatus, has_time: bool) -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="61.64", status=flag)])
-    swim = meets[0].individual_swims[0]
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="61.64", status=flag)])
+    swim = archive.meets[0].individual_swims[0]
     assert swim.status is status
     assert (swim.time is not None) == has_time
 
 
 def test_e2_dq_keeps_time_and_code() -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="61.64", status="Q", dqcode="3D")])
-    swim = meets[0].individual_swims[0]
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="61.64", status="Q", dqcode="3D")])
+    swim = archive.meets[0].individual_swims[0]
     assert swim.status is ResultStatus.DQ
     assert str(swim.time) == "1:01.64"
     assert swim.dq_code == "3D"
 
 
 def test_e2_unknown_status_recovers_to_ok() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(), e2(status="Z")])
-    assert meets[0].individual_swims[0].status is ResultStatus.OK
-    assert report.warnings_for(field="status", kind=IssueKind.UNKNOWN_CODE)
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(status="Z")])
+    assert archive.meets[0].individual_swims[0].status is ResultStatus.OK
+    assert archive.report.warnings_for(field="status", kind=IssueKind.UNKNOWN_CODE)
 
 
 def test_e2_zero_time_is_none() -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="0.00", status="F")])
-    assert meets[0].individual_swims[0].time is None
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(time="0.00", status="F")])
+    assert archive.meets[0].individual_swims[0].time is None
 
 
 def test_e2_negative_or_zero_place_is_none() -> None:
-    meets, _ = parse_hy3_lines([*_HEAD, d1(), e1(), e2(place="0")])
-    assert meets[0].individual_swims[0].rank is None
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(place="0")])
+    assert archive.meets[0].individual_swims[0].rank is None
 
 
 def test_e2_backup_times() -> None:
-    meets, _ = parse_hy3_lines(
+    archive = parse_hy3_lines(
         [*_HEAD, d1(), e1(), e2(time="61.64", watch1="61.60", watch2="61.70", watch3="0.00")]
     )
-    swim = meets[0].individual_swims[0]
+    swim = archive.meets[0].individual_swims[0]
     # The 0.00 watch slot is dropped; the two real backups are kept.
     assert [str(t) for t in swim.backup_times] == ["1:01.60", "1:01.70"]
 
@@ -406,8 +408,8 @@ def _relay_meet() -> list[str]:
 
 
 def test_relay_basic() -> None:
-    meets, _ = parse_hy3_lines(_relay_meet())
-    relay = meets[0].relays[0]
+    archive = parse_hy3_lines(_relay_meet())
+    relay = archive.meets[0].relays[0]
     assert relay.event is Event.FREE_200_RELAY_SCY
     assert relay.event_sex is Sex.MIXED
     assert relay.relay_letter == "A"
@@ -416,13 +418,13 @@ def test_relay_basic() -> None:
     assert [leg.order.name for leg in relay.legs] == ["LEG_1", "LEG_2"]
     assert [leg.swimmer.last_name for leg in relay.legs] == ["Aa", "Bb"]
     # Counting legs are surfaced on their swimmers' swims.
-    assert meets[0].swimmers[0].relay_swims[0].relay is relay
+    assert archive.meets[0].swimmers[0].relay_swims[0].relay is relay
 
 
 def test_relay_medley_stroke() -> None:
     lines = [*_HEAD, f1(letter="A", dist="200", stroke="E"), f2(time="120.00")]
-    meets, _ = parse_hy3_lines(lines)
-    assert meets[0].relays[0].event is Event.MEDLEY_200_RELAY_SCY
+    archive = parse_hy3_lines(lines)
+    assert archive.meets[0].relays[0].event is Event.MEDLEY_200_RELAY_SCY
 
 
 def test_relay_alternate_leg() -> None:
@@ -433,12 +435,12 @@ def test_relay_alternate_leg() -> None:
         f2(time="105.95"),
         f3(f3_slot("F", "3", "Cc", "F", "A")),  # leg char 'A' -> alternate
     ]
-    meets, _ = parse_hy3_lines(lines)
-    relay = meets[0].relays[0]
+    archive = parse_hy3_lines(lines)
+    relay = archive.meets[0].relays[0]
     assert relay.legs == []
     assert len(relay.alternates) == 1 and relay.alternates[0].swimmer is not None
     # Alternates are excluded from the swimmer's counting relay swims.
-    assert meets[0].swimmers[0].relay_swims == []
+    assert archive.meets[0].swimmers[0].relay_swims == []
 
 
 def test_relay_leg_unknown_athlete_kept_with_none_swimmer() -> None:
@@ -448,19 +450,19 @@ def test_relay_leg_unknown_athlete_kept_with_none_swimmer() -> None:
         f2(time="105.95"),
         f3(f3_slot("F", "99", "Zz", "F", "1")),
     ]
-    meets, _ = parse_hy3_lines(lines)
-    assert meets[0].relays[0].legs[0].swimmer is None
+    archive = parse_hy3_lines(lines)
+    assert archive.meets[0].relays[0].legs[0].swimmer is None
 
 
 def test_f2_orphan_without_f1() -> None:
-    meets, report = parse_hy3_lines([*_HEAD, f2(time="105.95")])
-    assert meets[0].relays == []
-    assert report.warnings_for(record_type="F2", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([*_HEAD, f2(time="105.95")])
+    assert archive.meets[0].relays == []
+    assert archive.report.warnings_for(record_type="F2", kind=IssueKind.ORPHANED)
 
 
 def test_f3_orphan_without_f2() -> None:
-    _, report = parse_hy3_lines([*_HEAD, f3(f3_slot("F", "1", "Aa", "F", "1"))])
-    assert report.warnings_for(record_type="F3", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([*_HEAD, f3(f3_slot("F", "1", "Aa", "F", "1"))])
+    assert archive.report.warnings_for(record_type="F3", kind=IssueKind.ORPHANED)
 
 
 def test_f1_missing_letter_is_fatal() -> None:
@@ -470,11 +472,9 @@ def test_f1_missing_letter_is_fatal() -> None:
 
 
 def test_relay_unresolvable_event_skipped() -> None:
-    meets, report = parse_hy3_lines(
-        [*_HEAD, f1(letter="A", dist="201", stroke="A"), f2(time="105.95")]
-    )
-    assert meets[0].relays == []
-    assert report.warnings_for(field="event", severity=Severity.SKIPPED)
+    archive = parse_hy3_lines([*_HEAD, f1(letter="A", dist="201", stroke="A"), f2(time="105.95")])
+    assert archive.meets[0].relays == []
+    assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
 # --------------------------------------------------------------------------- #
@@ -490,13 +490,13 @@ def test_g1_individual_splits() -> None:
         e2(time="61.64"),
         g1(g1_block("F", 2, "29.00"), g1_block("F", 4, "61.64")),
     ]
-    meets, report = parse_hy3_lines(lines)
-    splits = meets[0].individual_swims[0].splits
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
     assert [(s.distance, str(s.time), s.split_type) for s in splits] == [
         (50, "29.00", SplitType.CUMULATIVE),
         (100, "1:01.64", SplitType.CUMULATIVE),
     ]
-    assert report.splits_parsed == 2
+    assert archive.report.splits_parsed == 2
 
 
 def test_g1_skips_zero_placeholder() -> None:
@@ -507,10 +507,10 @@ def test_g1_skips_zero_placeholder() -> None:
         e2(),
         g1(g1_block("F", 2, "0.00"), g1_block("F", 4, "61.64")),
     ]
-    meets, report = parse_hy3_lines(lines)
-    splits = meets[0].individual_swims[0].splits
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
     assert [s.distance for s in splits] == [100]  # the 0.00 placeholder is dropped
-    assert report.splits_parsed == 1
+    assert archive.report.splits_parsed == 1
 
 
 def test_g1_malformed_time_kept_as_none() -> None:
@@ -521,29 +521,29 @@ def test_g1_malformed_time_kept_as_none() -> None:
         e2(),
         g1(g1_block("F", 2, "29.00"), "F 4 xx.yy "),
     ]
-    meets, report = parse_hy3_lines(lines)
-    splits = meets[0].individual_swims[0].splits
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
     assert any(s.time is None for s in splits)
-    assert report.warnings_for(field="split_time", kind=IssueKind.MALFORMED)
+    assert archive.report.warnings_for(field="split_time", kind=IssueKind.MALFORMED)
 
 
 def test_g1_malformed_counter_skipped() -> None:
     lines = [*_HEAD, d1(), e1(dist="100", stroke="A"), e2(), g1("F** 29.00 ")]
-    meets, report = parse_hy3_lines(lines)
-    assert meets[0].individual_swims[0].splits == []
-    assert report.warnings_for(field="split_distance", kind=IssueKind.MALFORMED)
+    archive = parse_hy3_lines(lines)
+    assert archive.meets[0].individual_swims[0].splits == []
+    assert archive.report.warnings_for(field="split_distance", kind=IssueKind.MALFORMED)
 
 
 def test_g1_relay_splits() -> None:
     lines = _relay_meet() + [g1(g1_block("F", 2, "0.00"), g1_block("F", 4, "105.95"))]
-    meets, _ = parse_hy3_lines(lines)
-    relay = meets[0].relays[0]
+    archive = parse_hy3_lines(lines)
+    relay = archive.meets[0].relays[0]
     assert [(s.distance, str(s.time)) for s in relay.splits] == [(100, "1:45.95")]
 
 
 def test_g1_orphan_without_swim() -> None:
-    _, report = parse_hy3_lines([*_HEAD, d1(), g1(g1_block("F", 2, "29.00"))])
-    assert report.warnings_for(record_type="G1", kind=IssueKind.ORPHANED)
+    archive = parse_hy3_lines([*_HEAD, d1(), g1(g1_block("F", 2, "29.00"))])
+    assert archive.report.warnings_for(record_type="G1", kind=IssueKind.ORPHANED)
 
 
 def test_g1_continuation_across_records() -> None:
@@ -557,8 +557,8 @@ def test_g1_continuation_across_records() -> None:
         g1(*blocks1),
         g1(*blocks2),
     ]
-    meets, _ = parse_hy3_lines(lines)
-    splits = meets[0].individual_swims[0].splits
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
     assert len(splits) == 12
     assert splits[-1].distance == 600  # counter 24 * 25
 
@@ -570,15 +570,15 @@ def test_g1_continuation_across_records() -> None:
 
 def test_h1_dq_reason() -> None:
     lines = [*_HEAD, d1(), e1(), e2(status="Q", dqcode="3D"), h1(code="3D", text="One hand touch")]
-    meets, _ = parse_hy3_lines(lines)
-    assert meets[0].individual_swims[0].dq_reason == "One hand touch"
+    archive = parse_hy3_lines(lines)
+    assert archive.meets[0].individual_swims[0].dq_reason == "One hand touch"
 
 
 def test_h1_h2_dq_reason_concatenated() -> None:
     h2 = hy3_rec((1, "H2"), (3, "3D"), (5, "on the turn"))
     lines = [*_HEAD, d1(), e1(), e2(status="Q", dqcode="3D"), h1(text="One hand touch"), h2]
-    meets, _ = parse_hy3_lines(lines)
-    assert meets[0].individual_swims[0].dq_reason == "One hand touch on the turn"
+    archive = parse_hy3_lines(lines)
+    assert archive.meets[0].individual_swims[0].dq_reason == "One hand touch on the turn"
 
 
 def test_h1_on_relay() -> None:
@@ -588,8 +588,8 @@ def test_h1_on_relay() -> None:
         f2(time="105.95", status="Q", dqcode="62"),
         h1(code="62", text="Early takeoff"),
     ]
-    meets, _ = parse_hy3_lines(lines)
-    relay = meets[0].relays[0]
+    archive = parse_hy3_lines(lines)
+    relay = archive.meets[0].relays[0]
     assert relay.status is ResultStatus.DQ
     assert relay.dq_code == "62"
     assert relay.dq_reason == "Early takeoff"
@@ -597,8 +597,8 @@ def test_h1_on_relay() -> None:
 
 def test_h1_without_result_ignored() -> None:
     # An H1 right after D1 (no result yet) attaches to nothing and is dropped silently.
-    meets, report = parse_hy3_lines([*_HEAD, d1(), h1()])
-    assert not report.warnings_for(record_type="H1")
+    archive = parse_hy3_lines([*_HEAD, d1(), h1()])
+    assert not archive.report.warnings_for(record_type="H1")
 
 
 # --------------------------------------------------------------------------- #
@@ -611,32 +611,32 @@ def test_trailing_checksum_is_ignored() -> None:
     # Export` files omit it, and it is not a data field. A wrong checksum still parses.
     good = e2(time="61.64")
     corrupt = good[:128] + "99"  # valid data body, deliberately wrong checksum
-    meets, report = parse_hy3_lines([*_HEAD, d1(), e1(), corrupt])
-    assert str(meets[0].individual_swims[0].time) == "1:01.64"
-    assert not report.warnings_for(field="checksum")
+    archive = parse_hy3_lines([*_HEAD, d1(), e1(), corrupt])
+    assert str(archive.meets[0].individual_swims[0].time) == "1:01.64"
+    assert not archive.report.warnings_for(field="checksum")
 
 
 def test_unknown_record_warns() -> None:
     unknown = hy3_rec((1, "Z9"))
-    _, report = parse_hy3_lines([*_HEAD, unknown, d1(), e1(), e2()])
-    assert report.warnings_for(record_type="Z9", kind=IssueKind.UNKNOWN_RECORD)
+    archive = parse_hy3_lines([*_HEAD, unknown, d1(), e1(), e2()])
+    assert archive.report.warnings_for(record_type="Z9", kind=IssueKind.UNKNOWN_RECORD)
 
 
 def test_over_long_line_skipped() -> None:
-    _, report = parse_hy3_lines([*_HEAD, "B1" + "x" * 200, d1(), e1(), e2()])
-    assert report.warnings_for(kind=IssueKind.BAD_LENGTH)
+    archive = parse_hy3_lines([*_HEAD, "B1" + "x" * 200, d1(), e1(), e2()])
+    assert archive.report.warnings_for(kind=IssueKind.BAD_LENGTH)
 
 
 def test_short_line_padded() -> None:
     # A blank-ish C1 truncated short still parses after right-padding.
     short = "C1   ABCD"
-    meets, _ = parse_hy3_lines([A1, B1_HY3, B2_HY3, short, d1(), e1(), e2()])
-    assert meets[0].individual_swims  # parsing continued past the short line
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, short, d1(), e1(), e2()])
+    assert archive.meets[0].individual_swims  # parsing continued past the short line
 
 
 def test_blank_lines_skipped() -> None:
-    meets, _ = parse_hy3_lines([A1, "", B1_HY3, "   ", B2_HY3, C1_HY3, d1(), e1(), e2()])
-    assert len(meets) == 1
+    archive = parse_hy3_lines([A1, "", B1_HY3, "   ", B2_HY3, C1_HY3, d1(), e1(), e2()])
+    assert len(archive.meets) == 1
 
 
 def test_strict_mode_raises_on_first_warning() -> None:
@@ -645,13 +645,13 @@ def test_strict_mode_raises_on_first_warning() -> None:
 
 
 def test_report_counts() -> None:
-    meets, report = parse_hy3_lines(_relay_meet() + [g1(g1_block("F", 4, "105.95"))])
-    assert report.files_read == 1
-    assert report.meets_parsed == 1
-    assert report.swimmers_parsed == 2
-    assert report.individual_swims_parsed == 2
-    assert report.relays_parsed == 1
-    assert report.splits_parsed == 1
+    archive = parse_hy3_lines(_relay_meet() + [g1(g1_block("F", 4, "105.95"))])
+    assert archive.report.files_read == 1
+    assert archive.report.meets_parsed == 1
+    assert archive.report.swimmers_parsed == 2
+    assert archive.report.individual_swims_parsed == 2
+    assert archive.report.relays_parsed == 1
+    assert archive.report.splits_parsed == 1
 
 
 def test_records_before_meet_are_noops() -> None:
@@ -668,5 +668,5 @@ def test_records_before_meet_are_noops() -> None:
         g1(g1_block("F", 2, "29.00")),
         h1(),
     ]
-    meets, _ = parse_hy3_lines(pre + [B1_HY3, C1_HY3, d1(), e1(), e2()])
-    assert len(meets) == 1 and meets[0].individual_swims
+    archive = parse_hy3_lines(pre + [B1_HY3, C1_HY3, d1(), e1(), e2()])
+    assert len(archive.meets) == 1 and archive.meets[0].individual_swims

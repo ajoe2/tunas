@@ -17,9 +17,10 @@ def _single_meet_text() -> str:
 
 def test_return_shape() -> None:
     relay_g0 = g0(times=("26.50",), total="1", session="F")
-    meets, report = parse_lines([A0, B1, C1, d0(), g0(), e0(), f0(), relay_g0, Z0])
-    assert isinstance(meets, list)
-    assert len(meets) == report.meets_parsed == 1
+    archive = parse_lines([A0, B1, C1, d0(), g0(), e0(), f0(), relay_g0, Z0])
+    report = archive.report
+    assert isinstance(archive.meets, list)
+    assert len(archive.meets) == report.meets_parsed == 1
     assert report.files_read == 1
     assert report.swimmers_parsed == 1
     assert report.individual_swims_parsed == 1
@@ -33,9 +34,9 @@ def test_file_path(tmp_path: object) -> None:
     p = os.path.join(str(tmp_path), "meet.cl2")
     with open(p, "w") as fh:
         fh.write(_single_meet_text())
-    meets, report = read_cl2(p)
-    assert len(meets) == 1
-    assert report.files_read == 1
+    archive = next(iter(read_cl2(p)))
+    assert len(archive.meets) == 1
+    assert archive.report.files_read == 1
 
 
 def test_directory_walk(tmp_path: object) -> None:
@@ -43,9 +44,9 @@ def test_directory_walk(tmp_path: object) -> None:
     for name in ("a.cl2", "b.CL2", "ignore.txt"):
         with open(os.path.join(d, name), "w") as fh:
             fh.write(_single_meet_text() if name.lower().endswith(".cl2") else "junk")
-    meets, report = read_cl2(d)
-    assert len(meets) == 2  # only the two .cl2 files
-    assert report.files_read == 2
+    archives = list(read_cl2(d))
+    assert len(archives) == 2  # one archive per .cl2 file (the .txt is ignored)
+    assert sum(len(a.meets) for a in archives) == 2
 
 
 def test_iterable_of_paths(tmp_path: object) -> None:
@@ -55,21 +56,22 @@ def test_iterable_of_paths(tmp_path: object) -> None:
         with open(p, "w") as fh:
             fh.write(_single_meet_text())
         paths.append(p)
-    meets, _ = read_cl2(paths)
-    assert len(meets) == 2
+    archives = list(read_cl2(paths))
+    assert [os.path.basename(a.source) for a in archives] == ["one.cl2", "two.cl2"]
+    assert sum(len(a.meets) for a in archives) == 2
 
 
 def test_file_like_stream() -> None:
-    meets, report = read_cl2(io.StringIO(_single_meet_text()))
-    assert len(meets) == 1
+    archive = next(iter(read_cl2(io.StringIO(_single_meet_text()))))
+    assert len(archive.meets) == 1
     # warnings (if any) use the stream source label
-    meets, report = read_cl2(io.StringIO("\n".join([A0, B1, C1, d0(birth=""), Z0]) + "\n"))
-    assert all(w.source == "<stream>" for w in report.warnings)
+    archive = next(iter(read_cl2(io.StringIO("\n".join([A0, B1, C1, d0(birth=""), Z0]) + "\n"))))
+    assert all(w.source == "<stream>" for w in archive.report.warnings)
 
 
 def test_binary_stream_raises() -> None:
     with pytest.raises(TypeError):
-        read_cl2(io.BytesIO(b"A0 stuff"))  # type: ignore[arg-type]  # bytes stream rejected
+        list(read_cl2(io.BytesIO(b"A0 stuff")))  # type: ignore[arg-type]  # bytes stream rejected
 
 
 def test_multi_file_no_merge(tmp_path: object) -> None:
@@ -79,15 +81,14 @@ def test_multi_file_no_merge(tmp_path: object) -> None:
         with open(p, "w") as fh:
             fh.write(_single_meet_text())
         paths.append(p)
-    meets, _ = read_cl2(paths)
-    assert len(meets) == 2
-    # same id_short, but two distinct Swimmer objects
-    assert meets[0].swimmers[0].id_short == meets[1].swimmers[0].id_short
-    assert meets[0].swimmers[0] is not meets[1].swimmers[0]
+    a, b = read_cl2(paths)  # one archive per file, in order
+    # same id_short, but two distinct Swimmer objects (no cross-file merge)
+    assert a.meets[0].swimmers[0].id_short == b.meets[0].swimmers[0].id_short
+    assert a.meets[0].swimmers[0] is not b.meets[0].swimmers[0]
 
 
 def test_per_meet_scope_two_b1_blocks() -> None:
-    meets, _ = parse_lines([A0, B1, C1, d0(), Z0, B1, C1, d0(), Z0])
+    meets = parse_lines([A0, B1, C1, d0(), Z0, B1, C1, d0(), Z0]).meets
     assert len(meets) == 2
     s0 = set(map(id, meets[0].swimmers))
     s1 = set(map(id, meets[1].swimmers))
@@ -99,7 +100,7 @@ def test_per_meet_scope_two_b1_blocks() -> None:
 def test_swimmer_grouping_total_within_meet() -> None:
     # Two D0s sharing an id -> one Swimmer with two individual swims.
     line2 = d0(dist="50", finals="28.00")
-    meets, _ = parse_lines([A0, B1, C1, d0(), line2, Z0])
+    meets = parse_lines([A0, B1, C1, d0(), line2, Z0]).meets
     assert len(meets[0].swimmers) == 1
     sw = meets[0].swimmers[0]
     assert len(sw.individual_swims) == 2
@@ -107,7 +108,7 @@ def test_swimmer_grouping_total_within_meet() -> None:
 
 
 def test_club_repeated_c1_reuses() -> None:
-    meets, _ = parse_lines([A0, B1, C1, d0(), C1, d0(dist="50", finals="28.00"), Z0])
+    meets = parse_lines([A0, B1, C1, d0(), C1, d0(dist="50", finals="28.00"), Z0]).meets
     assert len(meets[0].clubs) == 1
 
 
@@ -125,7 +126,7 @@ def test_result_status_outcomes_and_dq_rate() -> None:
         d0(name="C, C", uss="CCCCCCCCCCCC", finals="NS"),
         Z0,
     ]
-    meets, _ = parse_lines(lines)
+    meets = parse_lines(lines).meets
     statuses = Counter(r.status for r in meets[0].individual_swims)
     assert statuses[ResultStatus.OK] == 1
     assert statuses[ResultStatus.DQ] == 1
@@ -160,8 +161,7 @@ def test_capture_everything_full_spec() -> None:
     alt = f0(name="Sub, A", uss="ALT000000001", order_finals="A", leg_time="")
     g_bad = g0(times=("29.00", "bad"), total="2")
     lines = [A0, B1, b2, C1, c2, d0(), d1, d2, d3, g_bad, e0(), f0(), alt, Z0]
-    meets, report = parse_lines(lines)
-    m = meets[0]
+    m = parse_lines(lines).meets[0]
     assert m.source_file is not None and m.source_file.file_type is not None
     assert m.host is not None and m.host.name == "Host Club"
     club = m.clubs[0]

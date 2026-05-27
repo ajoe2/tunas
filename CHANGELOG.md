@@ -2,16 +2,22 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
-## [Unreleased]
+## [0.3.0] — 2026-05-26
+
+### Changed
+- **Breaking — streaming reader API**: `read_cl2` and `read_hy3` now return a **lazy `Iterator[MeetArchive]`** — one archive per source file — instead of `tuple[list[Meet], ParseReport]`. Files are parsed as the iterator is consumed, so a large corpus is processed one file at a time without holding every meet in memory at once, and each file's diagnostics stay attached to that file rather than being merged into one report. `max_workers` now dispatches files across a thread pool behind a bounded, order-preserving look-ahead window (archives are still yielded in source order); on a free-threaded interpreter the per-file work parses in genuine parallel.
+  - **Migration**: to recover the old behaviour, flatten the iterator — `meets = [m for arc in read_cl2(src) for m in arc.meets]` — and, if a single combined report is needed, fold the per-file reports with `ParseReport.merge`. For a single file/stream, `(archive,) = read_cl2(src)` or `archive = next(iter(read_cl2(src)))` yields the one archive.
 
 ### Added
+- **`MeetArchive`**: the per-file parse result yielded by both readers, wrapping `source` (path or `"<stream>"`), `meets` (a file may hold more than one), and a per-file `report`. Exported from the top-level package.
 - **`.hy3` event metadata**: `read_hy3` now populates `event_min_age`, `event_max_age`, and `event_number` on individual (`E1`/`E2`) and relay (`F1`/`F2`) results, decoded from the newly-confirmed `E1`/`F1` columns (age range 23–28, event number 39–42). Open-ended age bounds use the SDIF `None` convention (the `0`/`109` file sentinels map to `None`).
 
 ### Fixed
 - **`.hy3` format reference**: Corrected the `E1`/`F1` field map — cols 23–28 are the event age range (min 23–25, max 26–28), and the event number is at cols 39–42, not 25–28 as previously documented.
 
 ### Internal
-- Refactored the shared parse engine for readability with **no change** to the public API or parse output: hoisted the duplicated event-resolution and split-appending logic out of `_parser/cl2.py` and `_parser/hy3.py` into `_BaseEngine` (`_resolve_event`, `_append_split`), and unified the generic code-enum helpers on Python 3.12 type-parameter syntax.
+- Reworked the `parser.py` driver into a lazy archive iterator: eager argument validation, a per-file engine, and a bounded order-preserving `_imap_ordered` look-ahead over the thread pool (at most `2 * max_workers` files in flight) in place of the old map-and-merge parallel path.
+- Refactored the shared parse engine for readability with **no change** to per-file parse output: hoisted the duplicated event-resolution and split-appending logic out of `_parser/cl2.py` and `_parser/hy3.py` into `_BaseEngine` (`_resolve_event`, `_append_split`), and unified the generic code-enum helpers on Python 3.12 type-parameter syntax.
 
 ## [0.2.0] — 2026-05-25
 
