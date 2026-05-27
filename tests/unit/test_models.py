@@ -268,8 +268,7 @@ def test_repr_does_not_recurse_into_related_objects() -> None:
 def test_meet_repr_and_str() -> None:
     m = _fully_wired_meet()
     assert repr(m) == (
-        "Meet(name='M', organization=USS, start_date=2025-01-01, "
-        "clubs=0, swimmers=1, results=2)"
+        "Meet(name='M', organization=USS, start_date=2025-01-01, clubs=0, swimmers=1, results=2)"
     )
     assert str(m) == "M (2025-01-01)"
 

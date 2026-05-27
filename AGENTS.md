@@ -20,4 +20,6 @@ Update the documentation immediately following any code changes to ensure it rem
 
 ## Testing
 
-Every new feature must include accompanying test scripts to verify the correctness of the implementation. No code should be deployed without test coverage.
+Every new feature must include test scripts to verify its implementation. **No code may be deployed without test coverage.** 
+
+Before deployment, you must run all verification steps to ensure the codebase is production-ready.

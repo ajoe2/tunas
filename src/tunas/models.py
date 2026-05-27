@@ -83,6 +83,7 @@ def _swimmer_label(swimmer: Swimmer | None) -> str | None:
     """A swimmer's ``full_name`` (or ``None``), without recursing into it."""
     return swimmer.full_name if swimmer is not None else None
 
+
 __all__ = [
     "Swim",
     "MeetResult",
