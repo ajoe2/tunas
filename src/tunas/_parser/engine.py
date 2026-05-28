@@ -33,7 +33,8 @@ from tunas.time import Time
 
 
 class _BaseEngine:
-    """Stateful fixed-width parser. One instance per reader call, reused across files."""
+    """Stateful fixed-width parser. ``parse_source`` resets all per-file state, so one
+    instance can parse many files in turn (each call yields only that source's results)."""
 
     #: Total record width (data + any trailing checksum); padded/limited per line.
     RECORD_WIDTH: ClassVar[int]
@@ -52,8 +53,14 @@ class _BaseEngine:
     # -- public driver ----------------------------------------------------- #
 
     def parse_source(self, lines: Iterable[object], source: str) -> None:
-        """Parse one file/stream's lines, accumulating into ``self.meets``."""
+        """Parse one file/stream's lines into a fresh ``meets``/``report`` pair.
+
+        Fully resets every per-file accumulator, so one engine instance is safe
+        to reuse across files: each call yields results for *this source only*.
+        """
         self.source = source
+        self.meets = []
+        self.report = ParseReport()
         self.report.files_read += 1
         self.source_file = None
         self.file_counts = Counter()
@@ -65,7 +72,7 @@ class _BaseEngine:
             if not isinstance(raw, str):
                 raise TypeError(f"{self.READER} requires a text source yielding str, not bytes")
             if first:
-                raw = raw.lstrip("﻿")
+                raw = raw.removeprefix("﻿")
                 first = False
             self._feed(raw, line_no)
         self._finish_file()

@@ -30,8 +30,10 @@ class Time:
     def parse(cls, s: str) -> Time:
         """Parse a swim-time string formatted as `[MM:]SS.HH` or `[M:]SS.HH`.
 
-        Strips leading/trailing whitespace. Tolerates 1- or 2-digit minutes,
-        seconds, and fractions of a second.
+        Strips leading/trailing whitespace. Tolerates 1- or 2-digit minutes and
+        seconds; fractions of a second are taken to centisecond precision, with
+        any extra digits rounded to the nearest hundredth (e.g. ``"1:04.875"`` ->
+        ``1:04.88``).
 
         Args:
             s: The time string to parse (e.g., `"1:04.87"`, `"23.4"`, `"8.23"`).
@@ -64,7 +66,12 @@ class Time:
 
         minutes = int(minutes_str)
         seconds = int(seconds_str)
-        hundredths = int((frac_str + "00")[:2])  # tolerate 1- or 2-digit fractions
+        if len(frac_str) <= 2:
+            hundredths = int((frac_str + "00")[:2])  # 1- or 2-digit fraction: exact
+        else:
+            # Round any extra precision to the nearest hundredth; a value that
+            # rounds up to 100 carries cleanly since we store total centiseconds.
+            hundredths = round(int(frac_str) / 10 ** len(frac_str) * 100)
         return cls(minutes * 6000 + seconds * 100 + hundredths)
 
     @property

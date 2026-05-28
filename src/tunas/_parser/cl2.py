@@ -180,7 +180,8 @@ _Z0_CHECKS = (
 
 
 class _Cl2Engine(_BaseEngine):
-    """Stateful SDIF parser. One instance per ``read_cl2`` call, reused across files."""
+    """Stateful SDIF parser. ``parse_source`` resets per-file state, so one instance
+    can parse many files in turn (each call yields only that source's results)."""
 
     RECORD_WIDTH: ClassVar[int] = RECORD_WIDTH
     READER: ClassVar[str] = "read_cl2"

@@ -104,7 +104,8 @@ _FIRST_SLOT_COL = 3
 
 
 class _Hy3Engine(_BaseEngine):
-    """Stateful Hy-Tek parser. One instance per ``read_hy3`` call, reused across files."""
+    """Stateful Hy-Tek parser. ``parse_source`` resets per-file state, so one instance
+    can parse many files in turn (each call yields only that source's results)."""
 
     RECORD_WIDTH: ClassVar[int] = HY3_RECORD_WIDTH
     READER: ClassVar[str] = "read_hy3"

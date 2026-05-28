@@ -74,6 +74,21 @@ def test_binary_stream_raises() -> None:
         list(read_cl2(io.BytesIO(b"A0 stuff")))  # type: ignore[arg-type]  # bytes stream rejected
 
 
+def test_engine_reuse_resets_between_files() -> None:
+    # parse_source must fully reset, so one engine instance can parse several
+    # sources without leaking the prior file's meets or accumulating its counts.
+    from tunas._parser.cl2 import _Cl2Engine
+
+    lines = [A0, B1, C1, d0(), Z0]
+    engine = _Cl2Engine(strict=False)
+    engine.parse_source(lines, "first.cl2")
+    engine.parse_source(lines, "second.cl2")
+    assert len(engine.meets) == 1  # only the second source's meet, not both
+    assert engine.report.files_read == 1  # counters are per-source, not cumulative
+    assert engine.report.meets_parsed == 1
+    assert engine.report.swimmers_parsed == 1
+
+
 def test_multi_file_no_merge(tmp_path: object) -> None:
     paths = []
     for name in ("a.cl2", "b.cl2"):

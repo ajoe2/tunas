@@ -60,6 +60,11 @@ def read_cl2(
     memory at once. To materialize everything, drain the iterator (e.g.
     ``meets = [m for arc in read_cl2(...) for m in arc.meets]``).
 
+    Per the SDIF spec a "no time" is a blank field or a status code
+    (``NT``/``NS``/``DNF``/``DQ``/``SCR``) — never ``0.00`` — so a missing time
+    surfaces as ``time=None`` with a non-OK :class:`~tunas.ResultStatus` (Hy-Tek
+    `.hy3` instead uses a ``0.00`` sentinel; see :func:`read_hy3`).
+
     Args:
         source: File path, directory (walked recursively for `*.cl2`), iterable of paths,
             or an open text stream. A stream yields exactly one archive (``source="<stream>"``).
@@ -105,6 +110,10 @@ def read_hy3(
     Only fields confirmed by the reverse-engineered `.hy3` specification are parsed
     into the returned `Meet` object graph. Iteration, ordering, and ``max_workers``
     semantics are identical to :func:`read_cl2`.
+
+    Hy-Tek encodes a "no time" entry as the sentinel ``0.00``, normalized here to
+    ``time=None`` (SDIF instead uses a blank field or an ``NT`` code; see
+    :func:`read_cl2`).
 
     Args:
         source: File path, directory (walked recursively for `*.hy3`), iterable of paths,
@@ -226,11 +235,11 @@ def _resolve_paths(
     if isinstance(source, (str, os.PathLike)):
         path = Path(os.fspath(source))
         if path.is_dir():
-            return [
+            return sorted(
                 child
-                for child in sorted(path.rglob("*"))
+                for child in path.rglob("*")
                 if child.is_file() and child.suffix.lower() == suffix
-            ]
+            )
         return [path]
     return [Path(os.fspath(item)) for item in source]
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import math
 from enum import StrEnum
 
 from tunas.enums import Course, ResultStatus
@@ -171,17 +172,18 @@ def decimal_value(raw: str) -> tuple[str, float | None]:
 
     Returns:
         A tuple of `(status, value)` where `status` is one of:
-        - `"dec"`: Successfully parsed; `value` is a `float`.
+        - `"dec"`: Successfully parsed; `value` is a finite `float`.
         - `"blank"`: The field was blank; `value` is `None`.
-        - `"bad"`: Unparseable non-numeric float string; `value` is `None`.
+        - `"bad"`: Unparseable, or a non-finite value (`inf`/`nan`); `value` is `None`.
     """
     v = raw.strip()
     if not v:
         return "blank", None
     try:
-        return "dec", float(v)
+        value = float(v)
     except ValueError:
         return "bad", None
+    return ("dec", value) if math.isfinite(value) else ("bad", None)
 
 
 def code_value[E: StrEnum](raw: str, enum_cls: type[E]) -> tuple[str, E | None]:
