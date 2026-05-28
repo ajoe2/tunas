@@ -98,6 +98,18 @@ def test_b1_meet_metadata() -> None:
     assert m.altitude == 12
 
 
+def test_organization_is_none() -> None:
+    # `.hy3` carries no ORG code, so it must never be fabricated: every node that
+    # has an `organization` field is left as None rather than defaulted to USS.
+    archive = parse_hy3_lines(_one_swim())
+    meet = archive.meets[0]
+    assert meet.organization is None
+    assert all(club.organization is None for club in meet.clubs)
+    assert meet.clubs  # guard: the assertion above is vacuous on an empty meet
+    assert all(result.organization is None for result in meet.results)
+    assert meet.results
+
+
 def test_b1_missing_start_date_is_fatal() -> None:
     b1 = hy3_rec((1, "B1"), (3, "No Date Meet"))
     with pytest.raises(ParseError):

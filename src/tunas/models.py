@@ -229,7 +229,7 @@ class MeetResult:
 
     meet: Meet
     club: Club | None
-    organization: Organization
+    organization: Organization | None
     session: Session
     event: Event
     event_min_age: int | None
@@ -439,7 +439,7 @@ class Club:
     """A club scoped to one meet, keyed by `(team_code, lsc)`."""
 
     meet: Meet
-    organization: Organization
+    organization: Organization | None
     team_code: str
     lsc: LSC | None = None
     full_name: str | None = None
@@ -484,7 +484,7 @@ class Club:
 class Meet:
     """A single swimming meet containing clubs, swimmers, and results."""
 
-    organization: Organization
+    organization: Organization | None
     name: str
     start_date: datetime.date
     end_date: datetime.date | None = None

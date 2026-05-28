@@ -44,6 +44,14 @@ def test_b1_meet_fields() -> None:
     assert m.course is Course.SCY
 
 
+def test_b1_blank_org_is_none() -> None:
+    # A blank ORG code (3/1) must surface as None, not be defaulted to USS — the
+    # parser never fabricates an organization the source did not state.
+    b1 = rec((1, "B1"), (12, "Winter Champs"), (122, "01012025"))  # no (3, ...) org
+    archive = parse_lines([A0, b1, C1, d0(), Z0])
+    assert archive.meets[0].organization is None
+
+
 def test_b2_host() -> None:
     b2 = rec(
         (1, "B2"),

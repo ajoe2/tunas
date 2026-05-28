@@ -121,7 +121,7 @@ A [`Meet`][tunas.models.Meet] represents one `B1` block and all elements beneath
 |---|---|---|
 | `name`, `start_date` | `str`, `date` | Required (M1). |
 | `end_date`, `city`, `state`, `country`, `postal_code`, `address_one`, `address_two` | optional | Location. `state` is a [`State`][tunas.geography.State]; `country` is a [`Country`][tunas.geography.Country]. |
-| `organization` | [`Organization`][tunas.enums.Organization] | ORG code (USS, Masters, NCAA, ...). |
+| `organization` | [`Organization`][tunas.enums.Organization] `\| None` | ORG code (USS, Masters, NCAA, ...). `None` when the source carries no org code (`.hy3` always; `.cl2` when the field is blank). |
 | `course` | [`Course`][tunas.enums.Course] `\| None` | Default course (`B1` col 150). |
 | `altitude` | `int \| None` | Pool altitude in feet. |
 | `meet_type` | [`MeetType`][tunas.enums.MeetType] `\| None` | Almost always blank in real `.cl2`. |

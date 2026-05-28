@@ -20,7 +20,6 @@ from tunas._parser.ids import normalize_id
 from tunas._parser.state import Hy3Entry, Hy3RelayEntry, Hy3State
 from tunas.enums import (
     Hy3FileType,
-    Organization,
     RelayLegOrder,
     ResultStatus,
     Session,
@@ -248,7 +247,7 @@ class _Hy3Engine(_BaseEngine):
                 rec, "start_date", "93/8", "M1", IssueKind.MISSING, "missing meet start date"
             )
         meet = Meet(
-            organization=Organization.USS,  # `.hy3` carries no org code; USA Swimming context
+            organization=None,  # `.hy3` carries no org code
             name=name,
             start_date=start,
             end_date=self._date(rec, 101, 8, "end_date", "101/8", "M2"),
@@ -292,7 +291,7 @@ class _Hy3Engine(_BaseEngine):
             return
         club = Club(
             meet=st.meet,
-            organization=Organization.USS,
+            organization=None,  # `.hy3` carries no org code
             team_code=abbrev,
             lsc=lsc,
             full_name=name,
@@ -412,7 +411,7 @@ class _Hy3Engine(_BaseEngine):
         swim = IndividualSwim(
             meet=st.meet,
             club=st.attached_club,
-            organization=Organization.USS,
+            organization=None,  # `.hy3` carries no org code
             event=event,
             event_min_age=entry.event_min_age,
             event_max_age=entry.event_max_age,
@@ -494,7 +493,7 @@ class _Hy3Engine(_BaseEngine):
         relay = Relay(
             meet=st.meet,
             club=st.attached_club,
-            organization=Organization.USS,
+            organization=None,  # `.hy3` carries no org code
             event=event,
             event_min_age=entry.event_min_age,
             event_max_age=entry.event_max_age,

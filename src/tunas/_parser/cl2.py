@@ -143,7 +143,7 @@ class _CommonResultFields(TypedDict):
 
     meet: Meet
     club: Club | None
-    organization: Organization
+    organization: Organization | None
     event: Event
     event_min_age: int | None
     event_max_age: int | None
@@ -408,7 +408,7 @@ class _Cl2Engine(_BaseEngine):
 
     def _h_b1(self, rec: Record) -> None:
         self._commit_pending()
-        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
+        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2")
         name = self._require_text(rec, 12, 30, "name", "12/30")
         start = self._date(rec, 122, 8, "start_date", "122/8", "M1")
         if start is None:
@@ -495,7 +495,7 @@ class _Cl2Engine(_BaseEngine):
         if st is None:
             return
         self._commit_pending()
-        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
+        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2")
         team_code, lsc = self._team_code(rec, 12, 150)
         name = self._require_text(rec, 18, 30, "full_team_name", "18/30")
         team_part = rec.raw(12, 6)[2:].strip().upper()
@@ -555,7 +555,7 @@ class _Cl2Engine(_BaseEngine):
         if st is None:
             self._skip_orphan(rec, "D0 with no preceding B1 meet")
             return
-        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
+        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2")
         last, first, middle = parse_name(self._require_text(rec, 12, 28, "swimmer_name", "12/28"))
         id_short = normalize_id(rec.raw(40, 12))
         citizenship = self._citizenship(rec, 53, 3)
@@ -838,7 +838,7 @@ class _Cl2Engine(_BaseEngine):
             self._skip_orphan(rec, "E0 with no preceding B1 meet")
             return
         self._commit_pending()
-        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2") or Organization.USS
+        org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2")
         relay_letter = self._require_text(rec, 12, 1, "relay_letter", "12/1")
         esex = code_value(rec.raw(21, 1), Sex)[1]
         dist = int_value(rec.raw(22, 4))[1]
