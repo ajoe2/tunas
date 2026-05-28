@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import os
-from collections import deque
-from collections.abc import Callable, Iterable, Iterator
-from concurrent.futures import Future, ThreadPoolExecutor
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from itertools import islice
 from pathlib import Path
 from typing import TextIO
 
@@ -51,13 +48,12 @@ def read_cl2(
     strict: bool = False,
     encoding: str = "cp1252",
     errors: str = "replace",
-    max_workers: int = 1,
 ) -> Iterator[MeetArchive]:
     """Parse `.cl2` / SDIF v3 files, yielding one :class:`MeetArchive` per source.
 
-    Parsing is lazy: files are read and parsed as the iterator is consumed, so a
-    large corpus is processed one file at a time without holding every meet in
-    memory at once. To materialize everything, drain the iterator (e.g.
+    Parsing is lazy: files are read and parsed one at a time as the iterator is
+    consumed, so a large corpus is never held in memory all at once. To materialize
+    everything, drain the iterator (e.g.
     ``meets = [m for arc in read_cl2(...) for m in arc.meets]``).
 
     Per the SDIF spec a "no time" is a blank field or a status code
@@ -72,29 +68,15 @@ def read_cl2(
             Otherwise, parsing is lenient. Fatal M1 structural violations always raise.
         encoding: Text encoding to use when opening file paths.
         errors: Error handling scheme for decoding errors.
-        max_workers: Thread-pool size for concurrent file parsing. Archives are always
-            yielded in source order. Under CPython's GIL the parse is CPU-bound and
-            workers effectively serialize; on a free-threaded interpreter they run in
-            parallel with no change to the result. At most ``2 * max_workers`` files are
-            parsed ahead of the consumer, bounding peak memory.
 
     Yields:
         :class:`MeetArchive` objects in source order — one per file/stream.
 
     Raises:
-        ValueError: If ``max_workers < 1`` (raised eagerly, before iteration).
         ParseError: During iteration, on a fatal structural violation, or in strict
             mode on any parse warning. The earliest failing source raises first.
     """
-    return _read(
-        source,
-        _Cl2Engine,
-        ".cl2",
-        strict=strict,
-        encoding=encoding,
-        errors=errors,
-        max_workers=max_workers,
-    )
+    return _read(source, _Cl2Engine, ".cl2", strict=strict, encoding=encoding, errors=errors)
 
 
 def read_hy3(
@@ -103,13 +85,12 @@ def read_hy3(
     strict: bool = False,
     encoding: str = "cp1252",
     errors: str = "replace",
-    max_workers: int = 1,
 ) -> Iterator[MeetArchive]:
     """Parse Hy-Tek `.hy3` result files, yielding one :class:`MeetArchive` per source.
 
     Only fields confirmed by the reverse-engineered `.hy3` specification are parsed
-    into the returned `Meet` object graph. Iteration, ordering, and ``max_workers``
-    semantics are identical to :func:`read_cl2`.
+    into the returned `Meet` object graph. Iteration and ordering semantics are
+    identical to :func:`read_cl2`.
 
     Hy-Tek encodes a "no time" entry as the sentinel ``0.00``, normalized here to
     ``time=None`` (SDIF instead uses a blank field or an ``NT`` code; see
@@ -122,25 +103,15 @@ def read_hy3(
             Otherwise, parsing is lenient. Fatal M1 structural violations always raise.
         encoding: Text encoding to use when opening file paths.
         errors: Error handling scheme for decoding errors.
-        max_workers: Thread-pool size for concurrent file parsing (see :func:`read_cl2`).
 
     Yields:
         :class:`MeetArchive` objects in source order — one per file/stream.
 
     Raises:
-        ValueError: If ``max_workers < 1`` (raised eagerly, before iteration).
         ParseError: During iteration, on a fatal structural violation, or in strict
             mode on any parse warning. The earliest failing source raises first.
     """
-    return _read(
-        source,
-        _Hy3Engine,
-        ".hy3",
-        strict=strict,
-        encoding=encoding,
-        errors=errors,
-        max_workers=max_workers,
-    )
+    return _read(source, _Hy3Engine, ".hy3", strict=strict, encoding=encoding, errors=errors)
 
 
 def _read(
@@ -151,19 +122,13 @@ def _read(
     strict: bool,
     encoding: str,
     errors: str,
-    max_workers: int,
 ) -> Iterator[MeetArchive]:
-    """Validate args eagerly, then return a lazy archive iterator; shared by both readers."""
-    if max_workers < 1:
-        raise ValueError(f"max_workers must be >= 1, got {max_workers}")
-
+    """Dispatch to the stream or path iterator; shared by both readers."""
     if hasattr(source, "read"):  # an open text stream — a single unit of work
         return _iter_stream(source, engine_cls, strict)  # type: ignore[arg-type]
 
     paths = _resolve_paths(source, suffix)
-    return _iter_paths(
-        paths, engine_cls, strict=strict, encoding=encoding, errors=errors, max_workers=max_workers
-    )
+    return _iter_paths(paths, engine_cls, strict=strict, encoding=encoding, errors=errors)
 
 
 def _iter_stream(
@@ -182,49 +147,10 @@ def _iter_paths(
     strict: bool,
     encoding: str,
     errors: str,
-    max_workers: int,
 ) -> Iterator[MeetArchive]:
-    """Yield one archive per path, in order, optionally parsing several files concurrently."""
-
-    def parse(path: Path) -> MeetArchive:
-        return _parse_one(path, engine_cls, strict, encoding, errors)
-
-    if max_workers == 1 or len(paths) <= 1:
-        for path in paths:
-            yield parse(path)
-        return
-
-    # Bounded, order-preserving parallel map: at most ``window`` files are parsed
-    # ahead of the consumer, so peak memory tracks the window — not the whole corpus.
-    # The pool lives for the iterator's lifetime and is shut down when it is exhausted
-    # or closed (e.g. the consumer stops early).
-    with ThreadPoolExecutor(max_workers=max_workers) as pool:
-        yield from _imap_ordered(pool, parse, paths, window=max_workers * 2)
-
-
-def _imap_ordered(
-    pool: ThreadPoolExecutor,
-    fn: Callable[[Path], MeetArchive],
-    items: Iterable[Path],
-    window: int,
-) -> Iterator[MeetArchive]:
-    """Like ``pool.map``, but never more than ``window`` tasks are in flight.
-
-    ``pool.map`` submits every task up front and buffers completed-but-unconsumed
-    results, which for thousands of files defeats the streaming/memory goal. This
-    keeps a sliding window of futures, refilling one as each result is yielded, and
-    preserves submission order so strict mode re-raises the earliest failing file first.
-    """
-    items = iter(items)
-    futures: deque[Future[MeetArchive]] = deque(
-        pool.submit(fn, item) for item in islice(items, window)
-    )
-    for item in items:
-        result = futures.popleft().result()  # wait for the oldest in-flight file
-        futures.append(pool.submit(fn, item))  # refill the window before handing back
-        yield result
-    while futures:
-        yield futures.popleft().result()
+    """Yield one archive per path, in order, parsing each file as it is consumed."""
+    for path in paths:
+        yield _parse_one(path, engine_cls, strict, encoding, errors)
 
 
 def _resolve_paths(

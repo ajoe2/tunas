@@ -125,7 +125,13 @@ class _BaseEngine:
         reason: str,
         raw_line: str,
     ) -> None:
-        w = ParseWarning(
+        """Record one diagnostic — or raise it.
+
+        A ``FATAL`` issue, or any issue while ``strict``, raises :class:`ParseError`
+        immediately. Otherwise the warning is appended to the report and the matching
+        counter (``records_skipped`` / ``fields_recovered``) is bumped.
+        """
+        warning = ParseWarning(
             source=source,
             line_no=line_no,
             record_type=record_type,
@@ -138,8 +144,8 @@ class _BaseEngine:
             raw_line=raw_line[:200],
         )
         if severity is Severity.FATAL or self.strict:
-            raise ParseError(w)
-        self.report.warnings.append(w)
+            raise ParseError(warning)
+        self.report.warnings.append(warning)
         if severity is Severity.SKIPPED:
             self.report.records_skipped += 1
         elif severity is Severity.RECOVERED and kind is not IssueKind.COUNT_MISMATCH:

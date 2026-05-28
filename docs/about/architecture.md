@@ -122,16 +122,15 @@ populate the shared `SourceFile`; `B1` opens a `Meet`; `C1`/`C2` establish club 
 adds relay legs. The `.hy3` flow is analogous but splits athlete/entry/result across `D1`
 (athlete), `E1` (entry/seed), and `E2` (result), with relays in `F1`/`F2`/`F3`.
 
-Each file is parsed by its own engine, so files never share mutable state. With `max_workers > 1`
-the driver dispatches files across a thread pool behind a bounded, order-preserving look-ahead
-window (`_imap_ordered`): at most `2 * max_workers` files are in flight, and archives are still
-yielded strictly in source order. Because the work is independent per file, the same code parses
-in genuine parallel on a free-threaded interpreter; under the GIL the CPU-bound parse serializes,
-so the thread pool mainly overlaps file I/O there. Even free-threaded, the parallel speed-up is
-sublinear and plateaus (empirically ~2.4× at 24–32 threads, regressing past that) because workers
-contend on atomic refcounts over shared immutables and on cyclic-GC coordination — so `max_workers`
-is best kept around 8–32, not core count (see [parsing.md](../guide/parsing.md#parallel-parsing)).
-Callers that want a single combined report can fold the per-file ones with `ParseReport.merge`.
+Each file is parsed by its own engine, so files never share mutable state. The driver iterates
+files lazily and sequentially, yielding one archive per file in source order; a file is only read
+and parsed when its archive is consumed, keeping peak memory flat regardless of corpus size.
+Parsing is single-threaded by design: the work is CPU-bound pure Python, so a thread pool serializes
+under the GIL and (even on a free-threaded build) plateaus at a sublinear ~2.4× before regressing,
+as workers contend on atomic refcounts over shared immutables and on cyclic-GC coordination over the
+meet graph — complexity that bought no reliable gain. To use multiple cores, shard the file list
+across separate processes. Callers that want a single combined report can fold the per-file ones
+with `ParseReport.merge`.
 
 ## Development
 

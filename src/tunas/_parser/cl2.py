@@ -231,7 +231,7 @@ class _Cl2Engine(_BaseEngine):
     ) -> tuple[EventTimeClass | None, EventTimeClass | None]:
         raw = rec.raw(start, 2)
 
-        def one(ch: str) -> EventTimeClass | None:
+        def parse_class(ch: str) -> EventTimeClass | None:
             ch = ch.strip().upper()
             if ch in ("", "U", "O"):  # blank / no-lower / no-upper
                 return None
@@ -240,7 +240,7 @@ class _Cl2Engine(_BaseEngine):
             except ValueError:
                 return None
 
-        return one(raw[0:1]), one(raw[1:2])
+        return parse_class(raw[0:1]), parse_class(raw[1:2])
 
     def _place(
         self, rec: Record, start: int, field: str, column: str, championship: bool
@@ -568,7 +568,7 @@ class _Cl2Engine(_BaseEngine):
         dist_tag, dist = int_value(rec.raw(68, 4))
         stroke_tag, stroke = code_value(rec.raw(72, 1), Stroke)
         eage_tag, emin, emax = event_age_value(rec.raw(77, 4))
-        present = [
+        event_fields_present = [
             esex_tag != "blank",
             dist_tag != "blank",
             stroke_tag != "blank",
@@ -596,7 +596,7 @@ class _Cl2Engine(_BaseEngine):
         )
 
         results: list[IndividualSwim] = []
-        if any(present):
+        if any(event_fields_present):
             # Any invalid/partial/unresolvable event field means we cannot model the
             # swim — skip the whole record (lenient) / raise (strict). This is NOT a
             # fatal M1: one bad/odd record (e.g. a diving event with stroke "H") must
@@ -614,12 +614,12 @@ class _Cl2Engine(_BaseEngine):
                 noun="event",
                 distance_display=repr(rec.raw(68, 4).strip()),
                 stroke_display=repr(rec.raw(72, 1).strip()),
-                extra_ok=all(present) and eage_tag != "bad",
+                extra_ok=all(event_fields_present) and eage_tag != "bad",
             )
             if event is None:
                 st.current_individual_swims = []
                 st.current_swimmer = None
-                st.last_leaf = None
+                st.last_result_kind = None
                 return
             assert esex is not None
             min_tc, max_tc = self._time_classes(rec, 143)
@@ -666,7 +666,7 @@ class _Cl2Engine(_BaseEngine):
             st.pending_individual = PendingIndividual(swimmer, results, rec.line, rec.line_no)
             st.current_swimmer = swimmer
         st.current_individual_swims = results
-        st.last_leaf = "individual"
+        st.last_result_kind = "individual"
 
     def _parse_session(
         self, rec: Record, cols: SessionColumns, champ: bool, noun: str
@@ -808,8 +808,8 @@ class _Cl2Engine(_BaseEngine):
         )
         self._update_registration(
             sw,
-            ethnicity_primary=self._eth(eth[0:1]),
-            ethnicity_secondary=self._eth(eth[1:2]),
+            ethnicity_primary=self._ethnicity(eth[0:1]),
+            ethnicity_secondary=self._ethnicity(eth[1:2]),
             affiliations=affiliations if affiliations else None,
         )
 
@@ -823,7 +823,7 @@ class _Cl2Engine(_BaseEngine):
             st.swimmers_by_id.setdefault(id_long, sw)
 
     @staticmethod
-    def _eth(ch: str) -> Ethnicity | None:
+    def _ethnicity(ch: str) -> Ethnicity | None:
         ch = ch.strip().upper()
         if not ch:
             return None
@@ -864,7 +864,7 @@ class _Cl2Engine(_BaseEngine):
         if event is None:
             st.current_relays = {}
             st.current_relay_legs = {}
-            st.last_leaf = None
+            st.last_result_kind = None
             return
         assert esex is not None
 
@@ -907,7 +907,7 @@ class _Cl2Engine(_BaseEngine):
             self.report.relays_parsed += 1
             st.current_relays[sr.session] = relay
         st.current_relay_legs = {}
-        st.last_leaf = "relay"
+        st.last_result_kind = "relay"
 
     def _h_f0(self, rec: Record) -> None:
         st = self.state
@@ -984,7 +984,7 @@ class _Cl2Engine(_BaseEngine):
 
         st.current_relay_legs = created
         st.current_swimmer = swimmer
-        st.last_leaf = "relay"
+        st.last_result_kind = "relay"
 
     def _h_g0(self, rec: Record) -> None:
         st = self.state
@@ -1030,7 +1030,7 @@ class _Cl2Engine(_BaseEngine):
     def _g0_target(self, rec: Record, session: Session | None) -> list[Split] | None:
         st = self.state
         assert st is not None
-        if st.last_leaf == "relay":
+        if st.last_result_kind == "relay":
             if not st.current_relay_legs:
                 return None
             leg = (
@@ -1039,7 +1039,7 @@ class _Cl2Engine(_BaseEngine):
                 or next(iter(st.current_relay_legs.values()))
             )
             return leg.splits
-        if st.last_leaf == "individual":
+        if st.last_result_kind == "individual":
             if not st.current_individual_swims:
                 return None
             for r in st.current_individual_swims:

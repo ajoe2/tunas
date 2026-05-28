@@ -229,15 +229,15 @@ def event_age_value(raw: str) -> tuple[str, int | None, int | None]:
     field = raw[:4]
     lo_s, hi_s = field[0:2].strip().upper(), field[2:4].strip().upper()
 
-    def one(token: str, open_marker: str) -> tuple[bool, int | None]:
+    def parse_bound(token: str, open_marker: str) -> tuple[bool, int | None]:
         if token in (open_marker, ""):
             return True, None
         if token.isdigit():
             return True, int(token)
         return False, None
 
-    lo_ok, lo = one(lo_s, _AGE_OPEN_LOW)
-    hi_ok, hi = one(hi_s, _AGE_OPEN_HIGH)
+    lo_ok, lo = parse_bound(lo_s, _AGE_OPEN_LOW)
+    hi_ok, hi = parse_bound(hi_s, _AGE_OPEN_HIGH)
     if not (lo_ok and hi_ok):
         return "bad", None, None
     return "ok", lo, hi

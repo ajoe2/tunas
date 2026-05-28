@@ -329,20 +329,20 @@ def prelim_final(swimmer, event):
     return (p.time, f.time) if p and f else None
 ```
 
-## Parse a whole season concurrently
+## Parse a whole season
 
 ```python
 files = meets = 0
-for arc in read_cl2("season_archive/", max_workers=8):
+for arc in read_cl2("season_archive/"):
     files += 1
     meets += len(arc.meets)
 print(files, "files,", meets, "meets")
 ```
 
-Archives are yielded in source order — identical output to the sequential default. On a standard
-(GIL) interpreter the speed-up comes from overlapping file I/O; on a free-threaded build the files
-are parsed in genuine parallel, though the gain is sublinear and plateaus (keep `max_workers` around
-8–32, not your core count). See [parsing.md](parsing.md#parallel-parsing) for the full caveats.
+The iterator is lazy and single-threaded: each file is parsed only as its archive is consumed and
+freed before the next is read, so peak memory stays flat no matter how large the corpus. To use
+multiple cores, shard the file list across separate processes. See [parsing.md](parsing.md#lazy-iteration)
+for details.
 
 ## Inspect file provenance
 

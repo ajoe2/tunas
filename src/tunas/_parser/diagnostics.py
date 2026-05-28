@@ -46,7 +46,11 @@ class ParseWarning:
 
 @dataclass
 class ParseReport:
-    """Metrics and warnings for an entire ``read_cl2`` call."""
+    """Metrics and warnings for a single parsed source (one file or stream).
+
+    Both :func:`~tunas.read_cl2` and :func:`~tunas.read_hy3` attach one report per
+    :class:`~tunas.MeetArchive`; use :meth:`merge` to fold several into a corpus-wide total.
+    """
 
     warnings: list[ParseWarning] = field(default_factory=list)
     files_read: int = 0

@@ -53,7 +53,7 @@ Each `report` aggregates running metrics for its file like `files_read`, `meets_
 print(archive.report.meets_parsed, "meets,", archive.report.individual_swims_parsed, "swims")
 ```
 
-Pass `strict=True` to fail fast and raise `ParseError` on the first warning. For large datasets, specify `max_workers > 1` to dispatch files across a thread pool (the iterator still yields in source order). See [parsing.md](parsing.md) for more details.
+Pass `strict=True` to fail fast and raise `ParseError` on the first warning. For large datasets, the iterator is lazy — files are parsed one at a time as you consume archives, so peak memory stays flat regardless of corpus size. See [parsing.md](parsing.md) for more details.
 
 ### 2. Finding a Swimmer
 

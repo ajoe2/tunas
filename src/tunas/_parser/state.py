@@ -42,7 +42,7 @@ class ParserState:
     pending_individual: PendingIndividual | None = None
     current_relays: dict[Session, Relay] = field(default_factory=dict)
     current_relay_legs: dict[Session, RelaySwim] = field(default_factory=dict)
-    last_leaf: str | None = None  # "individual" | "relay"
+    last_result_kind: str | None = None  # "individual" | "relay"
 
     @property
     def attached_club(self) -> Club | None:
@@ -102,7 +102,7 @@ class Hy3State:
     pending_relay_entry: Hy3RelayEntry | None = None
     current_individual_swim: IndividualSwim | None = None
     current_relay: Relay | None = None
-    last_leaf: str | None = None  # "individual" | "relay"
+    last_result_kind: str | None = None  # "individual" | "relay"
 
     @property
     def attached_club(self) -> Club | None:

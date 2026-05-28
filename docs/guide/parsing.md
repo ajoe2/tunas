@@ -40,7 +40,6 @@ def read_cl2(
     strict: bool = False,
     encoding: str = "cp1252",
     errors: str = "replace",
-    max_workers: int = 1,
 ) -> Iterator[MeetArchive]: ...
 ```
 
@@ -52,26 +51,20 @@ def read_cl2(
 | `strict` | `bool` | If `True`, any warning raises a `ParseError`. If `False` (default), collects warnings and continues. **M1 structural violations always raise.** |
 | `encoding` | `str` | Text encoding for file paths. Defaults to `"cp1252"` (common for SDIF/DOS files) to preserve alignments and accented names. |
 | `errors` | `str` | Encoding error policy. Defaults to `"replace"`. |
-| `max_workers` | `int` | Thread-pool size for concurrent file parsing. Defaults to `1` (sequential). Archives are always yielded **in source order**, so the output is identical regardless of `max_workers`. At most `2 * max_workers` files are parsed ahead of the consumer, bounding peak memory. Must be `>= 1`. |
 
-### Parallel parsing
+### Lazy iteration
 
-Pass `max_workers > 1` to parse a directory or list of files concurrently using a thread pool:
+Parsing is single-threaded and lazy: each file is read and parsed only when you consume its archive, so a whole season's corpus is processed one file at a time without ever holding every meet in memory at once.
 
 ```python
-for arc in read_cl2("season_archive/", max_workers=8):
-    handle(arc.meets, arc.report)
+for arc in read_cl2("season_archive/"):
+    handle(arc.meets, arc.report)  # previous archive is freed before the next file is parsed
 ```
 
-Archives are yielded deterministically in source order, matching sequential execution, and at most `2 * max_workers` files are parsed ahead of the consumer. In `strict` mode, the earliest failing file raises first.
+Archives are yielded in source order, and in `strict` mode the earliest failing file raises first. The lazy iterator (one archive per file) keeps peak memory flat regardless of corpus size — that is the main scaling lever.
 
-!!! warning "Limitations of `max_workers`"
-    Parsing is CPU-bound pure Python, and the speed-up from threads is bounded by the interpreter you run on:
-
-    - **Standard (GIL) interpreter:** the global interpreter lock serializes the parse, so `max_workers > 1` does **not** make parsing faster — it only overlaps file I/O. Under contention it can be measurably *slower* than `max_workers=1`. Leave it at `1` unless you are on a free-threaded build.
-    - **Free-threaded build (3.13t+):** the same code parses files in genuine parallel with no pickling, since each file is independent. But the speed-up is **sublinear and plateaus** — on an 80-core box parsing 200 files it peaks at roughly **2.4× around 24–32 threads**, then *regresses*: at 64+ threads it can drop below single-threaded. The wall is not cores but cross-thread contention — atomic reference-count traffic on shared immutables (`Event`/`Stroke`/`Course` enum members, the `Time` class, interned strings), allocator pressure from millions of objects, and stop-the-world cyclic-GC coordination over the cross-referenced meet graph.
-
-    **Guidance:** keep `max_workers=1` on a standard interpreter; on a free-threaded build set it to roughly **8–32**, not your core count. Higher values waste cores and can slow the parse down. For corpus-scale work, the lazy iterator (one archive per file, bounded look-ahead) keeps peak memory flat regardless of corpus size — that, not raw thread count, is the main scaling lever.
+!!! note "Why single-threaded"
+    Parsing is CPU-bound pure Python. On a standard (GIL) interpreter a thread pool only overlaps file I/O and can be measurably *slower* under contention; even on a free-threaded build (3.13t+) the speed-up is sublinear and plateaus — cross-thread contention on shared immutables (`Event`/`Stroke`/`Course` enum members, interned strings) and cyclic-GC coordination over the cross-referenced meet graph dominate. A concurrent reader added complexity for no reliable gain, so `tunas` parses sequentially. To use multiple cores, shard the file list across separate processes.
 
 ### Source types
 
@@ -108,7 +101,6 @@ def read_hy3(
     strict: bool = False,
     encoding: str = "cp1252",
     errors: str = "replace",
-    max_workers: int = 1,
 ) -> Iterator[MeetArchive]: ...
 ```
 

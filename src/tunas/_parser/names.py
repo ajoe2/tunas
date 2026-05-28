@@ -6,7 +6,12 @@ __all__ = ["parse_name"]
 
 
 def parse_name(raw: str) -> tuple[str, str, str | None]:
-    """Split a NAME field into `(last_name, first_name, middle_initial)`."""
+    """Split an SDIF `Last, First MI` NAME field into `(last_name, first_name, middle_initial)`.
+
+    Only the first comma separates last from first; the first whitespace token after it
+    is the first name and the next token's leading letter is the middle initial. A field
+    with no comma is treated as a bare last name (empty first name, no middle initial).
+    """
     text = raw.strip()
     if "," not in text:
         return text, "", None

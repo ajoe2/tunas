@@ -112,7 +112,7 @@ Use `strict=True` to fail fast and raise `ParseError` on the first warning (surf
 - **Lenient by default, strict on demand**: Recovers from common exporter bugs and reports each issue as a structured `ParseWarning` (with `severity`, `kind`, column, and raw line); `strict=True` fails fast on the first problem.
 - **Offline standards**: Local O(1) lookup of USA Swimming B through AAAA motivational cuts, bundled as JSON — no setup or network.
 - **Robust decoding**: Defaults to CP-1252 (to preserve column alignment and accented names), tolerates BOMs, short/long lines, and mixed line endings.
-- **Streaming, parallel-ready execution**: Readers yield one `MeetArchive` per file lazily, so large corpora parse one file at a time with bounded memory. `max_workers` dispatches files across a thread pool behind an order-preserving look-ahead window (output identical to sequential), parsing in genuine parallel on free-threaded Python.
+- **Streaming execution**: Readers yield one `MeetArchive` per file lazily and in source order, so large corpora parse one file at a time with bounded memory regardless of corpus size.
 - **Type-safe**: Fully type-hinted and marked `py.typed`; passes `mypy --strict`.
 
 ## Documentation

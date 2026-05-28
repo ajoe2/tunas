@@ -329,7 +329,7 @@ class _Hy3Engine(_BaseEngine):
             st.current_age_class = None
             st.current_individual_swim = None
             st.current_relay = None
-            st.last_leaf = None
+            st.last_result_kind = None
             return
         sex = self._require_code(rec, 3, 1, Sex, "sex", "3/1")
         last = self._require_text(rec, 9, 20, "last_name", "9/20")
@@ -353,7 +353,7 @@ class _Hy3Engine(_BaseEngine):
         st.current_age_class = rec.text(98, 2)
         st.current_individual_swim = None
         st.current_relay = None
-        st.last_leaf = None
+        st.last_result_kind = None
 
     def _h_e1(self, rec: Record) -> None:
         st = self.state
@@ -404,7 +404,7 @@ class _Hy3Engine(_BaseEngine):
         if event is None:
             st.current_individual_swim = None
             st.current_relay = None
-            st.last_leaf = None
+            st.last_result_kind = None
             return
         assert entry.event_sex is not None  # guaranteed by the event guard above
 
@@ -439,7 +439,7 @@ class _Hy3Engine(_BaseEngine):
         self.report.individual_swims_parsed += 1
         st.current_individual_swim = swim
         st.current_relay = None
-        st.last_leaf = "individual"
+        st.last_result_kind = "individual"
 
     def _h_f1(self, rec: Record) -> None:
         st = self.state
@@ -486,7 +486,7 @@ class _Hy3Engine(_BaseEngine):
         if event is None:
             st.current_relay = None
             st.current_individual_swim = None
-            st.last_leaf = None
+            st.last_result_kind = None
             return
         assert entry.event_sex is not None  # guaranteed by the event guard above
 
@@ -519,7 +519,7 @@ class _Hy3Engine(_BaseEngine):
         self.report.relays_parsed += 1
         st.current_relay = relay
         st.current_individual_swim = None
-        st.last_leaf = "relay"
+        st.last_result_kind = "relay"
 
     def _h_f3(self, rec: Record) -> None:
         st = self.state
@@ -575,9 +575,9 @@ class _Hy3Engine(_BaseEngine):
     def _g1_target(self) -> list[Split] | None:
         st = self.state
         assert st is not None
-        if st.last_leaf == "individual" and st.current_individual_swim is not None:
+        if st.last_result_kind == "individual" and st.current_individual_swim is not None:
             return st.current_individual_swim.splits
-        if st.last_leaf == "relay" and st.current_relay is not None:
+        if st.last_result_kind == "relay" and st.current_relay is not None:
             return st.current_relay.splits
         return None
 
@@ -593,9 +593,9 @@ class _Hy3Engine(_BaseEngine):
             return
         result: MeetResult | None = (
             st.current_individual_swim
-            if st.last_leaf == "individual"
+            if st.last_result_kind == "individual"
             else st.current_relay
-            if st.last_leaf == "relay"
+            if st.last_result_kind == "relay"
             else None
         )
         text = rec.text(5, 48)

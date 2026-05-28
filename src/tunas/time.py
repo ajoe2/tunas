@@ -28,7 +28,7 @@ class Time:
 
     @classmethod
     def parse(cls, s: str) -> Time:
-        """Parse a swim-time string formatted as `[MM:]SS.HH` or `[M:]SS.HH`.
+        """Parse a swim-time string formatted as `[M:]SS.HH` (the minutes part is optional).
 
         Strips leading/trailing whitespace. Tolerates 1- or 2-digit minutes and
         seconds; fractions of a second are taken to centisecond precision, with

@@ -2,6 +2,15 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [0.4.0] — 2026-05-28
+
+### Changed
+- **Breaking — removed the `max_workers` parameter** from `read_cl2` and `read_hy3`. Parsing is now always single-threaded. The work is CPU-bound pure Python, so the thread pool serialized under the GIL and, even on a free-threaded build (3.13t+), plateaued at a sublinear ~2.4× before regressing as workers contended on atomic refcounts over shared immutables and on cyclic-GC coordination — complexity that bought no reliable speed-up. The readers remain lazy and yield one `MeetArchive` per file in source order, keeping peak memory flat regardless of corpus size.
+  - **Migration**: drop the `max_workers` argument (the default `1` was already the only value worth using). To parse across multiple cores, shard the file list over separate processes and fold the per-file reports with `ParseReport.merge`.
+
+### Internal
+- Simplified the `parser.py` driver to a plain sequential generator, removing the `ThreadPoolExecutor` and the bounded order-preserving `_imap_ordered` look-ahead.
+
 ## [0.3.1] — 2026-05-27
 
 ### Fixed

@@ -85,23 +85,16 @@ def test_binary_stream_raises() -> None:
         list(read_hy3(io.BytesIO(b"A107 stuff")))  # type: ignore[arg-type]
 
 
-def test_bad_max_workers() -> None:
-    # max_workers is validated eagerly, before any iteration.
-    with pytest.raises(ValueError):
-        read_hy3(io.StringIO(_single_meet_text()), max_workers=0)
-
-
-def test_parallel_matches_sequential(tmp_path: object) -> None:
+def test_directory_yields_one_archive_per_file_in_order(tmp_path: object) -> None:
     d = str(tmp_path)
     for i in range(6):
         with open(os.path.join(d, f"m{i}.hy3"), "w") as fh:
             fh.write(_single_meet_text())
-    seq = list(read_hy3(d, max_workers=1))
-    par = list(read_hy3(d, max_workers=4))
-    assert len(seq) == len(par) == 6
-    assert sum(a.report.meets_parsed for a in seq) == sum(a.report.meets_parsed for a in par) == 6
-    assert [a.source for a in seq] == [a.source for a in par]
-    assert [m.name for a in seq for m in a.meets] == [m.name for a in par for m in a.meets]
+    archives = list(read_hy3(d))
+    assert len(archives) == 6
+    assert sum(a.report.meets_parsed for a in archives) == 6
+    # rglob sorts, so archives arrive in sorted-filename order
+    assert [os.path.basename(a.source) for a in archives] == [f"m{i}.hy3" for i in range(6)]
 
 
 def test_multi_file_no_merge(tmp_path: object) -> None:
