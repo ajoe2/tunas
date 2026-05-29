@@ -4,6 +4,8 @@ All notable changes to `tunas` are documented here in Keep a Changelog format, a
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-29
+
 ### Changed
 - **Breaking — `read_hy3` club `team_code` now carries the LSC prefix**: a Hy-Tek club's `team_code` is now the LSC-prefixed code (e.g. `PCSCSC` instead of `SCSC`), matching `read_cl2`, which already stores the prefixed code from the SDIF `C1` record. The bare code is kept only when the file carries no LSC. This aligns club (and relay) identity across the two readers — previously the prefix difference made the same club look different between a meet's `.cl2` and `.hy3` exports.
 
