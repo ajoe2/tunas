@@ -2,7 +2,7 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
-## [Unreleased]
+## [0.5.0] — 2026-05-29
 
 ### Changed
 - **Relay leg splits (`RelaySwim.splits`) are now derived, not stored**: relay splits live on the relay row (`Relay.splits`) as whole-relay cumulative marks, and a leg's `splits` is computed on demand from that row — the marks swum during the leg, re-based to the leg start so the leg reads like a flat-start swim (distances from 0, cumulative time from the leg's takeoff). It remains a `list[Split]` (empty when there is nothing to derive — the relay has no splits, or the slot is an alternate), preserving the uniform `Swim.splits` type. The property is read-only.
