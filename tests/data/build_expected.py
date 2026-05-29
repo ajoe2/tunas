@@ -72,8 +72,10 @@ def parse_name(raw: str) -> tuple[str, str, str | None]:
     # A trailing single-letter (optionally dotted) token is the middle initial;
     # a trailing whole word is part of a compound first name, not an initial.
     tail = tokens[-1]
-    is_initial = len(tail) == 1 and tail.isalpha() or (
-        len(tail) == 2 and tail[1] == "." and tail[0].isalpha()
+    is_initial = (
+        len(tail) == 1
+        and tail.isalpha()
+        or (len(tail) == 2 and tail[1] == "." and tail[0].isalpha())
     )
     if len(tokens) > 1 and is_initial:
         return last.strip(), " ".join(tokens[:-1]), tail[0]

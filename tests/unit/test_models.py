@@ -224,6 +224,23 @@ def test_relay_leg_splits_derived_and_rebased() -> None:
     assert [(s.distance, str(s.time)) for s in leg2.splits] == [(50, "24.96"), (100, "54.65")]
 
 
+def test_relay_leg_splits_interval_type_keeps_time() -> None:
+    # INTERVAL splits already carry per-segment times: only the distance is
+    # re-based to the leg, the time is passed through unchanged (not subtracted).
+    m = _meet()
+    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
+    relay.splits = [
+        Split(distance=50 * (i + 1), time=Time.parse(t), split_type=SplitType.INTERVAL)
+        for i, t in enumerate(["23.84", "25.68", "24.96", "29.69"])
+    ]
+    leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
+    # window = marks at 150/200 -> distances re-based to 50/100; times kept as-is.
+    assert [(s.distance, str(s.time), s.split_type.name) for s in leg2.splits] == [
+        (50, "24.96", "INTERVAL"),
+        (100, "29.69", "INTERVAL"),
+    ]
+
+
 def test_relay_leg_splits_empty_when_no_row_splits() -> None:
     # Nothing to derive from -> empty list, keeping the uniform Swim.splits type.
     m = _meet()

@@ -120,6 +120,8 @@ def _split_unit(event: Event, max_counter: int) -> float:
     while unit * max_counter > event.distance:
         unit /= 2
     return unit
+
+
 # F3 athlete layout: up to eight 13-char slots starting at column 3.
 _SLOTS_PER_RECORD = 8
 _SLOT_WIDTH = 13

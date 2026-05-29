@@ -506,8 +506,8 @@ class RelaySwim(Swim):
             return []
         # Leg-start cumulative time: zero for the lead-off leg, otherwise the
         # relay mark at the leg boundary (left as None if that mark is absent).
-        start: Time | None = Time(0) if lo == 0 else next(
-            (s.time for s in relay_splits if s.distance == lo), None
+        start: Time | None = (
+            Time(0) if lo == 0 else next((s.time for s in relay_splits if s.distance == lo), None)
         )
         derived: list[Split] = []
         for s in window:
