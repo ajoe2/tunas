@@ -2,6 +2,16 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [Unreleased]
+
+### Changed
+- **Relay leg splits (`RelaySwim.splits`) are now derived, not stored**: relay splits live on the relay row (`Relay.splits`) as whole-relay cumulative marks, and a leg's `splits` is computed on demand from that row — the marks swum during the leg, re-based to the leg start so the leg reads like a flat-start swim (distances from 0, cumulative time from the leg's takeoff). It remains a `list[Split]` (empty when there is nothing to derive — the relay has no splits, or the slot is an alternate), preserving the uniform `Swim.splits` type. The property is read-only.
+
+### Fixed
+- **`.cl2` relay splits misplaced on legs at a bogus distance, and some dropped entirely**: SDIF `G0` relay splits are whole-relay cumulative times (e.g. a 200 medley relay's 50/100/150/200 marks), but the reader attached each to an individual leg and, because every leg's `G0` restarts at slot 0, stamped *every* split with `distance=50` — so leg 2's cumulative time read as a 50-yard split. Relays whose `G0`s followed the `E0` directly with no `F0` leg records had their splits orphaned and dropped. Relay splits now attach to the relay row (`Relay.splits`, matching the `.hy3` reader and the documented "whole-relay cumulative splits" contract) with distances climbing 50/100/150/200/… across the relay's `G0` records, and the no-`F0` case is rescued rather than dropped. Per-leg segments are exposed through the derived `RelaySwim.splits` described above.
+- **`.hy3` split distances on half-length-counter files**: some timing systems index `G1` split counters by half-length (e.g. a 200 SCY at counters `4/8/12/16` instead of `2/4/6/8`), which a blind `counter × 25` mapped to impossible 100/200/300/400-yard splits. The per-counter distance is now resolved by anchoring the furthest counter in the swim to the event distance (halving the pool-length unit until it fits), so these resolve to the correct 50/100/150/200 and a lone finishing split lands on the event distance. The mapping is also course-aware now (50 m per length for LCM rather than a hardcoded 25).
+- **Compound first names truncated in `.cl2` (and any SDIF `Last, First MI` field)**: a whole-word second given-name token (e.g. `Zhou, Melissa Hanlin`, `Lam, Lok Yiu`) was treated as a middle *initial*, yielding `first="Melissa"`, `middle="H"`. A trailing token is now taken as a middle initial only when it is genuinely initial-like (a single letter, optionally dotted); otherwise it stays part of `first_name` (`first="Melissa Hanlin"`, no middle initial). Real trailing initials (`Smith, John Q`) are unchanged.
+
 ## [0.4.0] — 2026-05-28
 
 ### Changed

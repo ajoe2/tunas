@@ -4,8 +4,8 @@
 league championship (committed with the tests). Unlike the individual-events
 golden file (``reno_walk_on_meet``), it exercises the relay path and per-session
 swims: prelim+finals individual swims with split routing by session, E0 relays,
-F0 relay legs (leg event, leg splits), and blank-``id_short`` swimmers resolved
-from a later ``D3`` long ID.
+F0 relay legs (leg event), whole-relay cumulative splits on the relay row, and
+blank-``id_short`` swimmers resolved from a later ``D3`` long ID.
 
 ``aaa_league_championship.expected.json`` is its complete expected parsed state,
 built by the independent decoder ``tests/data/build_expected_aaa.py`` (which does
@@ -60,7 +60,6 @@ def _swim_entry(swim: IndividualSwim | RelaySwim) -> dict:
         "session": swim.session.name,
         "leg_event": swim.event.name if swim.event is not None else None,
         "order": swim.order.name if swim.order is not None else None,
-        "splits": [_split(s) for s in swim.splits],
     }
 
 
@@ -110,6 +109,7 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
                 "rank": relay.rank,
                 "total_age": relay.total_age,
                 "date": relay.date.isoformat() if relay.date else None,
+                "splits": [_split(s) for s in relay.splits],
                 "legs": [_leg(leg) for leg in relay.legs],
                 "alternates": [_leg(leg) for leg in relay.alternates],
             }
@@ -186,7 +186,6 @@ def _leg(leg: RelaySwim) -> dict:
         "time": str(leg.time) if leg.time is not None else None,
         "takeoff_time": leg.takeoff_time,
         "course": _name(leg.course),
-        "splits": [_split(s) for s in leg.splits],
     }
 
 
@@ -220,11 +219,15 @@ def test_clubs() -> None:
 
 def test_relay_split_breakdown() -> None:
     meets = next(iter(read_cl2(str(CL2)))).meets
-    relay_splits = sum(
-        len(leg.splits) for relay in meets[0].relays for leg in (*relay.legs, *relay.alternates)
-    )
+    # Parsed splits: whole-relay cumulative marks live on the relay row.
+    relay_splits = sum(len(relay.splits) for relay in meets[0].relays)
     indiv_splits = sum(len(s.splits) for s in meets[0].individual_swims)
     assert {"individual": indiv_splits, "relay": relay_splits} == EXPECTED["_split_breakdown"]
+    # Each leg derives its own splits from the row; every row mark belongs to
+    # exactly one leg, so the per-leg derived splits partition the row exactly.
+    for relay in meets[0].relays:
+        derived = sum(len(leg.splits) for leg in relay.legs)
+        assert derived == len(relay.splits), f"{relay.club} {relay.relay_letter} {relay.event.name}"
 
 
 def test_swimmer_roster_matches() -> None:

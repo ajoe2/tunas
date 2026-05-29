@@ -89,12 +89,25 @@ def ages(raw: str) -> tuple[int | None, int | None]:
     return (int(lo) if lo.isdigit() else None, int(hi) if hi.isdigit() else None)
 
 
+def _is_initial(token: str) -> bool:
+    # A genuine middle initial: a single letter, optionally dotted ("Q" / "Q.").
+    return len(token) == 1 and token.isalpha() or (len(token) == 2 and token[1] == ".")
+
+
 def parse_name(raw: str) -> tuple[str, str, str | None]:
-    last, rest = raw.strip().split(",", 1)
+    text = raw.strip()
+    if "," not in text:
+        return text, "", None
+    last, rest = text.split(",", 1)
     tokens = rest.split()
-    first = tokens[0] if tokens else ""
-    middle = tokens[1][0] if len(tokens) > 1 and tokens[1] else None
-    return last.strip(), first, middle
+    if not tokens:
+        return last.strip(), "", None
+    # Only treat a trailing token as a middle initial when it is initial-like;
+    # a whole-word trailing token belongs to a compound first name (e.g.
+    # "Lam, Lok Yiu" -> first="Lok Yiu", not first="Lok", middle="Y").
+    if len(tokens) > 1 and _is_initial(tokens[-1]):
+        return last.strip(), " ".join(tokens[:-1]), tokens[-1][0]
+    return last.strip(), " ".join(tokens), None
 
 
 def event_course(line: str, positions: list[int], default: str | None) -> str | None:
@@ -129,7 +142,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
     current_swims: list[dict] = []
     pending: dict | None = None  # {"swimmer":.., "swims":[..], "club":..}
     current_relays: dict[str, dict] = {}
-    current_legs: dict[str, dict] = {}
     last_leaf: str | None = None
     meet_course: str | None = None
 
@@ -368,7 +380,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 None if unattached else (current_club["team_code"] if current_club else None)
             )
             current_relays = {}
-            current_legs = {}
             if relay_event is None:
                 warnings[("E0", "event", "UNKNOWN_CODE", "SKIPPED")] += 1
                 counts["records_skipped"] += 1
@@ -401,6 +412,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                     "_dist": int(dist_raw),
                     "_stroke": stroke_raw,
                     "_course": course,
+                    "splits": [],
                     "legs": [],
                     "alternates": [],
                 }
@@ -487,7 +499,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                     "time": None,
                     "takeoff_time": None,
                     "course": None,
-                    "splits": [],
                 }
                 if o == "A":
                     relay["alternates"].append(leg)
@@ -500,7 +511,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                                 "session": session,
                                 "leg_event": leg_evt,
                                 "order": leg["order"],
-                                "splits": leg["splits"],
                             }
                         )
                 created[session] = leg
@@ -509,7 +519,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 target["time"] = leg_time
                 target["course"] = leg_course
                 target["takeoff_time"] = takeoff
-            current_legs = created
             current_swimmer = leg_swimmer
             last_leaf = "relay"
 
@@ -523,13 +532,18 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
             stype = "CUMULATIVE" if fld(line, 63, 1) == "C" else "INTERVAL"
             scode = {"P": "PRELIMS", "F": "FINALS", "S": "SWIM_OFFS"}.get(fld(line, 144, 1))
             target_splits = None
-            if last_leaf == "relay" and current_legs:
-                leg = (
-                    (current_legs.get(scode) if scode else None)
-                    or current_legs.get("FINALS")
-                    or next(iter(current_legs.values()))
+            is_relay = False
+            if last_leaf == "relay" and current_relays:
+                # Whole-relay cumulative splits attach to the relay row, not a leg
+                # (matching the reader and Relay.splits semantics). Targeting the
+                # relay also rescues no-F0 relays whose G0s would otherwise orphan.
+                relay = (
+                    (current_relays.get(scode) if scode else None)
+                    or current_relays.get("FINALS")
+                    or next(iter(current_relays.values()))
                 )
-                target_splits = leg["splits"]
+                target_splits = relay["splits"]
+                is_relay = True
             elif last_leaf == "individual" and current_swims:
                 match = next((s for s in current_swims if scode and s["session"] == scode), None)
                 target_splits = (match or current_swims[0])["splits"]
@@ -542,9 +556,13 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 raw = fld(line, 64 + j * 8, 8)
                 if not raw:
                     continue
+                # Relay distance climbs by the running count across all the relay's
+                # G0 records (each leg restarts at slot 0); individual splits index
+                # by the per-record slot.
+                distance = inc * (len(target_splits) + 1) if is_relay else inc * (base + j + 1)
                 target_splits.append(
                     {
-                        "distance": inc * (base + j + 1),
+                        "distance": distance,
                         "time": time_str(raw),
                         "split_type": stype,
                     }
@@ -576,7 +594,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
     fields_recovered = sum(
         c for (rt, f, k, s), c in warnings.items() if s == "RECOVERED" and k != "COUNT_MISMATCH"
     )
-    relay_splits = sum(len(leg["splits"]) for r in relays for leg in r["legs"] + r["alternates"])
+    relay_splits = sum(len(r["splits"]) for r in relays)
     indiv_splits = counts["splits"] - relay_splits
 
     def render_swimmer(sw: dict) -> dict:

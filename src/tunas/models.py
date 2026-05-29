@@ -109,7 +109,13 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Split:
-    """A split entry representing the swim time at a cumulative distance of a swim."""
+    """A split entry representing the swim time at a cumulative distance of a swim.
+
+    Attributes:
+        distance: Cumulative distance from start (50, 100, 150, etc.).
+        time: The split time, or None if present but unparseable.
+        split_type: Split representation style (INTERVAL or CUMULATIVE).
+    """
 
     distance: int  # Cumulative distance from start (50, 100, 150, etc.)
     time: Time | None  # None if split was present but unparseable
@@ -118,7 +124,19 @@ class Split:
 
 @dataclass(frozen=True)
 class SwimmerContact:
-    """Contact details for a swimmer (contains PII)."""
+    """Contact details for a swimmer (contains PII).
+
+    Attributes:
+        address: Mailing street address.
+        city: Mailing city.
+        state: Mailing US state.
+        postal_code: Mailing ZIP or postal code.
+        country: Mailing country code.
+        region: Geographic region code.
+        alt_mailing_name: Alternate mailing recipient name.
+        phone_primary: Primary contact phone number.
+        phone_secondary: Secondary contact phone number.
+    """
 
     address: str | None = None
     city: str | None = None
@@ -133,7 +151,19 @@ class SwimmerContact:
 
 @dataclass(frozen=True)
 class SwimmerRegistration:
-    """Registration and demographic details for a swimmer (contains sensitive PII)."""
+    """Registration and demographic details for a swimmer (contains sensitive PII).
+
+    Attributes:
+        member_status: USS membership status (e.g. member, non-member).
+        registration_date: Original registration date.
+        season: Swim season identifier.
+        ethnicity_primary: Primary ethnicity category.
+        ethnicity_secondary: Secondary ethnicity category.
+        affiliations: Set of organizational affiliations.
+        old_member_number: Historic member registration number.
+        fina_other_federation: FINA federation identifier.
+        admin_info: Administrative metadata or flags.
+    """
 
     member_status: MemberStatus | None = None
     registration_date: datetime.date | None = None
@@ -148,7 +178,18 @@ class SwimmerRegistration:
 
 @dataclass(frozen=True)
 class MeetHost:
-    """Meet host details from B2."""
+    """Meet host details from B2.
+
+    Attributes:
+        name: Name of the host organization.
+        address_one: Primary mailing address.
+        address_two: Secondary mailing address.
+        city: City of the host.
+        state: US state of the host.
+        postal_code: Postal or ZIP code.
+        country: Country code.
+        phone: Host contact phone number.
+    """
 
     name: str | None = None
     address_one: str | None = None
@@ -168,6 +209,21 @@ class SourceFile:
     `A1` record. The `hy3_*` fields and `created_time`/`licensee` are only
     populated by :func:`~tunas.read_hy3`; the SDIF-only fields are only
     populated by :func:`~tunas.read_cl2`.
+
+    Attributes:
+        path: Original file path or stream label.
+        file_type: Coded SDIF file type.
+        sdif_version: SDIF version string.
+        software_name: Generating software product name.
+        software_version: Generating software version.
+        contact_name: Contact person for the file.
+        contact_phone: Contact phone number.
+        created: Date the file was generated.
+        submitted_by_lsc: LSC that submitted or processed the file.
+        notes: Arbitrary text notes or comments.
+        hy3_file_type: Coded Hy-Tek file type.
+        created_time: Time the file was generated.
+        licensee: Organization licensed to run the software.
     """
 
     path: str | None = None
@@ -188,7 +244,15 @@ class SourceFile:
 
 @dataclass(frozen=True)
 class ClubEntryCounts:
-    """Entry counts from a C2 record."""
+    """Entry counts from a C2 record.
+
+    Attributes:
+        num_individual_swims: Expected individual-swim count.
+        num_athletes: Expected athlete count.
+        num_relay_entries: Expected relay-entry count.
+        num_relay_name_records: Expected relay-swimmer record count.
+        num_split_records: Expected split-time record count.
+    """
 
     num_individual_swims: int | None = None
     num_athletes: int | None = None
@@ -225,7 +289,35 @@ class Swim(ABC):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class MeetResult:
-    """Base class for a meet result row (IndividualSwim or Relay)."""
+    """Base class for a meet result row (IndividualSwim or Relay).
+
+    Attributes:
+        meet: Meet this result belongs to.
+        club: Club the swimmer or squad represents.
+        organization: Governing body code (e.g. USA Swimming).
+        session: Meet session (prelims, finals, swim-offs).
+        event: The swum event.
+        event_min_age: Minimum age restriction for the event.
+        event_max_age: Maximum age restriction for the event.
+        event_sex: Sex category for the event.
+        status: The result status (OK, DQ, scratch, etc.).
+        time: The final swim time, or None if no time was recorded/OK.
+        date: Date the event was swum.
+        event_number: Coded event number.
+        heat: Swum heat number.
+        lane: Swum lane number.
+        rank: Official place finish.
+        points: Scored points.
+        seed_time: Entry/seed time.
+        seed_course: Entry/seed course.
+        event_min_time_class: Minimum entry time class required.
+        event_max_time_class: Maximum entry time class.
+        dq_code: 2-character Hy-Tek DQ code (e.g. "3D").
+        dq_reason: Human-readable DQ description.
+        converted_seed_time: Seed time converted to the meet's course (Hy-Tek only).
+        converted_seed_course: Seed course converted to the meet's course (Hy-Tek only).
+        backup_times: Watch or manual backup times (Hy-Tek only).
+    """
 
     meet: Meet
     club: Club | None
@@ -268,7 +360,14 @@ class MeetResult:
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class IndividualSwim(MeetResult, Swim):
-    """Result of an individual swim event."""
+    """Result of an individual swim event.
+
+    Attributes:
+        swimmer: Swimmer who produced this result.
+        swimmer_age_class: Coded age class at the time of the swim.
+        attach_status: Attached or unattached status.
+        splits: Cumulative splits recorded for this swim.
+    """
 
     swimmer: Swimmer
     swimmer_age_class: str | None = None
@@ -298,7 +397,15 @@ class IndividualSwim(MeetResult, Swim):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Relay(MeetResult):
-    """Squad relay result (the legs are RelaySwims)."""
+    """Squad relay result (the legs are RelaySwims).
+
+    Attributes:
+        relay_letter: Squad designation letter (e.g. "A", "B").
+        total_age: Combined age of all squad members.
+        legs: Ordered list of swimmers who raced (positions 1-4).
+        alternates: Roster alternates who did not race.
+        splits: Whole-relay cumulative split times (e.g. 50/100/150/200).
+    """
 
     relay_letter: str
     total_age: int | None = None
@@ -320,7 +427,19 @@ class Relay(MeetResult):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class RelaySwim(Swim):
-    """A swimmer's relay leg or roster slot."""
+    """A swimmer's relay leg or roster slot.
+
+    Attributes:
+        swimmer: The rostered swimmer, or None if unnamed.
+        relay: The parent Relay result row.
+        order: Leg sequence or alternate order.
+        time: Time swum on this specific leg, or None.
+        status: The leg's result status.
+        takeoff_time: Hundredths of a second takeoff reaction time.
+        course: Course code (derived or stored).
+        swimmer_age_class: Coded age class at the time of the swim.
+        citizenship: Citizenship or country code.
+    """
 
     swimmer: Swimmer | None
     relay: Relay
@@ -331,7 +450,6 @@ class RelaySwim(Swim):
     course: Course | None = None
     swimmer_age_class: str | None = None
     citizenship: CitizenshipOrCountry | None = None
-    splits: list[Split] = field(default_factory=list)
 
     def __repr__(self) -> str:
         return (
@@ -363,6 +481,44 @@ class RelaySwim(Swim):
         return None
 
     @property
+    def splits(self) -> list[Split]:
+        """This leg's splits, derived from the relay's whole-relay cumulative splits.
+
+        Both readers store splits on the relay row (:attr:`Relay.splits`) as
+        whole-relay cumulative marks (e.g. 50/100/150/200 for a 4×50). A leg's
+        splits are the marks swum during that leg, re-based to the leg start so
+        the leg reads like a flat-start swim: distances count from 0 and a
+        cumulative time is measured from the leg's takeoff. (Interval splits keep
+        their per-segment time; only the distance is re-based.)
+
+        Empty when there is nothing to derive — the relay carries no splits, the
+        slot is an alternate / has no leg number, or no relay mark falls within
+        this leg's distance window.
+        """
+        relay_splits = self.relay.splits
+        leg_number = _LEG_NUMBERS.get(self.order) if self.order is not None else None
+        if not relay_splits or leg_number is None:
+            return []
+        per_leg = self.relay.event.leg_distance()
+        lo, hi = (leg_number - 1) * per_leg, leg_number * per_leg
+        window = [s for s in relay_splits if lo < s.distance <= hi]
+        if not window:
+            return []
+        # Leg-start cumulative time: zero for the lead-off leg, otherwise the
+        # relay mark at the leg boundary (left as None if that mark is absent).
+        start: Time | None = Time(0) if lo == 0 else next(
+            (s.time for s in relay_splits if s.distance == lo), None
+        )
+        derived: list[Split] = []
+        for s in window:
+            if s.split_type is SplitType.CUMULATIVE and start is not None and s.time is not None:
+                time: Time | None = s.time - start
+            else:
+                time = s.time
+            derived.append(Split(distance=s.distance - lo, time=time, split_type=s.split_type))
+        return derived
+
+    @property
     def date(self) -> datetime.date | None:
         """Date of the swim (parent relay date)."""
         return self.relay.date
@@ -385,7 +541,24 @@ class RelaySwim(Swim):
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Swimmer:
-    """A swimmer scoped to one meet."""
+    """A swimmer scoped to one meet.
+
+    Attributes:
+        meet: The meet this swimmer is registered for.
+        first_name: The swimmer's first name.
+        last_name: The swimmer's last name.
+        sex: The swimmer's sex.
+        id_short: 12-character short ID (USS#).
+        id_long: 14-character new long ID.
+        middle_initial: Swimmer's middle initial.
+        preferred_first_name: Swimmer's preferred first name.
+        birthday: Swimmer's birthday.
+        citizenship: Citizenship or country code.
+        contact: Swimmer contact details (contains PII).
+        registration: Swimmer registration details (contains PII).
+        club: The club the swimmer belongs to at this meet.
+        swims: List of individual and relay swims for this swimmer at the meet.
+    """
 
     meet: Meet
     first_name: str
@@ -436,7 +609,30 @@ class Swimmer:
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Club:
-    """A club scoped to one meet, keyed by `(team_code, lsc)`."""
+    """A club scoped to one meet, keyed by `(team_code, lsc)`.
+
+    Attributes:
+        meet: The meet this club is scoped to.
+        organization: Governing body code.
+        team_code: Unique code identifying the team.
+        lsc: Local Swimming Committee code.
+        full_name: Full team/club name.
+        abbreviated_name: Shortened club name.
+        address_one: Primary club address.
+        address_two: Secondary club address.
+        city: Club city.
+        state: Club US state.
+        postal_code: ZIP or postal code.
+        country: Country code.
+        region: Geographic region code.
+        coach: Head coach name.
+        coach_phone: Coach contact phone.
+        short_name: Alternate short name.
+        email: Contact email address.
+        entry_counts: Official entry counts from the file.
+        results: Club's individual and relay results at the meet.
+        swimmers: Swimmers representing this club at the meet.
+    """
 
     meet: Meet
     organization: Organization | None
@@ -482,7 +678,31 @@ class Club:
 
 @dataclass(slots=True, kw_only=True, eq=False)
 class Meet:
-    """A single swimming meet containing clubs, swimmers, and results."""
+    """A single swimming meet containing clubs, swimmers, and results.
+
+    Attributes:
+        organization: Governing body hosting the meet.
+        name: Name of the meet.
+        start_date: Start date of the competition.
+        end_date: End date of the competition.
+        city: City where the meet took place.
+        address_one: Primary venue address.
+        state: US state where the meet took place.
+        address_two: Secondary venue address.
+        postal_code: Venue postal or ZIP code.
+        country: Venue country code.
+        course: Course code (SCY, SCM, LCM).
+        altitude: Venue altitude in feet or meters.
+        meet_type: Meet classification code.
+        venue: Facility or pool name.
+        age_up_date: Age-determination date for the meet.
+        sanction_number: Meet sanction identifier.
+        host: Host details.
+        source_file: Metadata of the file this meet was parsed from.
+        results: All individual and relay results at this meet.
+        swimmers: All athletes registered at this meet.
+        clubs: All clubs registered at this meet.
+    """
 
     organization: Organization | None
     name: str

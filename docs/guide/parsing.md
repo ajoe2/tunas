@@ -329,8 +329,9 @@ Detailed structural contracts enforced by the parser:
 - **Missing course byte `*`:** Kept with `course=None` + warning. Course `X` sets `status=DQ` and retains recorded time.
 - **Relay-only swimmers:** Created with no `IndividualSwim` if all event fields are blank.
 - **Relay alternates:** Swimmers with order `ALTERNATE` are routed to `Relay.alternates` instead of `legs`, and excluded from `Swimmer.swims`.
-- **Relay legs fanning out:** A single `F0` spanning multiple sessions creates one `RelaySwim` per session. The single `F0` leg time is filed on the finals leg; splits from `G0` records tag their respective session swims.
-- **Splits attachment:** Attachment links to the preceding `D0`/`F0` swum session based on the G0's `prelims/finals` code.
+- **Relay legs fanning out:** A single `F0` spanning multiple sessions creates one `RelaySwim` per session. The single `F0` leg time is filed on the finals leg.
+- **Relay splits:** A relay's `G0` records carry whole-relay cumulative splits, attached to the relay row (`Relay.splits`) with distances climbing 50/100/150/200/… across the records — matching the `.hy3` reader. Relays whose `G0`s follow the `E0` with no `F0` legs still attach to the row rather than being dropped. Each leg's `RelaySwim.splits` is then *derived* from that row (re-based to the leg start), and empty when there is nothing to derive.
+- **Individual splits attachment:** For individual swims, `G0` splits link to the preceding `D0` swum session based on the G0's `prelims/finals` code.
 - **Blank split slots:** Skipped individually; a recorded split in a later slot is still kept (no information is lost when an earlier split is missing).
 
 ## Performance

@@ -266,9 +266,12 @@ for meet in meets:
 
 ## Work with splits
 
-Splits live on the individual swim or relay leg that produced them. Each `Split` has a
-cumulative `distance`, a `time`, and a `split_type` (`INTERVAL` or `CUMULATIVE`). This helper
-yields per-segment times regardless of how the file stored them:
+Splits live on the individual swim (`IndividualSwim.splits`) or, for relays, on the relay
+row (`Relay.splits`) as whole-relay cumulative marks. A relay leg's `RelaySwim.splits` is
+*derived* from that row (re-based to the leg start), and empty when there is nothing to
+derive. Each `Split` has a cumulative `distance`, a `time`, and a `split_type` (`INTERVAL`
+or `CUMULATIVE`). This helper yields per-segment times regardless of how the file stored
+them (and works for a relay leg's derived splits too):
 
 ```python
 from tunas import SplitType

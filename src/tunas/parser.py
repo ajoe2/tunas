@@ -35,6 +35,11 @@ class MeetArchive:
     A single `.cl2`/`.hy3` file can legitimately hold more than one meet, so
     ``meets`` is a list. ``report`` carries the diagnostics and counts for *this
     source only* — readers yield one ``MeetArchive`` per file, never a merged one.
+
+    Attributes:
+        source: File path, or "<stream>" for an open text stream.
+        meets: List of Meet objects parsed from the source.
+        report: Diagnostic and metric report for the parsed source.
     """
 
     source: str  # file path, or "<stream>" for a text stream

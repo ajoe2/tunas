@@ -18,6 +18,9 @@ class Time:
     String formatting returns `"M:SS.HH"` if the time is at least one minute, or
     `"SS.HH"` if under a minute. The formatted string zero-pads seconds and hundredths
     but does not pad the minute component.
+
+    Attributes:
+        centiseconds: Duration of the swim in hundredths of a second.
     """
 
     centiseconds: int

@@ -357,13 +357,33 @@ def test_g0_splits_after_d0() -> None:
     assert finals.splits[1].distance == 100  # cumulative
 
 
-def test_g0_splits_after_f0_on_leg_not_relay() -> None:
-    gr = g0(times=("26.50",), total="1", session="F")
-    archive = parse_lines([A0, B1, C1, e0(), f0(), gr, Z0])
+def test_g0_relay_splits_on_relay_row_cumulative() -> None:
+    # Whole-relay cumulative splits attach to the Relay row (matching the .hy3
+    # reader and the Relay.splits contract) and climb 50/100/... across the
+    # per-leg G0 records, instead of collapsing onto each leg at distance 50.
+    leg1 = f0(name="One, Ann", uss="49AC52F69611", order_finals="1")
+    leg2 = f0(name="Two, Bea", uss="49AC52F69622", order_finals="2")
+    g1 = g0(uss="49AC52F69611", times=("26.50",), total="1", session="F")
+    g2 = g0(uss="49AC52F69622", times=("55.00",), total="1", session="F")
+    archive = parse_lines([A0, B1, C1, e0(), leg1, g1, leg2, g2, Z0])
     relay = archive.meets[0].relays[0]
-    # SDIF relay splits live on the leg (RelaySwim), never on the Relay itself.
-    assert relay.splits == []
-    assert [str(s.time) for s in relay.legs[0].splits] == ["26.50"]
+    assert [(s.distance, str(s.time)) for s in relay.splits] == [(50, "26.50"), (100, "55.00")]
+    # Each leg derives its slice from the row, re-based to the leg start.
+    assert [(s.distance, str(s.time)) for s in relay.legs[0].splits] == [(50, "26.50")]
+    assert [(s.distance, str(s.time)) for s in relay.legs[1].splits] == [(50, "28.50")]
+
+
+def test_g0_relay_splits_without_f0_legs_attach_to_row() -> None:
+    # Some relays list their cumulative G0 splits straight after the E0 with no
+    # F0 leg records; these attach to the relay row instead of being orphaned.
+    from tunas import IssueKind
+
+    gr = g0(times=("26.50", "55.00"), total="2", session="F")
+    archive = parse_lines([A0, B1, C1, e0(), gr, Z0])
+    relay = archive.meets[0].relays[0]
+    assert [(s.distance, str(s.time)) for s in relay.splits] == [(50, "26.50"), (100, "55.00")]
+    assert relay.legs == []
+    assert not archive.report.warnings_for(record_type="G0", kind=IssueKind.ORPHANED)
 
 
 def test_g0_multi_record_ordered_by_sequence() -> None:

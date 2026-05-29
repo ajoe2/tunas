@@ -17,7 +17,8 @@ class TunasError(Exception):
 class ParseError(TunasError):
     """Raised on a fatal structural violation, or on warnings in strict mode.
 
-    The originating ParseWarning is attached as `warning`.
+    Attributes:
+        warning: The originating ParseWarning that triggered this error.
     """
 
     def __init__(self, warning: ParseWarning) -> None:

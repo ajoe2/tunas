@@ -74,8 +74,19 @@ legs are the `RelaySwim`s.
 
 A `Relay` carries its swimmers as `RelaySwim` legs. Swimmers who raced are in
 `legs` (ordered `LEG_1`–`LEG_4`); rostered swimmers who did not race are in
-`alternates` and are **excluded** from `Swimmer.swims`. Splits live on the
-individual legs (`RelaySwim.splits`), not on the squad.
+`alternates` and are **excluded** from `Swimmer.swims`. The squad's splits are
+whole-relay cumulative marks on `Relay.splits` (e.g. 50/100/150/200 for a 4×50),
+populated identically by both readers. Each leg's `RelaySwim.splits` is **derived
+from that row** — the marks swum during the leg, re-based to the leg start so the
+leg reads like a flat-start swim (distances from 0, cumulative time from the
+leg's takeoff). It is empty when there is nothing to derive (the relay carries no
+splits, or the slot is an alternate), so it keeps the uniform `Swim.splits` type:
+
+```python
+relay.splits          # [Split(50, 31.60), Split(100, 1:10.63), Split(150, 1:40.63), Split(200, 2:16.27)]
+relay.legs[1].splits  # [Split(50, 39.03)]  — leg 2's own 50, = 1:10.63 − 31.60
+relay.alternates[0].splits   # []
+```
 
 A leg reports the *individual* event it amounts to, so it sorts alongside
 flat-start swims:

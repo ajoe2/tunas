@@ -35,6 +35,23 @@ def test_parse_name_comma_no_first() -> None:
     assert parse_name("Smith,") == ("Smith", "", None)
 
 
+def test_parse_name_trailing_initial() -> None:
+    # A single-letter trailing token is a middle initial.
+    assert parse_name("Smith, John Q") == ("Smith", "John", "Q")
+    assert parse_name("Smith, John Q.") == ("Smith", "John", "Q")
+
+
+def test_parse_name_compound_first_not_truncated() -> None:
+    # A whole-word trailing token is part of a compound first name, not an
+    # initial: it must not be truncated to a single letter.
+    assert parse_name("Zhou, Melissa Hanlin") == ("Zhou", "Melissa Hanlin", None)
+    assert parse_name("Lam, Lok Yiu") == ("Lam", "Lok Yiu", None)
+
+
+def test_parse_name_compound_first_with_trailing_initial() -> None:
+    assert parse_name("Doe, Anne Marie B") == ("Doe", "Anne Marie", "B")
+
+
 def test_d0_name_without_comma() -> None:
     archive = parse_lines([A0, B1, C1, d0(name="Madonna"), Z0])
     sw = archive.meets[0].swimmers[0]

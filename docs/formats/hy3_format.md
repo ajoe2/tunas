@@ -461,12 +461,15 @@ Each 11-character split block is structured as follows:
 | Offset | Field | Description / Notes |
 |---|---|---|
 | 1 | Round Code | Round letter matching the result record (`P`, `F`, or `S`) |
-| 2–3 | Distance Counter | Cumulative split distance divided by 25 (e.g., a counter value of `2` = 50 yards/meters, `4` = 100 yards/meters) |
+| 2–3 | Distance Counter | Pool-length index from the start. Usually `counter × pool_length` (so `2` = 50, `4` = 100 in a 25-unit pool), but see the caveat below |
 | 4–11 | Cumulative Time | Cumulative elapsed time in seconds |
+
+> **Counter scale is not constant.** Most files index one counter unit per pool length (`× 25` in a short-course pool), but some timing systems record at half-length granularity, doubling the counter — e.g. a 200 SCY whose splits are at counters `4/8/12/16` (odd slots blank) rather than `2/4/6/8`. A blind `× 25` would then place the final split at 400 yards. Because a cumulative split can never exceed the event distance, resolve the per-counter unit by anchoring the *largest* counter in the swim to the event distance (halving the pool-length unit until the furthest counter fits). This also recovers the distance of a lone finishing split (a common DQ / relay-leadoff case).
 
 ### Differences relative to SDIF (`.cl2`) splits:
 - `hy3` files populate a placeholder value of `0.00` for intermediate split points not recorded by the timing system, whereas SDIF omits these entries.
 - `hy3` splits include the final race distance and finish time as the last split entry, whereas SDIF terminates splits before the final distance.
+- Unlike SDIF—which carries an explicit per-record split increment—`hy3` only stores the length counter, so the per-counter distance must be inferred from the event distance (see the counter-scale caveat above).
 
 ---
 

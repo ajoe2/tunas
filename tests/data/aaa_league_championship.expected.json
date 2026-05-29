@@ -243,27 +243,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.73",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:47.81",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -379,32 +365,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "46.42",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:14.48",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:44.17",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -629,32 +596,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.59",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:52.32",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:17.49",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -797,14 +745,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:57.31",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -920,32 +861,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:26.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:49.88",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:30.41",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -1161,27 +1083,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:56.51",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "4:37.49",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -1275,32 +1183,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:38.41",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:17.18",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -1394,27 +1283,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:10.59",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -1550,27 +1425,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:46.69",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:33.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -1794,27 +1655,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:19.62",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "31.48",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -1895,14 +1742,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:11.88",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -1970,27 +1810,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.37",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -2168,27 +1994,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "3:38.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -2282,14 +2094,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "55.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -2493,14 +2298,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -2611,32 +2409,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "28.22",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "30.21",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:04.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -2837,14 +2616,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:28.40",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -3006,14 +2778,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "35.09",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -3804,14 +3569,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:04.06",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -3967,27 +3725,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:56.03",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:33.95",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -4161,27 +3905,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:26.23",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:03.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -4509,14 +4239,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:36.23",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -4562,14 +4285,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:01.74",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -4602,8 +4318,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": []
+     "order": "LEG_3"
     }
    ]
   },
@@ -4746,14 +4461,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:17.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -4869,27 +4577,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:23.34",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.79",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -4941,14 +4635,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "33.52",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -5121,36 +4808,22 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:52.74",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:36.10",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
   {
    "id_short": "2235117",
    "id_long": "2235117",
-   "first_name": "Lok",
+   "first_name": "Lok Yiu",
    "last_name": "Lam",
-   "middle_initial": "Y",
+   "middle_initial": null,
    "preferred_first_name": "Lok Yiu",
    "sex": "FEMALE",
    "birthday": null,
@@ -5213,23 +4886,16 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:12.17",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
   {
    "id_short": "2235119",
    "id_long": "2235119",
-   "first_name": "Yan",
+   "first_name": "Yan Wo",
    "last_name": "Suen",
-   "middle_initial": "W",
+   "middle_initial": null,
    "preferred_first_name": "Yan Wo",
    "sex": "MALE",
    "birthday": null,
@@ -5314,27 +4980,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "27.62",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "47.02",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -5599,14 +5251,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:36.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -5718,14 +5363,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "34.89",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -5819,14 +5457,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:03.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -5902,14 +5533,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:05.07",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -6003,14 +5627,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:22.05",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -6184,14 +5801,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "32.11",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -6263,14 +5873,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "38.35",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -6489,27 +6092,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:07.54",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "56.79",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -6723,27 +6312,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "36.31",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:24.11",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -7190,27 +6765,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:39.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:50.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -7421,14 +6982,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.19",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -7496,14 +7050,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "24.65",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -7571,14 +7118,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "52.48",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -7794,32 +7334,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:48.96",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:17.74",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:11.21",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -7966,27 +7487,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "41.06",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "34.76",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -8045,27 +7552,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:22.72",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:04.14",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -8191,14 +7684,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:14.82",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -8244,27 +7730,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:35.22",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "36.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -8345,27 +7817,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:48.28",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:52.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -8411,27 +7869,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "42.85",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:29.87",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -8525,27 +7969,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:21.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.84",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -9145,14 +8575,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "41.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -9266,27 +8689,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "32.39",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -9400,21 +8809,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:20.02",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": []
+     "order": "LEG_2"
     }
    ]
   },
@@ -9535,14 +8936,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:37.68",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -9639,14 +9033,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:05.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -9719,9 +9106,9 @@
   {
    "id_short": "2350781",
    "id_long": "2350781",
-   "first_name": "Sum",
+   "first_name": "Sum Miu",
    "last_name": "Ma",
-   "middle_initial": "M",
+   "middle_initial": null,
    "preferred_first_name": "Sum Miu",
    "sex": "FEMALE",
    "birthday": null,
@@ -9784,27 +9171,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:47.87",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:02.44",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -9898,27 +9271,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.09",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.33",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -10012,27 +9371,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BACK_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "33.85",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.57",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -10187,27 +9532,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:11.76",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "28.13",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -10405,32 +9736,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.26",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:21.88",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:51.84",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -10495,32 +9807,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:12.16",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:11.09",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:41.36",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -10614,32 +9907,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:23.98",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.28",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "54.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -10935,14 +10209,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "BREAST_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:20.89",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   },
@@ -11056,32 +10323,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "22.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.84",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "49.52",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -11217,27 +10465,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FLY_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:50.95",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -11353,32 +10587,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:35.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "3:07.62",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:35.91",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     }
    ]
   },
@@ -11872,32 +11087,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "45.61",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:04.66",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:29.72",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -12323,19 +11519,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_1",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.99",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "49.42",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_1"
     }
    ]
   },
@@ -12707,14 +11891,7 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_3",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:09.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_3"
     }
    ]
   },
@@ -12888,32 +12065,13 @@
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_50_SCY",
-     "order": "LEG_4",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:38.19",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_4"
     },
     {
      "is_relay_leg": true,
      "session": "FINALS",
      "leg_event": "FREE_100_SCY",
-     "order": "LEG_2",
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:13.77",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:40.40",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "order": "LEG_2"
     }
    ]
   }
@@ -12932,6 +12090,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "33.85",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:15.09",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:47.87",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:19.62",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -12939,14 +12119,7 @@
      "swimmer_id": "2350783",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "33.85",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -12954,14 +12127,7 @@
      "swimmer_id": "2350782",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.09",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -12969,14 +12135,7 @@
      "swimmer_id": "2350781",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:47.87",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -12984,14 +12143,7 @@
      "swimmer_id": "2045766",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:19.62",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13009,6 +12161,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "31.48",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:02.44",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:32.33",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:00.57",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13016,14 +12190,7 @@
      "swimmer_id": "2045766",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "31.48",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13031,14 +12198,7 @@
      "swimmer_id": "2350781",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:02.44",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13046,14 +12206,7 @@
      "swimmer_id": "2350782",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.33",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13061,14 +12214,7 @@
      "swimmer_id": "2350783",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.57",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13086,6 +12232,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "34.89",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:05.07",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:36.86",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:03.75",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13093,14 +12261,7 @@
      "swimmer_id": "2235371",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "34.89",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13108,14 +12269,7 @@
      "swimmer_id": "2235374",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:05.07",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13123,14 +12277,7 @@
      "swimmer_id": "2235366",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:36.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13138,14 +12285,7 @@
      "swimmer_id": "2235372",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:03.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13163,6 +12303,23 @@
    "rank": 4,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "41.70",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "2:01.74",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "2:36.23",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13170,14 +12327,7 @@
      "swimmer_id": "2349909",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "41.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13185,14 +12335,7 @@
      "swimmer_id": "2234647",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:01.74",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13200,8 +12343,7 @@
      "swimmer_id": "2234648",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": []
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13209,14 +12351,7 @@
      "swimmer_id": "2234646",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:36.23",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13234,6 +12369,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "32.39",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:15.77",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:50.95",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:20.02",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13241,14 +12398,7 @@
      "swimmer_id": "2350387",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "32.39",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13256,14 +12406,7 @@
      "swimmer_id": "2046105",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13271,14 +12414,7 @@
      "swimmer_id": "815B4F1AA224",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:50.95",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13286,14 +12422,7 @@
      "swimmer_id": "2350388",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:20.02",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13311,6 +12440,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "35.09",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:11.88",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:37.68",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:05.90",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13318,14 +12469,7 @@
      "swimmer_id": "2145748",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "35.09",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13333,14 +12477,7 @@
      "swimmer_id": "2046100",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:11.88",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13348,14 +12485,7 @@
      "swimmer_id": "2350389",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:37.68",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13363,14 +12493,7 @@
      "swimmer_id": "2350390",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:05.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13388,6 +12511,23 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "26.77",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:32.37",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "2:00.86",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13395,14 +12535,7 @@
      "swimmer_id": "2350387",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13410,8 +12543,7 @@
      "swimmer_id": "2350388",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": []
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13419,14 +12551,7 @@
      "swimmer_id": "2046105",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.37",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13434,14 +12559,7 @@
      "swimmer_id": "815B4F1AA224",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13459,6 +12577,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "22.47",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "46.42",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:12.16",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:35.77",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13466,14 +12606,7 @@
      "swimmer_id": "7C442AC8FD31",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "22.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13481,14 +12614,7 @@
      "swimmer_id": "0C2DD0E6EEC5",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "46.42",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13496,14 +12622,7 @@
      "swimmer_id": "4BE03064168F",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:12.16",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13511,14 +12630,7 @@
      "swimmer_id": "89DB3CA87054",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:35.77",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13536,6 +12648,48 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "23.84",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "49.52",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:14.48",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:44.17",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 250,
+     "time": "2:11.09",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 300,
+     "time": "2:41.36",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 350,
+     "time": "3:07.62",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 400,
+     "time": "3:35.91",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13543,19 +12697,7 @@
      "swimmer_id": "7C442AC8FD31",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.84",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "49.52",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13563,19 +12705,7 @@
      "swimmer_id": "0C2DD0E6EEC5",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:14.48",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:44.17",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13583,19 +12713,7 @@
      "swimmer_id": "4BE03064168F",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:11.09",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:41.36",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13603,19 +12721,7 @@
      "swimmer_id": "89DB3CA87054",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "3:07.62",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:35.91",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13633,6 +12739,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "38.35",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:20.89",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:56.03",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:26.23",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13640,14 +12768,7 @@
      "swimmer_id": "2327569",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "38.35",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13655,14 +12776,7 @@
      "swimmer_id": "6E0098757894",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:20.89",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13670,14 +12784,7 @@
      "swimmer_id": "2212682",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:56.03",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13685,14 +12792,7 @@
      "swimmer_id": "2212684",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:26.23",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13710,6 +12810,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "36.31",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:11.76",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:39.75",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:07.54",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13717,14 +12839,7 @@
      "swimmer_id": "2327574",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "36.31",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13732,14 +12847,7 @@
      "swimmer_id": "331E4DA22737",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:11.76",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13747,14 +12855,7 @@
      "swimmer_id": "2327586",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:39.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13762,14 +12863,7 @@
      "swimmer_id": "2327572",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:07.54",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13787,6 +12881,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "26.15",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "57.73",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:23.98",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:48.96",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13794,14 +12910,7 @@
      "swimmer_id": "2092026",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13809,14 +12918,7 @@
      "swimmer_id": "05FB91964962",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.73",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13824,14 +12926,7 @@
      "swimmer_id": "5252A0DA2BEB",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:23.98",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13839,14 +12934,7 @@
      "swimmer_id": "2327601",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:48.96",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13864,6 +12952,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "24.65",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "52.48",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:15.59",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:38.19",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13871,14 +12981,7 @@
      "swimmer_id": "2327595",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "24.65",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13886,14 +12989,7 @@
      "swimmer_id": "2327597",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "52.48",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13901,14 +12997,7 @@
      "swimmer_id": "2019849",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:15.59",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13916,14 +13005,7 @@
      "swimmer_id": "ECAE2D4AB20D",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:38.19",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -13941,6 +13023,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "32.11",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:03.47",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:33.95",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:04.06",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -13948,14 +13052,7 @@
      "swimmer_id": "2327568",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "32.11",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -13963,14 +13060,7 @@
      "swimmer_id": "2212684",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:03.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -13978,14 +13068,7 @@
      "swimmer_id": "2212682",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:33.95",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -13993,14 +13076,7 @@
      "swimmer_id": "2212675",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:04.06",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14018,6 +13094,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "28.13",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "56.79",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:24.11",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:50.64",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14025,14 +13123,7 @@
      "swimmer_id": "331E4DA22737",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "28.13",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14040,14 +13131,7 @@
      "swimmer_id": "2327572",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "56.79",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14055,14 +13139,7 @@
      "swimmer_id": "2327574",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:24.11",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14070,14 +13147,7 @@
      "swimmer_id": "2327586",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:50.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14095,6 +13165,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "26.26",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "55.70",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:22.05",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:47.81",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14102,14 +13194,7 @@
      "swimmer_id": "485055456326",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.26",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14117,14 +13202,7 @@
      "swimmer_id": "2092031",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "55.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14132,14 +13210,7 @@
      "swimmer_id": "2327567",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:22.05",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14147,14 +13218,7 @@
      "swimmer_id": "05FB91964962",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:47.81",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14172,6 +13236,28 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "23.15",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "45.61",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:09.70",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:32.19",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14179,14 +13265,7 @@
      "swimmer_id": "2121109",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14194,14 +13273,7 @@
      "swimmer_id": "8FEBFEBD3729",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "45.61",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14209,14 +13281,7 @@
      "swimmer_id": "E8AC398507AC",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:09.70",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14224,14 +13289,7 @@
      "swimmer_id": "2327592",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:32.19",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14249,6 +13307,43 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "26.28",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "54.64",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:21.88",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:51.84",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 250,
+     "time": "2:17.74",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 300,
+     "time": "3:11.21",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 350,
+     "time": "3:38.75",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14256,19 +13351,7 @@
      "swimmer_id": "5252A0DA2BEB",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "26.28",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "54.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14276,19 +13359,7 @@
      "swimmer_id": "485055456326",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:21.88",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:51.84",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14296,19 +13367,7 @@
      "swimmer_id": "2327601",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:17.74",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:11.21",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14316,14 +13375,7 @@
      "swimmer_id": "2092026",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "3:38.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14341,6 +13393,48 @@
    "rank": 1,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "23.99",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "49.42",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:13.77",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:40.40",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 250,
+     "time": "2:04.66",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 300,
+     "time": "2:29.72",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 350,
+     "time": "2:52.32",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 400,
+     "time": "3:17.49",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14348,19 +13442,7 @@
      "swimmer_id": "C35480C63DD4",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.99",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "49.42",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14368,19 +13450,7 @@
      "swimmer_id": "ECAE2D4AB20D",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:13.77",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:40.40",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14388,19 +13458,7 @@
      "swimmer_id": "8FEBFEBD3729",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:04.66",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:29.72",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14408,19 +13466,7 @@
      "swimmer_id": "2019849",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:52.32",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:17.49",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14438,6 +13484,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "42.85",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:35.22",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "2:12.17",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:48.28",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14445,14 +13513,7 @@
      "swimmer_id": "2348580",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "42.85",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14460,14 +13521,7 @@
      "swimmer_id": "2348577",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:35.22",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14475,14 +13529,7 @@
      "swimmer_id": "2235117",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:12.17",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14490,14 +13537,7 @@
      "swimmer_id": "2348579",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:48.28",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14515,6 +13555,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "41.06",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:22.72",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:52.74",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:21.86",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14522,14 +13584,7 @@
      "swimmer_id": "2348570",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "41.06",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14537,14 +13592,7 @@
      "swimmer_id": "2348571",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:22.72",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14552,14 +13600,7 @@
      "swimmer_id": "2235114",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:52.74",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14567,14 +13608,7 @@
      "swimmer_id": "2348581",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:21.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14592,6 +13626,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "33.52",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:17.15",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:57.31",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:28.40",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14599,14 +13655,7 @@
      "swimmer_id": "2235110",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "33.52",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14614,14 +13663,7 @@
      "swimmer_id": "2235107",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:17.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14629,14 +13671,7 @@
      "swimmer_id": "2045116",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:57.31",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14644,14 +13679,7 @@
      "swimmer_id": "2142770",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:28.40",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14669,6 +13697,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "27.62",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "57.64",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:23.34",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:46.69",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14676,14 +13726,7 @@
      "swimmer_id": "2235119",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "27.62",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14691,14 +13734,7 @@
      "swimmer_id": "2045129",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.64",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14706,14 +13742,7 @@
      "swimmer_id": "2235108",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:23.34",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14721,14 +13750,7 @@
      "swimmer_id": "2045130",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:46.69",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14746,6 +13768,28 @@
    "rank": 3,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "36.15",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:14.82",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:52.86",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:29.87",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14753,14 +13797,7 @@
      "swimmer_id": "2348577",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "36.15",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14768,14 +13805,7 @@
      "swimmer_id": "2348576",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:14.82",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14783,14 +13813,7 @@
      "swimmer_id": "2348579",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:52.86",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14798,14 +13821,7 @@
      "swimmer_id": "2348580",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:29.87",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14823,6 +13839,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "34.76",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:04.14",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:36.10",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:00.84",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14830,14 +13868,7 @@
      "swimmer_id": "2348570",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "34.76",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14845,14 +13876,7 @@
      "swimmer_id": "2348571",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:04.14",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14860,14 +13884,7 @@
      "swimmer_id": "2235114",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:36.10",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14875,14 +13892,7 @@
      "swimmer_id": "2348581",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:00.84",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14900,6 +13910,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "28.22",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "57.90",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:26.75",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:56.51",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14907,14 +13939,7 @@
      "swimmer_id": "2142769",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "28.22",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14922,14 +13947,7 @@
      "swimmer_id": "2045123",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "57.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -14937,14 +13955,7 @@
      "swimmer_id": "2045118",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:26.75",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -14952,14 +13963,7 @@
      "swimmer_id": "2045122",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:56.51",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -14977,6 +13981,28 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "23.79",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "47.02",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:10.59",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "1:33.47",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -14984,14 +14010,7 @@
      "swimmer_id": "2235108",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "23.79",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -14999,14 +14018,7 @@
      "swimmer_id": "2235119",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "47.02",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -15014,14 +14026,7 @@
      "swimmer_id": "2045129",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:10.59",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -15029,14 +14034,7 @@
      "swimmer_id": "2045130",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:33.47",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []
@@ -15054,6 +14052,43 @@
    "rank": 2,
    "total_age": 0,
    "date": "2026-05-09",
+   "splits": [
+    {
+     "distance": 50,
+     "time": "30.21",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 100,
+     "time": "1:04.90",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 150,
+     "time": "1:38.41",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 200,
+     "time": "2:17.18",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 250,
+     "time": "2:49.88",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 300,
+     "time": "3:30.41",
+     "split_type": "CUMULATIVE"
+    },
+    {
+     "distance": 350,
+     "time": "4:37.49",
+     "split_type": "CUMULATIVE"
+    }
+   ],
    "legs": [
     {
      "order": "LEG_1",
@@ -15061,19 +14096,7 @@
      "swimmer_id": "2142769",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "30.21",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "1:04.90",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_2",
@@ -15081,19 +14104,7 @@
      "swimmer_id": "2045123",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "1:38.41",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "2:17.18",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_3",
@@ -15101,19 +14112,7 @@
      "swimmer_id": "2045118",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "2:49.88",
-       "split_type": "CUMULATIVE"
-      },
-      {
-       "distance": 100,
-       "time": "3:30.41",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     },
     {
      "order": "LEG_4",
@@ -15121,14 +14120,7 @@
      "swimmer_id": "2045122",
      "time": null,
      "takeoff_time": null,
-     "course": null,
-     "splits": [
-      {
-       "distance": 50,
-       "time": "4:37.49",
-       "split_type": "CUMULATIVE"
-      }
-     ]
+     "course": null
     }
    ],
    "alternates": []

@@ -19,6 +19,7 @@ from tunas._parser.fields import Record, time_value
 from tunas._parser.ids import normalize_id
 from tunas._parser.state import Hy3Entry, Hy3RelayEntry, Hy3State
 from tunas.enums import (
+    Course,
     Hy3FileType,
     RelayLegOrder,
     ResultStatus,
@@ -27,6 +28,7 @@ from tunas.enums import (
     SplitType,
     Stroke,
 )
+from tunas.event import Event
 from tunas.geography import LSC
 from tunas.models import (
     Club,
@@ -36,7 +38,6 @@ from tunas.models import (
     Relay,
     RelaySwim,
     SourceFile,
-    Split,
     Swimmer,
 )
 from tunas.time import Time
@@ -96,6 +97,29 @@ _AGE_OPEN_HIGH = 109  # "& Over" — no upper bound
 _SPLITS_PER_RECORD = 11
 _SPLIT_WIDTH = 11
 _FIRST_SPLIT_COL = 3
+# Pool length per course (same distance unit as the event distance: yards for
+# SCY, meters for SCM/LCM). A G1 split counter indexes pool lengths from the
+# start, so the cumulative split distance is `counter * pool_length`.
+_POOL_LENGTH: dict[Course, int] = {Course.SCY: 25, Course.SCM: 25, Course.LCM: 50}
+
+
+def _split_unit(event: Event, max_counter: int) -> float:
+    """Distance one G1 split counter unit represents for ``event``.
+
+    Normally one counter unit is a pool length. But some timing systems double the
+    counter (recording at half-length granularity), which would place the furthest
+    split past the finish — e.g. a 200 SCY fly with counters 4/8/12/16 instead of
+    2/4/6/8 maps to 400 yd with a plain ``* 25``. A cumulative split can never
+    exceed the event distance, so halve the per-counter unit until the furthest
+    counter fits within the race. This also recovers the correct distance for a
+    lone finishing split (the common DQ/relay-leadoff case).
+    """
+    unit: float = _POOL_LENGTH.get(event.course, 25)
+    if event.distance <= 0 or max_counter <= 0:
+        return unit
+    while unit * max_counter > event.distance:
+        unit /= 2
+    return unit
 # F3 athlete layout: up to eight 13-char slots starting at column 3.
 _SLOTS_PER_RECORD = 8
 _SLOT_WIDTH = 13
@@ -545,10 +569,13 @@ class _Hy3Engine(_BaseEngine):
         st = self.state
         if st is None:
             return
-        target = self._g1_target()
-        if target is None:
+        result = self._g1_result()
+        if result is None:
             self._skip_orphan(rec, "G1 splits could not be attached to a swim")
             return
+        # Collect the recorded slots first: the per-counter distance depends on the
+        # furthest counter in the record (see _split_unit), so resolve it once.
+        recorded: list[tuple[int, str, Time | ResultStatus | None]] = []
         for slot in range(_SPLITS_PER_RECORD):
             block = rec.raw(_FIRST_SPLIT_COL + slot * _SPLIT_WIDTH, _SPLIT_WIDTH)
             if not block.strip():
@@ -565,19 +592,24 @@ class _Hy3Engine(_BaseEngine):
                     f"malformed split distance counter {counter!r}",
                 )
                 continue
-            distance = int(counter) * 25
             tag, val = time_value(block[3:_SPLIT_WIDTH])
             if tag == "blank" or (isinstance(val, Time) and val.centiseconds == 0):
                 continue  # blank or `0.00` placeholder for an unrecorded split
-            self._append_split(rec, target, distance, tag, val, SplitType.CUMULATIVE)
+            recorded.append((int(counter), tag, val))
+        if not recorded:
+            return
+        unit = _split_unit(result.event, max(c for c, _, _ in recorded))
+        for length_count, tag, val in recorded:
+            distance = int(round(length_count * unit))
+            self._append_split(rec, result.splits, distance, tag, val, SplitType.CUMULATIVE)
 
-    def _g1_target(self) -> list[Split] | None:
+    def _g1_result(self) -> IndividualSwim | Relay | None:
         st = self.state
         assert st is not None
         if st.last_result_kind == "individual" and st.current_individual_swim is not None:
-            return st.current_individual_swim.splits
+            return st.current_individual_swim
         if st.last_result_kind == "relay" and st.current_relay is not None:
-            return st.current_relay.splits
+            return st.current_relay
         return None
 
     def _h_h1(self, rec: Record) -> None:

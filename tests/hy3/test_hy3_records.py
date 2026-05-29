@@ -570,20 +570,58 @@ def test_g1_orphan_without_swim() -> None:
 
 
 def test_g1_continuation_across_records() -> None:
-    blocks1 = [g1_block("F", c, f"{c * 15}.00") for c in range(2, 24, 2)]  # 11 blocks
-    blocks2 = [g1_block("F", 24, "360.30")]
+    # A 1000 free has 20 length-counter splits (2,4,...,40), spilling past the
+    # 11-block limit into a second G1 record.
+    blocks1 = [g1_block("F", c, f"{c * 15}.00") for c in range(2, 24, 2)]  # counters 2..22
+    blocks2 = [g1_block("F", c, f"{c * 15}.00") for c in range(24, 42, 2)]  # counters 24..40
     lines = [
         *_HEAD,
         d1(),
-        e1(dist="500", stroke="A"),
-        e2(time="360.30"),
+        e1(dist="1000", stroke="A"),
+        e2(time="600.00"),
         g1(*blocks1),
         g1(*blocks2),
     ]
     archive = parse_hy3_lines(lines)
     splits = archive.meets[0].individual_swims[0].splits
-    assert len(splits) == 12
-    assert splits[-1].distance == 600  # counter 24 * 25
+    assert len(splits) == 20
+    assert splits[0].distance == 50  # counter 2 * 25
+    assert splits[-1].distance == 1000  # counter 40 * 25
+
+
+def test_g1_doubled_counter_scales_to_event_distance() -> None:
+    # Some timing systems record at half-length granularity: a 200 SCY shows
+    # counters 4/8/12/16 (odd slots blank) instead of 2/4/6/8. The cumulative
+    # distances must still resolve to 50/100/150/200, not 100/200/300/400.
+    blocks = [
+        g1_block("F", 2, "0.00"),
+        g1_block("F", 4, "27.72"),
+        g1_block("F", 6, "0.00"),
+        g1_block("F", 8, "59.14"),
+        g1_block("F", 10, "0.00"),
+        g1_block("F", 12, "92.78"),
+        g1_block("F", 14, "0.00"),
+        g1_block("F", 16, "127.30"),
+    ]
+    lines = [*_HEAD, d1(), e1(dist="200", stroke="D"), e2(time="127.30"), g1(*blocks)]
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
+    assert [s.distance for s in splits] == [50, 100, 150, 200]
+
+
+def test_g1_lone_finishing_split_uses_event_distance() -> None:
+    # A lone finishing split for a 100 IM arrives with the doubled counter 8; it
+    # must map to the event distance (100), not 200.
+    lines = [
+        *_HEAD,
+        d1(),
+        e1(dist="100", stroke="E"),
+        e2(time="71.31"),
+        g1(g1_block("F", 8, "71.31")),
+    ]
+    archive = parse_hy3_lines(lines)
+    splits = archive.meets[0].individual_swims[0].splits
+    assert [s.distance for s in splits] == [100]
 
 
 # --------------------------------------------------------------------------- #

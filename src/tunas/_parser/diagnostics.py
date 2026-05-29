@@ -30,7 +30,20 @@ class IssueKind(enum.Enum):
 
 @dataclass(frozen=True)
 class ParseWarning:
-    """A single structured diagnostic."""
+    """A single structured diagnostic.
+
+    Attributes:
+        source: Source file or stream label.
+        line_no: 1-based line number of the record.
+        record_type: Coded record type (e.g. "D0", "F0").
+        field: Name of the problematic field.
+        column: SDIF "start/length" (e.g. "40/12").
+        mandatory: Requirement level ("M1", "M2", "*", "**", etc.).
+        severity: Handling outcome (FATAL, SKIPPED, RECOVERED).
+        kind: Classification of the issue (MISSING, MALFORMED, etc.).
+        reason: Explanation of the validation failure.
+        raw_line: Raw source line (truncated to 200 characters).
+    """
 
     source: str
     line_no: int
@@ -50,6 +63,17 @@ class ParseReport:
 
     Both :func:`~tunas.read_cl2` and :func:`~tunas.read_hy3` attach one report per
     :class:`~tunas.MeetArchive`; use :meth:`merge` to fold several into a corpus-wide total.
+
+    Attributes:
+        warnings: List of collected ParseWarning diagnostics.
+        files_read: Count of processed files.
+        meets_parsed: Count of successfully parsed meets.
+        swimmers_parsed: Count of parsed athlete profiles.
+        individual_swims_parsed: Count of individual swim results.
+        relays_parsed: Count of parsed relay squads.
+        splits_parsed: Count of split-time objects parsed.
+        records_skipped: Count of records dropped entirely.
+        fields_recovered: Count of recovered (nulled) optional fields.
     """
 
     warnings: list[ParseWarning] = field(default_factory=list)

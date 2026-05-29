@@ -205,15 +205,33 @@ def test_open_ended_age_and_optionals() -> None:
     assert ind.attach_status is AttachStatus.ATTACHED
 
 
-def test_splits_live_on_leg_with_none_time() -> None:
+def test_relay_leg_splits_derived_and_rebased() -> None:
+    # Splits live on the relay row as whole-relay cumulative marks; each leg
+    # derives its own splits from that row, re-based to the leg start so it reads
+    # like a flat-start swim.
     m = _meet()
-    relay = _relay(m)
+    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
+    cum = ["23.84", "49.52", "1:14.48", "1:44.17", "2:11.09", "2:41.36", "3:07.62", "3:35.91"]
+    relay.splits = [
+        Split(distance=50 * (i + 1), time=Time.parse(t), split_type=SplitType.CUMULATIVE)
+        for i, t in enumerate(cum)
+    ]
+    leg1 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_1)
+    leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
+    # Lead-off leg: marks are already leg-relative (start time 0).
+    assert [(s.distance, str(s.time)) for s in leg1.splits] == [(50, "23.84"), (100, "49.52")]
+    # Second leg: distances and cumulative times re-based to the leg start (49.52).
+    assert [(s.distance, str(s.time)) for s in leg2.splits] == [(50, "24.96"), (100, "54.65")]
+
+
+def test_relay_leg_splits_empty_when_no_row_splits() -> None:
+    # Nothing to derive from -> empty list, keeping the uniform Swim.splits type.
+    m = _meet()
+    relay = _relay(m)  # no splits on the row
     leg = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_1)
-    leg.splits.append(Split(distance=50, time=None, split_type=SplitType.INTERVAL))
-    assert leg.splits[0].time is None
-    # SDIF leaves the relay-level splits empty (they live on the legs); the
-    # whole-relay `Relay.splits` list is only populated by the `.hy3` reader.
-    assert relay.splits == []
+    alt = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.ALTERNATE)
+    assert leg.splits == []
+    assert alt.splits == []  # alternates have no leg window either
 
 
 # --------------------------------------------------------------------------- #

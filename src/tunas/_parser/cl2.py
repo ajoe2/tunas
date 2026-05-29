@@ -1013,6 +1013,7 @@ class _Cl2Engine(_BaseEngine):
         if target_splits is None:
             self._skip_orphan(rec, "G0 splits could not be attached to a swim")
             return
+        is_relay = st.last_result_kind == "relay"
         base = (seq - 1) * _SPLITS_PER_RECORD
         for j in range(_SPLITS_PER_RECORD):
             start = _FIRST_SPLIT_COL + j * _SPLIT_WIDTH
@@ -1022,7 +1023,16 @@ class _Cl2Engine(_BaseEngine):
                 # followed by a recorded later split (e.g. only the final
                 # cumulative time present) must not discard that real time.
                 continue
-            distance = increment * (base + j + 1)
+            if is_relay:
+                # Relay G0s carry whole-relay cumulative splits spread across the
+                # successive per-leg records; each leg's record restarts at slot 0,
+                # so the relay position is the running count of splits already on
+                # the relay row, not the per-record slot index. This yields
+                # 50/100/150/200 (and beyond for longer relays) instead of every
+                # leg's split collapsing to the same distance.
+                distance = increment * (len(target_splits) + 1)
+            else:
+                distance = increment * (base + j + 1)
             self._append_split(
                 rec, target_splits, distance, tag, val, split_type, column=f"{start}/8"
             )
@@ -1031,14 +1041,18 @@ class _Cl2Engine(_BaseEngine):
         st = self.state
         assert st is not None
         if st.last_result_kind == "relay":
-            if not st.current_relay_legs:
+            if not st.current_relays:
                 return None
-            leg = (
-                (st.current_relay_legs.get(session) if session is not None else None)
-                or st.current_relay_legs.get(Session.FINALS)
-                or next(iter(st.current_relay_legs.values()))
+            # Whole-relay cumulative splits belong on the relay row (matching the
+            # `.hy3` reader and `Relay.splits` semantics), not on an individual
+            # leg. Attaching here also rescues relays whose G0s follow the E0
+            # directly with no F0 leg records (which would otherwise be orphaned).
+            relay = (
+                (st.current_relays.get(session) if session is not None else None)
+                or st.current_relays.get(Session.FINALS)
+                or next(iter(st.current_relays.values()))
             )
-            return leg.splits
+            return relay.splits
         if st.last_result_kind == "individual":
             if not st.current_individual_swims:
                 return None
