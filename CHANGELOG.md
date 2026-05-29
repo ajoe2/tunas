@@ -2,6 +2,14 @@
 
 All notable changes to `tunas` are documented here in Keep a Changelog format, adhering to Semantic Versioning.
 
+## [Unreleased]
+
+### Changed
+- **Breaking — `read_hy3` club `team_code` now carries the LSC prefix**: a Hy-Tek club's `team_code` is now the LSC-prefixed code (e.g. `PCSCSC` instead of `SCSC`), matching `read_cl2`, which already stores the prefixed code from the SDIF `C1` record. The bare code is kept only when the file carries no LSC. This aligns club (and relay) identity across the two readers — previously the prefix difference made the same club look different between a meet's `.cl2` and `.hy3` exports.
+
+### Fixed
+- **`.hy3` `D1` with a blank athlete name no longer aborts the file**: a missing first (or last) name on a `D1` athlete record was treated as a fatal structural violation, so a single malformed record made the entire meet unparseable even in lenient mode. The record is now skipped with a `SKIPPED` warning (and its following entries/results orphan-skip cleanly); strict mode still raises.
+
 ## [0.5.0] — 2026-05-29
 
 ### Changed

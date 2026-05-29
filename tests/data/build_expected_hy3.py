@@ -146,9 +146,12 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
 
         elif t == "C1":
             abbrev, name = fld(line, 3, 5), fld(line, 8, 30)
+            lsc_raw = fld(line, 54, 2)
+            # Prefix the LSC code to match read_cl2 / read_hy3 (e.g. "PCPASA").
+            team_code = (lsc_raw + abbrev) if lsc_raw else abbrev
             club = {
-                "team_code": abbrev,
-                "lsc": _LSC.get(fld(line, 54, 2)),
+                "team_code": team_code,
+                "lsc": _LSC.get(lsc_raw),
                 "full_name": name or None,
                 "email": None,
                 "swimmer_ids": [],

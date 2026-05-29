@@ -138,6 +138,8 @@ These differences reflect genuine format variation, not parser limitations:
 - **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields.
 - **Relay splits**: Parsed into `Relay.splits` as whole-relay cumulative splits. Individual splits attach to `IndividualSwim.splits` as usual. `0.00` placeholders are ignored.
 - **Swimmer IDs**: Populates `Swimmer.id_short` with the 14-character `.hy3` member ID. `id_long` is unused.
+- **Club codes**: `Club.team_code` carries the LSC prefix (e.g. `PCSCSC`) to match `read_cl2`; the bare code is kept only when the `C1` record has no LSC.
+- **Blank athlete names**: A `D1` with a blank first/last name is skipped (with a `SKIPPED` warning) rather than aborting the file in lenient mode.
 - **Checksums**: Line checksums (columns 129–130) are not validated, as they are omitted in some exports (e.g. `USAS Club Times Export`).
 
 ## Per-meet scope

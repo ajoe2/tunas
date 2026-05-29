@@ -310,7 +310,11 @@ class _Hy3Engine(_BaseEngine):
             st.current_club = None
             return
         st.unattached = False
-        key = (abbrev, lsc)
+        # Prefix the LSC code so the team code matches `read_cl2` (e.g. "PCSCSC",
+        # not "SCSC"); `.cl2` stores the LSC-prefixed code in its C1 record. Falls
+        # back to the bare code when the LSC is absent, as `read_cl2` does.
+        team_code = f"{lsc.value}{abbrev}" if lsc else abbrev
+        key = (team_code, lsc)
         existing = st.clubs_by_key.get(key)
         if existing is not None:
             st.current_club = existing
@@ -318,7 +322,7 @@ class _Hy3Engine(_BaseEngine):
         club = Club(
             meet=st.meet,
             organization=None,  # `.hy3` carries no org code
-            team_code=abbrev,
+            team_code=team_code,
             lsc=lsc,
             full_name=name,
         )
@@ -357,8 +361,28 @@ class _Hy3Engine(_BaseEngine):
             st.last_result_kind = None
             return
         sex = self._require_code(rec, 3, 1, Sex, "sex", "3/1")
-        last = self._require_text(rec, 9, 20, "last_name", "9/20")
-        first = self._require_text(rec, 29, 20, "first_name", "29/20")
+        last = rec.text(9, 20)
+        first = rec.text(29, 20)
+        if last is None or first is None:
+            # A blank name is a data-quality issue, not a structural one: skip the
+            # record and reset context (so the athlete's following E1/E2/G1 records
+            # orphan-skip) rather than aborting the file. Strict mode still raises
+            # via `_emit`.
+            self._warn(
+                rec,
+                "first_name" if first is None else "last_name",
+                "29/20" if first is None else "9/20",
+                "M1",
+                Severity.SKIPPED,
+                IssueKind.MISSING,
+                "D1 athlete with no name; record skipped",
+            )
+            st.current_swimmer = None
+            st.current_age_class = None
+            st.current_individual_swim = None
+            st.current_relay = None
+            st.last_result_kind = None
+            return
 
         swimmer = Swimmer(
             meet=st.meet,

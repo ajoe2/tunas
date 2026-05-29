@@ -219,6 +219,8 @@ C1ARSC Arcadia Riptides              ARSC            CA
 | 8–37 | Team Name | C | Full team name (30 characters) |
 | 38–53 | Short Team Name | I | 16-character abbreviated name |
 | 54–55 | LSC Code | C | 2-letter Local Swim Committee code (e.g., `PC`, `CA`) |
+
+`read_hy3` stores `Club.team_code` with the LSC prefix prepended (e.g. `PCARSC`), matching `read_cl2` whose SDIF `C1` already carries the prefixed code. The bare abbreviation is kept only when the LSC field is blank.
 | 118, 119, 122 | Team Counts/Flags | ? | Undocumented small integers |
 
 ### 5.5 `C2` — Team Address

@@ -145,10 +145,20 @@ def test_b2_lcm_course() -> None:
 def test_c1_club() -> None:
     archive = parse_hy3_lines(_one_swim())
     club = archive.meets[0].clubs[0]
-    assert club.team_code == "PASA"
+    # team_code carries the LSC prefix to match read_cl2 ("PC" + "PASA").
+    assert club.team_code == "PCPASA"
     assert club.full_name == "Palo Alto Stanford Aquatics"
     assert club.lsc is not None and club.lsc.name == "PACIFIC"
     assert len(club.swimmers) == 1 and len(club.results) == 1
+
+
+def test_c1_team_code_without_lsc() -> None:
+    # When the LSC field is blank the team code stays bare (same fallback as cl2).
+    c1 = hy3_rec((1, "C1"), (3, "ABC"), (8, "Some Team"))
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1, d1(), e1(), e2()])
+    club = archive.meets[0].clubs[0]
+    assert club.team_code == "ABC"
+    assert club.lsc is None
 
 
 def test_c3_email() -> None:
@@ -246,6 +256,26 @@ def test_d1_no_number_skipped() -> None:
     assert archive.report.warnings_for(
         record_type="D1", field="athlete_number", severity=Severity.SKIPPED
     )
+
+
+def test_d1_blank_first_name_skipped() -> None:
+    # A blank name is data-quality, not structural: skip the record in lenient
+    # mode (it used to abort the whole file) and orphan the following results.
+    line = d1(first="")
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
+    assert archive.meets[0].swimmers == []
+    assert archive.meets[0].individual_swims == []
+    assert archive.report.warnings_for(
+        record_type="D1", field="first_name", severity=Severity.SKIPPED
+    )
+
+
+def test_d1_blank_first_name_strict_raises() -> None:
+    from tunas import ParseError
+
+    line = d1(first="")
+    with pytest.raises(ParseError):
+        parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()], strict=True)
 
 
 def test_d1_orphan_without_meet() -> None:

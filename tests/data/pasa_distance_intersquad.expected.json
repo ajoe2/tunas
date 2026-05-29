@@ -45,7 +45,7 @@
   },
   "clubs": [
     {
-      "team_code": "PASA",
+      "team_code": "PCPASA",
       "lsc": "PACIFIC",
       "full_name": "PALO ALTO STANFORD AQUATICS",
       "email": null,
@@ -62,7 +62,7 @@
       "middle_initial": "L",
       "id_short": "031005GRELABUC",
       "birthday": "2005-03-10",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -91,7 +91,7 @@
       "middle_initial": "R",
       "id_short": "061409MARRABUC",
       "birthday": "2009-06-14",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_500_SCY",
@@ -137,7 +137,7 @@
       "middle_initial": "D",
       "id_short": "052507JASDADWE",
       "birthday": "2007-05-25",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -183,7 +183,7 @@
       "middle_initial": "A",
       "id_short": "042906GABAANAG",
       "birthday": "2006-04-29",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -229,7 +229,7 @@
       "middle_initial": "K",
       "id_short": "062008LILKANAG",
       "birthday": "2008-06-20",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -275,7 +275,7 @@
       "middle_initial": null,
       "id_short": "080808MAXABALV",
       "birthday": "2008-08-08",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -321,7 +321,7 @@
       "middle_initial": "P",
       "id_short": "100708ISHPBORA",
       "birthday": "2008-10-07",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -367,7 +367,7 @@
       "middle_initial": "C",
       "id_short": "110308MARCBYRN",
       "birthday": "2008-11-03",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -413,7 +413,7 @@
       "middle_initial": "S",
       "id_short": "021209BROSCHOW",
       "birthday": "2009-02-12",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_500_SCY",
@@ -459,7 +459,7 @@
       "middle_initial": "K",
       "id_short": "030108ERIKCHOW",
       "birthday": "2008-03-01",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -505,7 +505,7 @@
       "middle_initial": "Z",
       "id_short": "090509LUYZCHUA",
       "birthday": "2009-09-05",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_500_SCY",
@@ -551,7 +551,7 @@
       "middle_initial": "P",
       "id_short": "061707KINPCZAJ",
       "birthday": "2007-06-17",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_500_SCY",
@@ -597,7 +597,7 @@
       "middle_initial": "P",
       "id_short": "011909TOMPCZAJ",
       "birthday": "2009-01-19",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -643,7 +643,7 @@
       "middle_initial": "S",
       "id_short": "061909MILSDIZI",
       "birthday": "2009-06-19",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -689,7 +689,7 @@
       "middle_initial": "B",
       "id_short": "102407TRABDOAN",
       "birthday": "2007-10-24",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -735,7 +735,7 @@
       "middle_initial": "L",
       "id_short": "051208KIRLDYE*",
       "birthday": "2008-05-12",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -781,7 +781,7 @@
       "middle_initial": null,
       "id_short": "050708ALE*FARA",
       "birthday": "2008-05-07",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -827,7 +827,7 @@
       "middle_initial": null,
       "id_short": "020808YUK*HARA",
       "birthday": "2008-02-08",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -873,7 +873,7 @@
       "middle_initial": null,
       "id_short": "062209AKA*KARA",
       "birthday": "2009-06-22",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -902,7 +902,7 @@
       "middle_initial": "M",
       "id_short": "040409KATMKIRK",
       "birthday": "2009-04-04",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -948,7 +948,7 @@
       "middle_initial": "S",
       "id_short": "052808EDISLEE*",
       "birthday": "2008-05-28",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -994,7 +994,7 @@
       "middle_initial": null,
       "id_short": "011908HON*LIN*",
       "birthday": "2008-01-19",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -1040,7 +1040,7 @@
       "middle_initial": null,
       "id_short": "090607ERI*NI**",
       "birthday": "2007-09-06",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -1086,7 +1086,7 @@
       "middle_initial": "S",
       "id_short": "031809KRISOH**",
       "birthday": "2009-03-18",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -1132,7 +1132,7 @@
       "middle_initial": "S",
       "id_short": "062905ALESPARG",
       "birthday": "2005-06-29",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -1178,7 +1178,7 @@
       "middle_initial": "S",
       "id_short": "100407SAHSSHAR",
       "birthday": "2007-10-04",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -1224,7 +1224,7 @@
       "middle_initial": "R",
       "id_short": "040809JULRSTON",
       "birthday": "2009-04-08",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_500_SCY",
@@ -1270,7 +1270,7 @@
       "middle_initial": null,
       "id_short": "080608TIL*THIY",
       "birthday": "2008-08-06",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -1316,7 +1316,7 @@
       "middle_initial": null,
       "id_short": "040308MAT*WEI*",
       "birthday": "2008-04-03",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -1362,7 +1362,7 @@
       "middle_initial": null,
       "id_short": "080908AND*WU**",
       "birthday": "2008-08-09",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
@@ -1391,7 +1391,7 @@
       "middle_initial": "P",
       "id_short": "110107AMEPYUAN",
       "birthday": "2007-11-01",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_1000_SCY",
@@ -1437,7 +1437,7 @@
       "middle_initial": "M",
       "id_short": "022708GAVMZHAN",
       "birthday": "2008-02-27",
-      "club_team_code": "PASA",
+      "club_team_code": "PCPASA",
       "swims": [
         {
           "event": "FREE_50_SCY",
