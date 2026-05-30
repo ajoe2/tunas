@@ -373,6 +373,28 @@ def test_g0_relay_splits_on_relay_row_cumulative() -> None:
     assert [(s.distance, str(s.time)) for s in relay.legs[1].splits] == [(50, "28.50")]
 
 
+def test_g0_relay_splits_skip_missing_interior_split() -> None:
+    # A 200 medley relay (4x50) whose 3rd leg records no split. The remaining marks
+    # must keep their true per-leg cumulative distances: the final (leg 4) mark belongs
+    # at 200 (the full distance, == the relay time), NOT 150. Distance is derived from
+    # each leg's position, so a missing interior split does not shift the later marks.
+    e = e0(finals="2:36.00")
+    leg1 = f0(name="One, Ann", uss="AAAAAAAAAAA1", order_finals="1")
+    g1 = g0(uss="AAAAAAAAAAA1", times=("41.70",), total="1", session="F")
+    leg2 = f0(name="Two, Bea", uss="AAAAAAAAAAA2", order_finals="2")
+    g2 = g0(uss="AAAAAAAAAAA2", times=("2:01.74",), total="1", session="F")
+    leg3 = f0(name="Three, Cy", uss="AAAAAAAAAAA3", order_finals="3")  # no G0 split
+    leg4 = f0(name="Four, Dee", uss="AAAAAAAAAAA4", order_finals="4")
+    g4 = g0(uss="AAAAAAAAAAA4", times=("2:36.00",), total="1", session="F")
+    archive = parse_lines([A0, B1, C1, e, leg1, g1, leg2, g2, leg3, leg4, g4, Z0])
+    relay = archive.meets[0].relays[0]
+    assert [(s.distance, str(s.time)) for s in relay.splits] == [
+        (50, "41.70"),
+        (100, "2:01.74"),
+        (200, "2:36.00"),
+    ]
+
+
 def test_g0_relay_splits_without_f0_legs_attach_to_row() -> None:
     # Some relays list their cumulative G0 splits straight after the E0 with no
     # F0 leg records; these attach to the relay row instead of being orphaned.

@@ -274,6 +274,7 @@ def d1(
     member: str = "9F58190E90084A",
     birth: str = "07242014",
     age: str = "9",
+    grade: str = "",
     citizen: str = "",
 ) -> str:
     fields = [
@@ -287,6 +288,8 @@ def d1(
         (89, birth),
         (98, age.rjust(2)),
     ]
+    if grade:
+        fields.append((100, grade))  # Grade/Class code (SR/JR/SO/FR)
     if middle:
         fields.append((69, middle))
     if citizen:

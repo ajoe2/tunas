@@ -42,6 +42,9 @@ class ParserState:
     pending_individual: PendingIndividual | None = None
     current_relays: dict[Session, Relay] = field(default_factory=dict)
     current_relay_legs: dict[Session, RelaySwim] = field(default_factory=dict)
+    # Running 0-based leg index per relay session for G0 split-distance offsetting:
+    # seeded from each F0 leg number, advanced once per G0 record (see cl2._h_g0).
+    relay_split_index: dict[Session, int] = field(default_factory=dict)
     last_result_kind: str | None = None  # "individual" | "relay"
 
     @property

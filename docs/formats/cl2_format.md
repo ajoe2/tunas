@@ -473,10 +473,13 @@ says to enter the literal `NO SWIMMER NAME` (or another meaningful string).
 For **relays**, the `G0` records hold whole-relay *cumulative* times spread across the
 relay's per-leg records, each restarting at split 1. The reader treats these as the
 relay's own splits: they attach to the relay row (`Relay.splits`, matching the `.hy3`
-reader), and the cumulative distance climbs by the col-59 split distance for each recorded
-split across the whole relay (50/100/150/200/… for a 4×50), rather than per record. Some
-files emit a relay's `G0`s directly after the `E0` with no `F0` legs (often with `NO
-SWIMMER NAME`); these still attach to the relay row.
+reader), and each split's cumulative distance is its leg's start distance plus its in-leg
+offset (50/100/150/200/… for a 4×50). The leg start is tracked by a running leg index —
+seeded from each `F0` leg's number and advanced once per `G0` record — rather than by a
+running count of recorded splits, so a blank interior split or an unnamed final leg no
+longer shifts the later marks short. Some files emit a relay's `G0`s directly after the
+`E0` with no `F0` legs (often with `NO SWIMMER NAME`); these still attach to the relay
+row.
 
 ### Z0 — File terminator (required, last record)
 

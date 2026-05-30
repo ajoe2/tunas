@@ -232,11 +232,48 @@ def test_d1_swimmer_fields() -> None:
     assert (sw.last_name, sw.first_name) == ("Lim", "Adrian")
     assert sw.preferred_first_name == "AJ"
     assert sw.middle_initial == "Q"
-    assert sw.id_short == "ADR*LIM*082299"
+    # The D1 member-ID field (cols 70-83) is the 14-char SWIMS ID -> id_long; id_short
+    # is its 12-char prefix, matching read_cl2 (whose id_short == id_long[:12]).
+    assert sw.id_long == "ADR*LIM*082299"
+    assert sw.id_short == "ADR*LIM*0822"
     assert sw.birthday == datetime.date(1999, 8, 22)
     assert sw.citizenship is not None and sw.citizenship.name == "UNITED_STATES"
     # D1 age is surfaced as the per-swim age class.
     assert sw.individual_swims[0].swimmer_age_class == "17"
+
+
+def test_d1_age_class_prefers_grade_when_age_absent() -> None:
+    # Scholastic meets record a grade (cols 100-101) with a blank/zero age (cols 98-99);
+    # surface the grade so it matches read_cl2's single "age or class" field.
+    line = d1(age="0", grade="JR")
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
+    assert archive.meets[0].swimmers[0].individual_swims[0].swimmer_age_class == "JR"
+
+
+def test_d1_age_class_prefers_real_age_over_grade() -> None:
+    # When both a real age and a grade are present, the numeric age wins (read_cl2
+    # stores the age in this field for non-scholastic meets).
+    line = d1(age="17", grade="JR")
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
+    assert archive.meets[0].swimmers[0].individual_swims[0].swimmer_age_class == "17"
+
+
+def test_d1_unattached_swim_marks_attach_status() -> None:
+    # A swimmer under the "UN" Unattached team swims unattached, matching read_cl2.
+    from tunas.enums import AttachStatus
+
+    c1_un = hy3_rec((1, "C1"), (3, "UN"), (8, "Unattached"), (54, "PC"))
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1_un, d1(), e1(), e2()])
+    swim = archive.meets[0].individual_swims[0]
+    assert swim.attach_status is AttachStatus.UNATTACHED
+    assert swim.club is None
+
+
+def test_d1_attached_swim_default_attach_status() -> None:
+    from tunas.enums import AttachStatus
+
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, d1(), e1(), e2()])
+    assert archive.meets[0].individual_swims[0].attach_status is AttachStatus.ATTACHED
 
 
 def test_d1_wodob_blank_birthday() -> None:

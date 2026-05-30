@@ -142,6 +142,9 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
     current_swims: list[dict] = []
     pending: dict | None = None  # {"swimmer":.., "swims":[..], "club":..}
     current_relays: dict[str, dict] = {}
+    # Running 0-based leg index per relay session, for G0 split-distance offsetting:
+    # seeded from each F0 leg number, advanced once per G0 record.
+    relay_split_index: dict[str, int] = {}
     last_leaf: str | None = None
     meet_course: str | None = None
 
@@ -380,6 +383,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 None if unattached else (current_club["team_code"] if current_club else None)
             )
             current_relays = {}
+            relay_split_index = {}
             if relay_event is None:
                 warnings[("E0", "event", "UNKNOWN_CODE", "SKIPPED")] += 1
                 counts["records_skipped"] += 1
@@ -513,6 +517,8 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                                 "order": leg["order"],
                             }
                         )
+                    # Seed the running split index from this leg's number (1-based -> 0).
+                    relay_split_index[session] = int(o) - 1
                 created[session] = leg
             if created:
                 target = created.get("FINALS") or next(iter(created.values()))
@@ -537,13 +543,21 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 # Whole-relay cumulative splits attach to the relay row, not a leg
                 # (matching the reader and Relay.splits semantics). Targeting the
                 # relay also rescues no-F0 relays whose G0s would otherwise orphan.
-                relay = (
-                    (current_relays.get(scode) if scode else None)
-                    or current_relays.get("FINALS")
-                    or next(iter(current_relays.values()))
+                rsession = (
+                    scode
+                    if (scode and scode in current_relays)
+                    else ("FINALS" if "FINALS" in current_relays else next(iter(current_relays)))
                 )
+                relay = current_relays[rsession]
                 target_splits = relay["splits"]
                 is_relay = True
+                # Each relay leg's G0 restarts at slot 0; offset its slot positions by
+                # the cumulative distance of the preceding legs (the running leg index,
+                # seeded per F0 and advanced per G0 record) so a missing interior split
+                # or an unnamed final leg keeps the later marks at their true distance.
+                leg_idx = relay_split_index.get(rsession, 0)
+                relay_split_index[rsession] = leg_idx + 1
+                leg_offset = leg_idx * (relay["_dist"] // 4)
             elif last_leaf == "individual" and current_swims:
                 match = next((s for s in current_swims if scode and s["session"] == scode), None)
                 target_splits = (match or current_swims[0])["splits"]
@@ -556,10 +570,9 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 raw = fld(line, 64 + j * 8, 8)
                 if not raw:
                     continue
-                # Relay distance climbs by the running count across all the relay's
-                # G0 records (each leg restarts at slot 0); individual splits index
-                # by the per-record slot.
-                distance = inc * (len(target_splits) + 1) if is_relay else inc * (base + j + 1)
+                # Relay distance offsets the per-record slot by the preceding legs'
+                # cumulative distance (leg_offset); individual splits index by slot.
+                distance = (leg_offset if is_relay else 0) + inc * (base + j + 1)
                 target_splits.append(
                     {
                         "distance": distance,

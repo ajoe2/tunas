@@ -137,7 +137,7 @@ These differences reflect genuine format variation, not parser limitations:
 - **Disqualifications**: Preserves the swum `time` (SDIF sets it to `None`) and populates `dq_code` and `dq_reason`.
 - **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields.
 - **Relay splits**: Parsed into `Relay.splits` as whole-relay cumulative splits. Individual splits attach to `IndividualSwim.splits` as usual. `0.00` placeholders are ignored.
-- **Swimmer IDs**: Populates `Swimmer.id_short` with the 14-character `.hy3` member ID. `id_long` is unused.
+- **Swimmer IDs**: The 14-character `.hy3` member ID is stored in `id_long`, and `id_short` is derived as its 12-character prefix — matching `read_cl2`, where the same swimmer's `id_short`/`id_long` carry the 12- and 14-char forms.
 - **Club codes**: `Club.team_code` carries the LSC prefix (e.g. `PCSCSC`) to match `read_cl2`; the bare code is kept only when the `C1` record has no LSC.
 - **Blank athlete names**: A `D1` with a blank first/last name is skipped (with a `SKIPPED` warning) rather than aborting the file in lenient mode.
 - **Checksums**: Line checksums (columns 129–130) are not validated, as they are omitted in some exports (e.g. `USAS Club Times Export`).

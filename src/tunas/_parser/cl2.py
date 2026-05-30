@@ -69,6 +69,14 @@ _RELAY_LEG_SESSIONS: list[tuple[Session, int]] = [
     (Session.SWIM_OFFS, 78),
     (Session.FINALS, 79),
 ]
+# Relay leg position -> 1-based leg number (ALTERNATE/NOT_SWUM are absent), used to
+# offset a leg's G0 splits by the cumulative distance of the preceding legs.
+_LEG_NUMBERS: dict[RelayLegOrder, int] = {
+    RelayLegOrder.LEG_1: 1,
+    RelayLegOrder.LEG_2: 2,
+    RelayLegOrder.LEG_3: 3,
+    RelayLegOrder.LEG_4: 4,
+}
 _AFFILIATION_COLUMNS: list[tuple[int, Affiliation]] = [
     (34, Affiliation.JUNIOR_HIGH),
     (35, Affiliation.SENIOR_HIGH),
@@ -864,6 +872,7 @@ class _Cl2Engine(_BaseEngine):
         if event is None:
             st.current_relays = {}
             st.current_relay_legs = {}
+            st.relay_split_index = {}
             st.last_result_kind = None
             return
         assert esex is not None
@@ -907,6 +916,7 @@ class _Cl2Engine(_BaseEngine):
             self.report.relays_parsed += 1
             st.current_relays[sr.session] = relay
         st.current_relay_legs = {}
+        st.relay_split_index = {}
         st.last_result_kind = "relay"
 
     def _h_f0(self, rec: Record) -> None:
@@ -974,6 +984,12 @@ class _Cl2Engine(_BaseEngine):
                 if swimmer is not None:
                     swimmer.swims.append(leg)
             created[session] = leg
+            # Seed the G0 split-distance index from this leg's number so the leg's
+            # following G0 record lands at the right cumulative distance even if an
+            # earlier leg's split was blank (the index then advances per G0 record).
+            leg_number = _LEG_NUMBERS.get(order)
+            if leg_number is not None:
+                st.relay_split_index[session] = leg_number - 1
 
         # The F0 carries one leg time/course/takeoff — file it on the finals leg.
         if created:
@@ -1015,6 +1031,19 @@ class _Cl2Engine(_BaseEngine):
             return
         is_relay = st.last_result_kind == "relay"
         base = (seq - 1) * _SPLITS_PER_RECORD
+        # Relay G0s carry whole-relay cumulative splits as one G0 record per leg, each
+        # restarting at slot 0. Offset this leg's slot positions by the cumulative
+        # distance of the preceding legs (the running leg index, seeded from each F0 leg
+        # number and advanced once per G0 record). Deriving distance from the leg index
+        # rather than a running count of recorded splits keeps the later marks correct
+        # when an interior split is blank or a final leg has no F0 record of its own.
+        leg_offset = 0
+        if is_relay:
+            relay = self._g0_relay(session)
+            if relay is not None:
+                idx = st.relay_split_index.get(relay.session, 0)
+                st.relay_split_index[relay.session] = idx + 1
+                leg_offset = idx * relay.event.leg_distance()
         for j in range(_SPLITS_PER_RECORD):
             start = _FIRST_SPLIT_COL + j * _SPLIT_WIDTH
             tag, val = time_value(rec.raw(start, _SPLIT_WIDTH))
@@ -1023,36 +1052,33 @@ class _Cl2Engine(_BaseEngine):
                 # followed by a recorded later split (e.g. only the final
                 # cumulative time present) must not discard that real time.
                 continue
-            if is_relay:
-                # Relay G0s carry whole-relay cumulative splits spread across the
-                # successive per-leg records; each leg's record restarts at slot 0,
-                # so the relay position is the running count of splits already on
-                # the relay row, not the per-record slot index. This yields
-                # 50/100/150/200 (and beyond for longer relays) instead of every
-                # leg's split collapsing to the same distance.
-                distance = increment * (len(target_splits) + 1)
-            else:
-                distance = increment * (base + j + 1)
+            distance = leg_offset + increment * (base + j + 1)
             self._append_split(
                 rec, target_splits, distance, tag, val, split_type, column=f"{start}/8"
             )
+
+    def _g0_relay(self, session: Session | None) -> Relay | None:
+        """Resolve the relay a G0's splits belong to (by session, else finals/first)."""
+        st = self.state
+        assert st is not None
+        if not st.current_relays:
+            return None
+        return (
+            (st.current_relays.get(session) if session is not None else None)
+            or st.current_relays.get(Session.FINALS)
+            or next(iter(st.current_relays.values()))
+        )
 
     def _g0_target(self, rec: Record, session: Session | None) -> list[Split] | None:
         st = self.state
         assert st is not None
         if st.last_result_kind == "relay":
-            if not st.current_relays:
-                return None
             # Whole-relay cumulative splits belong on the relay row (matching the
             # `.hy3` reader and `Relay.splits` semantics), not on an individual
             # leg. Attaching here also rescues relays whose G0s follow the E0
             # directly with no F0 leg records (which would otherwise be orphaned).
-            relay = (
-                (st.current_relays.get(session) if session is not None else None)
-                or st.current_relays.get(Session.FINALS)
-                or next(iter(st.current_relays.values()))
-            )
-            return relay.splits
+            relay = self._g0_relay(session)
+            return relay.splits if relay is not None else None
         if st.last_result_kind == "individual":
             if not st.current_individual_swims:
                 return None

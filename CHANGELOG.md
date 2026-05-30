@@ -4,6 +4,14 @@ All notable changes to `tunas` are documented here in Keep a Changelog format, a
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-05-30
+
+### Fixed
+- **`read_hy3` member ID stored in the wrong field**: the 14-character `.hy3` `D1` member ID (cols 70–83) was written to `Swimmer.id_short`, leaving `id_long` unset — the opposite of `read_cl2`, whose `id_short`/`id_long` hold the 12- and 14-char forms. The 14-char ID now populates `id_long`, and `id_short` is derived as its 12-char prefix, so the same swimmer carries matching IDs across a meet's `.cl2` and `.hy3` exports. (Rare legacy DOB-based IDs whose stored 12-char form differs from the 14-char prefix cannot be recovered from the `.hy3` alone.)
+- **`read_hy3` never set `IndividualSwim.attach_status`**: every Hy-Tek individual swim defaulted to `ATTACHED`, even for athletes under the `UN`/`Unattached` team. The status is now derived from the team (matching `read_cl2`), so unattached swims are marked `UNATTACHED`.
+- **`read_hy3` read the wrong column for `swimmer_age_class`**: it took the numeric Age field (cols 98–99), yielding `'0'` where `read_cl2` reports the grade/class (`JR`, `SO`, …). It now prefers a real (non-zero) age and otherwise falls back to the `D1` Grade/Class field (cols 100–101), matching the single "age or class" field `read_cl2` reads from the SDIF `D0`.
+- **`read_cl2` relay split distances shifted short on missing splits**: relay `G0` cumulative distances were derived from a running count of recorded splits, so a blank interior split — or a final leg with a `G0` but no `F0` record of its own (`NO SWIMMER NAME`) — shifted every later mark down one increment (e.g. a 4×50's final mark labeled `150` instead of `200`). The distance is now derived from a running leg index (seeded from each `F0` leg number, advanced once per `G0` record), so missing interior splits and unnamed final legs no longer displace the remaining marks.
+
 ## [0.6.0] — 2026-05-29
 
 ### Changed

@@ -167,6 +167,9 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
             number = fld(line, 4, 5)
             if not fld(line, 89, 8):
                 warnings[("D1", "birthday", "MISSING", "RECOVERED")] += 1
+            # Cols 70-83 hold the 14-char SWIMS member ID (-> id_long); id_short is its
+            # 12-char prefix, matching the SDIF reader's distinct 12-char USS# field.
+            member = fld(line, 70, 14)
             sw = {
                 "athlete_number": number,
                 "sex": _SEX[fld(line, 3, 1)],
@@ -174,7 +177,7 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
                 "first_name": fld(line, 29, 20),
                 "preferred_first_name": fld(line, 49, 20) or None,
                 "middle_initial": fld(line, 69, 1) or None,
-                "id_short": fld(line, 70, 14) or None,
+                "id_short": member[:12] if member else None,
                 "birthday": parse_date(fld(line, 89, 8)),
                 "club_team_code": club["team_code"] if club else None,
                 "swims": [],
@@ -183,7 +186,11 @@ def build() -> dict:  # noqa: C901 — mirrors the parser's record state machine
             swim_order.append(number)
             if club is not None:
                 club["swimmer_ids"].append(number)
-            current_age = fld(line, 98, 2) or None
+            # cl2 packs a single "age or class" code; .hy3 separates Age (cols 98-99)
+            # from Grade/Class (cols 100-101). Prefer a real (non-zero) age, else grade.
+            age = fld(line, 98, 2)
+            grade = fld(line, 100, 2)
+            current_age = age if (age and age.lstrip("0")) else (grade or None)
             current_swim = current_relay = None
             last_leaf = None
 

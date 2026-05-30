@@ -19,6 +19,7 @@ from tunas._parser.fields import Record, time_value
 from tunas._parser.ids import normalize_id
 from tunas._parser.state import Hy3Entry, Hy3RelayEntry, Hy3State
 from tunas.enums import (
+    AttachStatus,
     Course,
     Hy3FileType,
     RelayLegOrder,
@@ -384,12 +385,17 @@ class _Hy3Engine(_BaseEngine):
             st.last_result_kind = None
             return
 
+        # The D1 "USA-S Member ID" field (cols 70-83) is the 14-char SWIMS ID, which
+        # belongs in `id_long`; `read_cl2` stores its 12-char USS# prefix in `id_short`,
+        # so derive the same prefix here (cl2's own `id_short == id_long[:12]`).
+        member_id = normalize_id(rec.raw(70, 14))
         swimmer = Swimmer(
             meet=st.meet,
             first_name=first,
             last_name=last,
             sex=sex,
-            id_short=normalize_id(rec.raw(70, 14)),
+            id_short=member_id[:12] if member_id else None,
+            id_long=member_id,
             middle_initial=rec.text(69, 1),
             preferred_first_name=rec.text(49, 20),
             birthday=self._date(rec, 89, 8, "birthday", "89/8", "M2"),
@@ -399,7 +405,13 @@ class _Hy3Engine(_BaseEngine):
         self._attach_swimmer(st.meet, swimmer)
         st.swimmers_by_number[number] = swimmer
         st.current_swimmer = swimmer
-        st.current_age_class = rec.text(98, 2)
+        # cl2 stores a single "age or class" code (D0 cols 64-65): the numeric age for
+        # most meets, or a school grade (JR/SO/FR/...) for scholastic meets. `.hy3`
+        # splits these into Age (cols 98-99) and Grade/Class (cols 100-101). Mirror cl2
+        # by preferring a real (non-zero) age and falling back to the grade, so both
+        # readers surface the same value the meet recorded.
+        age = rec.text(98, 2)
+        st.current_age_class = age if (age and age.lstrip("0")) else rec.text(100, 2)
         st.current_individual_swim = None
         st.current_relay = None
         st.last_result_kind = None
@@ -482,6 +494,9 @@ class _Hy3Engine(_BaseEngine):
             backup_times=self._backup_times(rec),
             swimmer=entry.swimmer,
             swimmer_age_class=st.current_age_class,
+            # `.hy3` has no per-entry attach flag; unattached is team-level (the
+            # `C1 UN Unattached` team sets `st.unattached`), matching `read_cl2`.
+            attach_status=AttachStatus.UNATTACHED if st.unattached else AttachStatus.ATTACHED,
         )
         entry.swimmer.swims.append(swim)
         self._attach_result(st.meet, swim)
