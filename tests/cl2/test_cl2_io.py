@@ -39,6 +39,19 @@ def test_file_path(tmp_path: object) -> None:
     assert archive.report.files_read == 1
 
 
+def test_file_with_a_utf8_bom(tmp_path: object) -> None:
+    # Decoded as CP-1252 (the default), a UTF-8 BOM reads as "ï»¿": three extra
+    # characters that would push the A0 past the record width and drop it.
+    p = os.path.join(str(tmp_path), "meet.cl2")
+    with open(p, "wb") as fh:
+        fh.write(b"\xef\xbb\xbf" + _single_meet_text().encode("cp1252"))
+    archive = next(iter(read_cl2(p)))
+    assert archive.meets[0].source_file is not None
+    without_bom = next(iter(read_cl2(io.StringIO(_single_meet_text()))))
+    reasons = [w.reason for w in archive.report.warnings]
+    assert reasons == [w.reason for w in without_bom.report.warnings]
+
+
 def test_directory_walk(tmp_path: object) -> None:
     d = str(tmp_path)
     for name in ("a.cl2", "b.CL2", "ignore.txt"):

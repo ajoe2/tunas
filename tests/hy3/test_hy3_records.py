@@ -161,6 +161,16 @@ def test_c1_team_code_without_lsc() -> None:
     assert club.lsc is None
 
 
+def test_c1_team_code_keeps_an_lsc_it_does_not_know() -> None:
+    # read_cl2 keeps whatever LSC its C1 code carries, so an unknown one (here
+    # "US") must still prefix the code for the club to match across the files.
+    c1 = hy3_rec((1, "C1"), (3, "MAC"), (8, "Some Team"), (54, "US"))
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1, d1(), e1(), e2()])
+    club = archive.meets[0].clubs[0]
+    assert club.team_code == "USMAC"
+    assert club.lsc is None
+
+
 def test_c3_email() -> None:
     c3 = hy3_rec((1, "C3"), (93, "coach@pasa.org"))
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c3, d1(), e1(), e2()])

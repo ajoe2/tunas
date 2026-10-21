@@ -312,9 +312,11 @@ class _Hy3Engine(_BaseEngine):
             return
         st.unattached = False
         # Prefix the LSC code so the team code matches `read_cl2` (e.g. "PCSCSC",
-        # not "SCSC"); `.cl2` stores the LSC-prefixed code in its C1 record. Falls
-        # back to the bare code when the LSC is absent, as `read_cl2` does.
-        team_code = f"{lsc.value}{abbrev}" if lsc else abbrev
+        # not "SCSC"); `.cl2` stores the LSC-prefixed code in its C1 record, even
+        # for a code `LSC` doesn't know. Falls back to the bare code when the LSC
+        # is absent, as `read_cl2` does.
+        lsc_code = rec.text(54, 2)
+        team_code = f"{lsc_code}{abbrev}" if lsc_code else abbrev
         key = (team_code, lsc)
         existing = st.clubs_by_key.get(key)
         if existing is not None:

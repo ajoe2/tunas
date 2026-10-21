@@ -224,6 +224,32 @@ def test_relay_leg_splits_derived_and_rebased() -> None:
     assert [(s.distance, str(s.time)) for s in leg2.splits] == [(50, "24.96"), (100, "54.65")]
 
 
+def test_relay_leg_splits_without_the_leg_start_mark_have_no_time() -> None:
+    # Re-basing needs the relay's mark at the leg start. Without it the relay's
+    # running time would pass for the leg's own (a 50 leg reading 1:44.17).
+    m = _meet()
+    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
+    relay.splits = [
+        Split(distance=d, time=Time.parse(t), split_type=SplitType.CUMULATIVE)
+        for d, t in [(50, "23.84"), (150, "1:14.48"), (200, "1:44.17")]  # no 100 mark
+    ]
+    leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
+    assert [(s.distance, s.time) for s in leg2.splits] == [(50, None), (100, None)]
+
+
+def test_relay_leg_splits_ignore_a_mark_before_the_leg_start() -> None:
+    # A corrupt mark earlier than the leg's start can't be re-based (and must not
+    # raise from a property while iterating splits).
+    m = _meet()
+    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg
+    relay.splits = [
+        Split(distance=d, time=Time.parse(t), split_type=SplitType.CUMULATIVE)
+        for d, t in [(100, "49.52"), (150, "45.00"), (200, "1:44.17")]
+    ]
+    leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
+    assert [(s.distance, s.time) for s in leg2.splits] == [(50, None), (100, Time.parse("54.65"))]
+
+
 def test_relay_leg_splits_interval_type_keeps_time() -> None:
     # INTERVAL splits already carry per-segment times: only the distance is
     # re-based to the leg, the time is passed through unchanged (not subtracted).

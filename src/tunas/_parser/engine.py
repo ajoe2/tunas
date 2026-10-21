@@ -31,6 +31,10 @@ from tunas.geography import Country
 from tunas.models import CitizenshipOrCountry, Meet, MeetResult, SourceFile, Split, Swimmer
 from tunas.time import Time
 
+# A byte-order mark as it reaches the first line: decoded (U+FEFF), or a UTF-8
+# BOM read with the default single-byte CP-1252 decoding, which makes it "ï»¿".
+_BOMS = ("﻿", "ï»¿")
+
 
 class _BaseEngine:
     """Stateful fixed-width parser. ``parse_source`` resets all per-file state, so one
@@ -72,7 +76,8 @@ class _BaseEngine:
             if not isinstance(raw, str):
                 raise TypeError(f"{self.READER} requires a text source yielding str, not bytes")
             if first:
-                raw = raw.removeprefix("﻿")
+                for bom in _BOMS:
+                    raw = raw.removeprefix(bom)
                 first = False
             self._feed(raw, line_no)
         self._finish_file()

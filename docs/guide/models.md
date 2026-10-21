@@ -79,8 +79,10 @@ whole-relay cumulative marks on `Relay.splits` (e.g. 50/100/150/200 for a 4×50)
 populated identically by both readers. Each leg's `RelaySwim.splits` is **derived
 from that row** — the marks swum during the leg, re-based to the leg start so the
 leg reads like a flat-start swim (distances from 0, cumulative time from the
-leg's takeoff). It is empty when there is nothing to derive (the relay carries no
-splits, or the slot is an alternate), so it keeps the uniform `Swim.splits` type:
+leg's takeoff). A cumulative split's `time` is `None` when the relay has no mark at
+the leg's start, since the takeoff time it is measured from is then unknown. It is
+empty when there is nothing to derive (the relay carries no splits, or the slot is
+an alternate), so it keeps the uniform `Swim.splits` type:
 
 ```python
 relay.splits          # [Split(50, 31.60), Split(100, 1:10.63), Split(150, 1:40.63), Split(200, 2:16.27)]

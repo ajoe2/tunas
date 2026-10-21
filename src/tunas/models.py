@@ -489,7 +489,9 @@ class RelaySwim(Swim):
         splits are the marks swum during that leg, re-based to the leg start so
         the leg reads like a flat-start swim: distances count from 0 and a
         cumulative time is measured from the leg's takeoff. (Interval splits keep
-        their per-segment time; only the distance is re-based.)
+        their per-segment time; only the distance is re-based.) A cumulative
+        split's time is None when the relay has no mark at the leg's start: the
+        takeoff time it would be measured from is unknown.
 
         Empty when there is nothing to derive — the relay carries no splits, the
         slot is an alternate / has no leg number, or no relay mark falls within
@@ -511,10 +513,11 @@ class RelaySwim(Swim):
         )
         derived: list[Split] = []
         for s in window:
-            if s.split_type is SplitType.CUMULATIVE and start is not None and s.time is not None:
-                time: Time | None = s.time - start
-            else:
-                time = s.time
+            time = s.time
+            if s.split_type is SplitType.CUMULATIVE and time is not None:
+                # Without the leg-start mark the relay's running time would pass
+                # for the leg's; a mark before the leg start is corrupt.
+                time = time - start if start is not None and time >= start else None
             derived.append(Split(distance=s.distance - lo, time=time, split_type=s.split_type))
         return derived
 

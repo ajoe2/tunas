@@ -4,6 +4,11 @@ All notable changes to `tunas` are documented here in Keep a Changelog format, a
 
 ## [Unreleased]
 
+### Fixed
+- **Relay leg splits showed the relay's running time**: when a relay had no split at a leg's starting exchange (a missed touch), `RelaySwim.splits` could not re-base the leg and returned the relay's cumulative marks instead, still labelled `CUMULATIVE` at leg-relative distances, so a 50-yard leg could read `2:36.23`. Those splits now have `time=None`. A corrupt mark earlier than the leg's start also no longer raises from the property.
+- **UTF-8 byte-order mark on files read from disk**: decoded as CP-1252 (the default), a UTF-8 BOM arrives as `ï»¿`, which the BOM stripping missed. The first record then overflowed the record width and was dropped, losing the `A0`/`A1` file header, and `strict=True` failed the file. It is now stripped like a decoded BOM.
+- **`read_hy3` club code with an unknown LSC**: a `C1` whose LSC field held a code `LSC` doesn't know (e.g. `US`) kept the bare team code, while `read_cl2` keeps whatever prefix its SDIF code carries, so the same club differed between a meet's `.cl2` and `.hy3`. The team code is now prefixed with the LSC field as written.
+
 ## [0.6.1] — 2026-05-30
 
 ### Fixed
