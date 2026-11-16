@@ -3,12 +3,12 @@
  "report": {
   "files_read": 1,
   "meets_parsed": 1,
-  "swimmers_parsed": 136,
-  "individual_swims_parsed": 416,
+  "swimmers_parsed": 137,
+  "individual_swims_parsed": 420,
   "relays_parsed": 28,
-  "splits_parsed": 865,
-  "records_skipped": 2,
-  "fields_recovered": 354
+  "splits_parsed": 869,
+  "records_skipped": 0,
+  "fields_recovered": 356
  },
  "warnings": [
   {
@@ -36,7 +36,7 @@
    "record_type": "D0",
    "field": "id_short",
    "kind": "MISSING",
-   "severity": "SKIPPED",
+   "severity": "RECOVERED",
    "count": 2
   },
   {
@@ -138,8 +138,8 @@
    "lsc": null,
    "full_name": "Wallenberg",
    "country": null,
-   "swimmer_count": 0,
-   "individual_count": 0,
+   "swimmer_count": 1,
+   "individual_count": 4,
    "relay_count": 0
   },
   {
@@ -153,6 +153,94 @@
   }
  ],
  "swimmers": [
+  {
+   "id_short": null,
+   "id_long": null,
+   "first_name": "Nehemiah",
+   "last_name": "Chan",
+   "middle_initial": null,
+   "preferred_first_name": null,
+   "sex": "MALE",
+   "birthday": null,
+   "citizenship": null,
+   "club_team_code": "R5WALL",
+   "swims": [
+    {
+     "is_relay_leg": false,
+     "session": "PRELIMS",
+     "status": "OK",
+     "time": "28.66",
+     "rank": 1,
+     "splits": [],
+     "event": "FLY_50_SCY",
+     "event_sex": "MALE",
+     "event_min_age": null,
+     "event_max_age": null,
+     "seed_time": "29.98"
+    },
+    {
+     "is_relay_leg": false,
+     "session": "FINALS",
+     "status": "OK",
+     "time": "29.07",
+     "rank": 1,
+     "splits": [],
+     "event": "FLY_50_SCY",
+     "event_sex": "MALE",
+     "event_min_age": null,
+     "event_max_age": null,
+     "seed_time": "29.98"
+    },
+    {
+     "is_relay_leg": false,
+     "session": "PRELIMS",
+     "status": "OK",
+     "time": "1:03.16",
+     "rank": 4,
+     "splits": [
+      {
+       "distance": 50,
+       "time": "31.05",
+       "split_type": "CUMULATIVE"
+      },
+      {
+       "distance": 100,
+       "time": "1:03.16",
+       "split_type": "CUMULATIVE"
+      }
+     ],
+     "event": "FREE_100_SCY",
+     "event_sex": "MALE",
+     "event_min_age": null,
+     "event_max_age": null,
+     "seed_time": "1:05.32"
+    },
+    {
+     "is_relay_leg": false,
+     "session": "FINALS",
+     "status": "OK",
+     "time": "1:03.20",
+     "rank": 4,
+     "splits": [
+      {
+       "distance": 50,
+       "time": "30.68",
+       "split_type": "CUMULATIVE"
+      },
+      {
+       "distance": 100,
+       "time": "1:03.20",
+       "split_type": "CUMULATIVE"
+      }
+     ],
+     "event": "FREE_100_SCY",
+     "event_sex": "MALE",
+     "event_min_age": null,
+     "event_max_age": null,
+     "seed_time": "1:05.32"
+    }
+   ]
+  },
   {
    "id_short": "05FB91964962",
    "id_long": "05FB9196496243",
@@ -14127,7 +14215,7 @@
   }
  ],
  "_split_breakdown": {
-  "individual": 741,
+  "individual": 745,
   "relay": 124
  }
 }

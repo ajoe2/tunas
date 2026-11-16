@@ -131,6 +131,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
     clubs: dict[str, dict] = {}
     swimmers: dict[int, dict] = {}  # keyed by id() of the swimmer dict
     by_id: dict[str, dict] = {}  # keyed by member id_short / id_long
+    without_id: dict[tuple, dict] = {}  # swimmers whose D0 carried no id at all
     order: list[int] = []
     relays: list[dict] = []
     warnings: Counter[tuple] = Counter()
@@ -186,10 +187,26 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
         p, pending = pending, None
         sw = p["swimmer"]
         if sw["id_short"] is None and sw["id_long"] is None:
-            # No identity: discard the record (and any splits a trailing G0 counted).
-            counts["splits"] -= sum(len(s["splits"]) for s in p["swims"])
-            warnings[("D0", "id_short", "MISSING", "SKIPPED")] += 1
-            counts["records_skipped"] += 1
+            # No identity: the swims are kept under a swimmer without an ID, one
+            # per person (same name, sex, birthday and club).
+            warnings[("D0", "id_short", "MISSING", "RECOVERED")] += 1
+            key = (
+                sw["last_name"].casefold(),
+                sw["first_name"].casefold(),
+                (sw["middle_initial"] or "").casefold(),
+                sw["sex"],
+                sw["birthday"],
+                id(p["club"]) if p["club"] is not None else None,
+            )
+            target = without_id.get(key)
+            if target is None:
+                without_id[key] = register(sw, p["swims"], p["club"])
+            else:
+                for s in p["swims"]:
+                    target["swims"].append(s)
+                    counts["individual_swims"] += 1
+                    if p["club"] is not None:
+                        p["club"]["individual_count"] += 1
         else:
             register(sw, p["swims"], p["club"])
 

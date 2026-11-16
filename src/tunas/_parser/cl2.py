@@ -323,10 +323,9 @@ class _Cl2Engine(_BaseEngine):
         p = st.pending_individual
         st.pending_individual = None
         if p.swimmer.id_short is None and p.swimmer.id_long is None:
-            # The record is discarded, so back out any splits a trailing G0
-            # already counted against the now-dropped results (keeps
-            # splits_parsed consistent with the object graph).
-            self.report.splits_parsed -= sum(len(r.splits) for r in p.results)
+            # No identity to key on: the swim is real, so keep it under a swimmer
+            # without an ID. Consecutive D0s for the same person (same name, sex,
+            # birthday and club) share one swimmer rather than one each.
             self._emit(
                 self.source,
                 p.line_no,
@@ -334,13 +333,38 @@ class _Cl2Engine(_BaseEngine):
                 "id_short",
                 "40/12",
                 "M2",
-                Severity.SKIPPED,
+                Severity.RECOVERED,
                 IssueKind.MISSING,
-                "no USS# (id_short or id_long); record skipped",
+                "no USS# (id_short or id_long); swimmer kept without an ID",
                 p.raw_line,
             )
+            self._register_swimmer_without_id(p.swimmer, p.results)
             return
         self._register_swimmer(p.swimmer, p.results)
+
+    def _register_swimmer_without_id(
+        self, swimmer: Swimmer, results: list[IndividualSwim]
+    ) -> Swimmer:
+        st = self.state
+        assert st is not None
+        key = (
+            swimmer.last_name.casefold(),
+            swimmer.first_name.casefold(),
+            (swimmer.middle_initial or "").casefold(),
+            swimmer.sex,
+            swimmer.birthday,
+            id(swimmer.club) if swimmer.club is not None else None,
+        )
+        target = st.swimmers_without_id.get(key)
+        if target is None:
+            target = st.swimmers_without_id[key] = swimmer
+            self._attach_swimmer(st.meet, target)
+        for r in results:
+            r.swimmer = target
+            target.swims.append(r)
+            self._attach_result(st.meet, r)
+            self.report.individual_swims_parsed += 1
+        return target
 
     def _resolve_relay_swimmer(
         self,

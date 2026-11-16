@@ -154,10 +154,23 @@ def test_d0_missing_date_kept() -> None:
     assert archive.report.warnings_for(record_type="D0", field="date")
 
 
-def test_d0_missing_id_skipped() -> None:
+def test_d0_missing_id_kept_without_an_id() -> None:
     archive = parse_lines([A0, B1, C1, d0(uss=""), Z0])
-    assert archive.meets[0].swimmers == []
-    assert archive.report.records_skipped == 1
+    (sw,) = archive.meets[0].swimmers
+    assert sw.id_short is None and sw.id_long is None
+    assert len(sw.individual_swims) == 1
+    assert sw.individual_swims[0].swimmer is sw
+    assert sw in archive.meets[0].clubs[0].swimmers
+    assert archive.report.records_skipped == 0
+    (warning,) = archive.report.warnings_for(record_type="D0", field="id_short")
+    assert warning.severity.name == "RECOVERED"
+
+
+def test_d0s_missing_id_for_one_person_share_a_swimmer() -> None:
+    archive = parse_lines([A0, B1, C1, d0(uss=""), d0(uss=""), Z0])
+    (sw,) = archive.meets[0].swimmers
+    assert len(sw.individual_swims) == 2
+    assert archive.report.individual_swims_parsed == 2
 
 
 def test_d0_id_long_fallback() -> None:

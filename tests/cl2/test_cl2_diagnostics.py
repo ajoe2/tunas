@@ -54,11 +54,11 @@ def test_m1_missing_meet_start_date() -> None:
 # -- M2 identity: skip D0, keep F0 ------------------------------------------- #
 
 
-def test_m2_identity_d0_skipped() -> None:
+def test_m2_identity_d0_kept_without_an_id() -> None:
     archive = parse_lines([A0, B1, C1, d0(uss=""), Z0])
-    assert archive.meets[0].swimmers == []
-    assert archive.report.records_skipped == 1
-    w = archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)[0]
+    assert len(archive.meets[0].swimmers) == 1
+    assert archive.report.records_skipped == 0
+    w = archive.report.warnings_for(record_type="D0", severity=Severity.RECOVERED)[0]
     assert w.kind is IssueKind.MISSING
     assert w.raw_line.startswith("D0")
 
@@ -232,7 +232,7 @@ def test_parse_warning_shape() -> None:
 
 
 def test_report_by_severity_and_filters() -> None:
-    archive = parse_lines([A0, B1, C1, d0(uss=""), d0(birth=""), Z0])
+    archive = parse_lines([A0, B1, C1, d0(esex=""), d0(birth=""), Z0])
     by_sev = archive.report.by_severity
     assert by_sev[Severity.SKIPPED]
     assert by_sev[Severity.RECOVERED]

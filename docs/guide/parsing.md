@@ -183,7 +183,7 @@ A swim's event fields (sex, distance, stroke, age) are not treated as fatal M1. 
 ### M2 — recoverable (kept as `None`)
 
 Data-quality fields skip corrupt or blank values with a `RECOVERED` warning and set the field to `None` in lenient mode, or raise `ParseError` in strict mode:
-- **Swimmer ID (USS#):** Uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is skipped (`SKIPPED`). An `F0` record lacking both is kept with `swimmer=None` (`RECOVERED`).
+- **Swimmer ID (USS#):** Uses `id_short` (12-char), falling back to `id_long` (14-char) from subsequent `D3` records. A `D0` record lacking both is kept under a swimmer with no ID (`RECOVERED`); consecutive ID-less records with the same name, sex, birthday and club share one swimmer. An `F0` record lacking both is kept with `swimmer=None` (`RECOVERED`).
 
 ### Conditional markers
 
@@ -209,7 +209,7 @@ Outcome codes in time fields are kept as official results with `status` set to t
 |---|---|---|
 | M1 field missing/unparseable | **raise `ParseError`** | raise `ParseError` |
 | Event fields invalid, partial, or unresolvable | skip record + warn (`SKIPPED`) | raise `ParseError` |
-| `D0` with no `id_short` **and** no `id_long` | skip record + warn (`SKIPPED`) | raise `ParseError` |
+| `D0` with no `id_short` **and** no `id_long` | keep under a swimmer with no ID + warn (`RECOVERED`) | raise `ParseError` |
 | `F0` with no `id_short`/`id_long` | keep leg, `swimmer=None` + warn | raise `ParseError` |
 | Other M2 (dates, birthdate, etc.) | keep record, null field + warn | raise `ParseError` |
 | Result outcome code (`NT`/`DQ`/etc.) | keep result, `status` set, `time=None` | keep result |

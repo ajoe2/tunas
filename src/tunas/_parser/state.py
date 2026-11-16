@@ -36,6 +36,9 @@ class ParserState:
     meet: Meet
     clubs_by_key: dict[tuple[str, LSC | None], Club] = field(default_factory=dict)
     swimmers_by_id: dict[str, Swimmer] = field(default_factory=dict)
+    # Swimmers whose D0 carried no USS# at all, keyed by name, sex, birthday and
+    # club so one person's consecutive records share a swimmer.
+    swimmers_without_id: dict[tuple[object, ...], Swimmer] = field(default_factory=dict)
     current_club: Club | None = None
     unattached: bool = False
     current_swimmer: Swimmer | None = None
