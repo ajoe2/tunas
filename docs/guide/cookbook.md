@@ -1,56 +1,35 @@
 # Cookbook
 
-Runnable recipes for common tasks. All recipes assume:
+Recipes for common tasks. All assume:
 
 ```python
 from tunas import (
     read_cl2,
-    Time, Event, Sex, Stroke, Course, Session, TimeStandard,
+    Time, Event, Session, TimeStandard,
     qualifies_for, all_qualified, standard_time,
 )
 ```
-`read_cl2` yields one [`MeetArchive`](parsing.md#meetarchive) per source file, each holding that file's `meets` and its own `report`. Many recipes below just want every meet, so they flatten the archives up front:
 
-```python
-meets = [m for arc in read_cl2("season/") for m in arc.meets]
-```
+Most recipes flatten the per-file [`MeetArchive`](parsing.md#meetarchive)s into one list of meets. Swimmers and clubs belong to a single meet, so cross-meet analysis needs explicit indexing.
 
-Because swimmers and clubs are scoped to single meets, cross-meet analysis requires explicit iteration or indexing.
-
-## Helper Functions
-
-Common helper functions to compute a swimmer's age and identify fastest swims:
+## Helper functions
 
 ```python
 def age_at(swimmer, on_date):
-    """Compute swimmer age in years on a specific date, or return None."""
+    """Swimmer's age in years on a date, or None."""
     birthday = swimmer.birthday
     if birthday is None or on_date is None:
         return None
     return on_date.year - birthday.year - ((on_date.month, on_date.day) < (birthday.month, birthday.day))
 
 def fastest(swims):
-    """Return the fastest timed swim from an iterable, or None."""
+    """The fastest timed swim, or None."""
     timed = [s for s in swims if s.time is not None]
     return min(timed, key=lambda s: s.time, default=None)
 ```
 
 
-## Print all individual swims
-
-Print every individual swim across all meets:
-
-```python
-meets = [m for arc in read_cl2("season/") for m in arc.meets]
-
-for meet in meets:
-    for r in meet.individual_swims:
-        print(meet.name, r.swimmer.full_name, r.event.name, r.time)
-```
-
 ## Top 10 fastest swimmers in a club for an event
-
-Find the top 10 fastest swimmers in a club for a specific event:
 
 ```python
 def top_ten(club, event):
@@ -69,8 +48,6 @@ for swimmer, time in top_ten(club, Event.FREE_100_SCY):
 ```
 
 ## Find swimmers qualifying for a cut
-
-Find swimmers who qualified for a specific motivational standard (e.g., `AAAA`):
 
 ```python
 def has_qualified(swimmer, event, standard):
@@ -95,7 +72,7 @@ print(f"{len(qualifiers)} AAAA performances in 100 SCY Free")
 
 ## Build a cross-meet swimmer index
 
-Reconcile and track a swimmer across multiple meets using `id_short`:
+Track swimmers across meets by `id_short`:
 
 ```python
 from collections import defaultdict
@@ -122,7 +99,7 @@ for r in progression("49AC52F69618", Event.FREE_100_SCY):
 
 ## Export to CSV
 
-Export all parsed individual swims to a CSV file (including DQs and scratches):
+Every individual swim, including DQs and scratches:
 
 ```python
 import csv
@@ -177,8 +154,6 @@ for event in events:
 
 ## Relay-leg analysis
 
-Find the fastest relay legs for a given relay event:
-
 ```python
 def all_relay_swims(meet, event):
     """Yield (swimmer, time) for every leg of the given relay event."""
@@ -198,8 +173,6 @@ for swimmer, time in legs[:10]:
 
 ## Get all motivational standards achieved
 
-Find all motivational standards achieved by a swimmer across events:
-
 ```python
 def standards_table(swimmer):
     """Return a dict: event -> list[TimeStandard] for every event the swimmer hit."""
@@ -216,8 +189,6 @@ def standards_table(swimmer):
 ```
 
 ## Print parse summary
-
-Summarize parsing metrics and warning counts:
 
 ```python
 from tunas import ParseReport
@@ -241,9 +212,7 @@ if report.has_warnings:
         print(f"    ... and {len(report.warnings) - 5} more")
 ```
 
-## Treat warnings as errors post-parse
-
-Treat parsing warnings as fatal errors post-parse:
+## Treat warnings as errors after parsing
 
 ```python
 warnings = [w for arc in read_cl2("results.cl2") for w in arc.report.warnings]
@@ -254,24 +223,12 @@ if warnings:
     )
 ```
 
-## Analyze outcomes (DQs, Scratches, and Times)
-
-Compute disqualification and scratch rates across a meet:
+## Outcome rates (DQs, scratches)
 
 ```python
-from tunas import ResultStatus
-
-# Only official times
-official = [r for r in meet.individual_swims
-            if r.status is ResultStatus.OK]
-
-# Fastest legal swim in an event (ignores DQ/NS/etc.)
-def best_legal(swimmer, event):
-    times = [r for r in swimmer.swims_in(event)
-             if r.status is ResultStatus.OK and r.time is not None]
-    return min(times, key=lambda r: r.time, default=None)
-
 from collections import Counter
+
+from tunas import ResultStatus
 
 def status_breakdown(meet):
     """How many of each outcome across all individual swims at a meet?"""
@@ -289,12 +246,9 @@ for meet in meets:
 
 ## Work with splits
 
-Splits live on the individual swim (`IndividualSwim.splits`) or, for relays, on the relay
-row (`Relay.splits`) as whole-relay cumulative marks. A relay leg's `RelaySwim.splits` is
-*derived* from that row (re-based to the leg start), and empty when there is nothing to
-derive. Each `Split` has a cumulative `distance`, a `time`, and a `split_type` (`INTERVAL`
-or `CUMULATIVE`). This helper yields per-segment times regardless of how the file stored
-them (and works for a relay leg's derived splits too):
+Splits live on `IndividualSwim.splits` and, for relays, `Relay.splits` (legs derive their
+own; see [Data model](models.md#relay-legs-and-their-events)). This helper yields
+per-segment times whether the file stored `INTERVAL` or `CUMULATIVE` splits:
 
 ```python
 from tunas import SplitType
@@ -340,14 +294,12 @@ def gap_to(standard, swim, age, sex):
     cut = standard_time(standard, swim.event, age, sex)
     if cut is None or swim.time is None or swim.time <= cut:
         return None
-    return swim.time - cut   # ValueError-safe: only subtract when swim.time > cut
+    return swim.time - cut
 ```
 
 ## Compare prelims and finals
 
 ```python
-from tunas import Session
-
 def prelim_final(swimmer, event):
     """(prelim_time, final_time) for an event, when both were swum."""
     by_session = {s.session: s for s in swimmer.swims_in(event) if s.time is not None}
@@ -355,24 +307,9 @@ def prelim_final(swimmer, event):
     return (p.time, f.time) if p and f else None
 ```
 
-## Parse a whole season
-
-```python
-files = meets = 0
-for arc in read_cl2("season_archive/"):
-    files += 1
-    meets += len(arc.meets)
-print(files, "files,", meets, "meets")
-```
-
-The iterator is lazy and single-threaded: each file is parsed only as its archive is consumed and
-freed before the next is read, so peak memory stays flat no matter how large the corpus. To use
-multiple cores, shard the file list across separate processes. See [parsing.md](parsing.md#lazy-iteration)
-for details.
-
 ## Inspect file provenance
 
-Each meet links back to its `A0`/`Z0` file header through `meet.source_file`:
+`meet.source_file` holds the file header (`A0`/`Z0`, or `.hy3` `A1`):
 
 ```python
 meets = [m for arc in read_cl2("results.cl2") for m in arc.meets]
@@ -386,7 +323,7 @@ if src is not None:
 
 ## Print a swimmer's full standards table
 
-Building on `standards_table` above, render every standard a swimmer has achieved:
+Using `standards_table` from above:
 
 ```python
 def print_standards(swimmer):

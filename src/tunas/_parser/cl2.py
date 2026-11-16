@@ -21,7 +21,6 @@ from tunas._parser.fields import (
     int_value,
     time_value,
 )
-from tunas._parser.ids import normalize_id
 from tunas._parser.names import parse_name
 from tunas._parser.state import ParserState, PendingIndividual
 from tunas.enums import (
@@ -46,6 +45,7 @@ from tunas.enums import (
 from tunas.event import Event
 from tunas.geography import LSC, Country, State
 from tunas.models import (
+    _LEG_NUMBERS,
     CitizenshipOrCountry,
     Club,
     ClubEntryCounts,
@@ -69,14 +69,6 @@ _RELAY_LEG_SESSIONS: list[tuple[Session, int]] = [
     (Session.SWIM_OFFS, 78),
     (Session.FINALS, 79),
 ]
-# Relay leg position -> 1-based leg number (ALTERNATE/NOT_SWUM are absent), used to
-# offset a leg's G0 splits by the cumulative distance of the preceding legs.
-_LEG_NUMBERS: dict[RelayLegOrder, int] = {
-    RelayLegOrder.LEG_1: 1,
-    RelayLegOrder.LEG_2: 2,
-    RelayLegOrder.LEG_3: 3,
-    RelayLegOrder.LEG_4: 4,
-}
 _AFFILIATION_COLUMNS: list[tuple[int, Affiliation]] = [
     (34, Affiliation.JUNIOR_HIGH),
     (35, Affiliation.SENIOR_HIGH),
@@ -188,8 +180,7 @@ _Z0_CHECKS = (
 
 
 class _Cl2Engine(_BaseEngine):
-    """Stateful SDIF parser. ``parse_source`` resets per-file state, so one instance
-    can parse many files in turn (each call yields only that source's results)."""
+    """Stateful SDIF parser."""
 
     RECORD_WIDTH: ClassVar[int] = RECORD_WIDTH
     READER: ClassVar[str] = "read_cl2"
@@ -237,18 +228,9 @@ class _Cl2Engine(_BaseEngine):
     def _time_classes(
         self, rec: Record, start: int
     ) -> tuple[EventTimeClass | None, EventTimeClass | None]:
+        # Blank, "U" (no lower) and "O" (no upper) all resolve to None.
         raw = rec.raw(start, 2)
-
-        def parse_class(ch: str) -> EventTimeClass | None:
-            ch = ch.strip().upper()
-            if ch in ("", "U", "O"):  # blank / no-lower / no-upper
-                return None
-            try:
-                return EventTimeClass(ch)
-            except ValueError:
-                return None
-
-        return parse_class(raw[0:1]), parse_class(raw[1:2])
+        return _char_code(raw[0:1], EventTimeClass), _char_code(raw[1:2], EventTimeClass)
 
     def _place(
         self, rec: Record, start: int, field: str, column: str, championship: bool
@@ -266,9 +248,7 @@ class _Cl2Engine(_BaseEngine):
                     f"missing {field} at a championship meet",
                 )
             return None
-        if tag == "bad" or val is None or val <= 0:
-            return None
-        return val
+        return val if val is not None and val > 0 else None
 
     # -- swimmer registration ---------------------------------------------- #
 
@@ -288,12 +268,17 @@ class _Cl2Engine(_BaseEngine):
             self._merge_swimmer(target, swimmer)
         for k in keys:
             st.swimmers_by_id.setdefault(k, target)
+        self._attach_swims(target, results)
+        return target
+
+    def _attach_swims(self, swimmer: Swimmer, results: list[IndividualSwim]) -> None:
+        st = self.state
+        assert st is not None
         for r in results:
-            r.swimmer = target
-            target.swims.append(r)
+            r.swimmer = swimmer
+            swimmer.swims.append(r)
             self._attach_result(st.meet, r)
             self.report.individual_swims_parsed += 1
-        return target
 
     @staticmethod
     def _merge_swimmer(existing: Swimmer, other: Swimmer) -> None:
@@ -309,9 +294,7 @@ class _Cl2Engine(_BaseEngine):
         ):
             if getattr(existing, attr) is None and getattr(other, attr) is not None:
                 setattr(existing, attr, getattr(other, attr))
-        # Backfilling the club of a previously-unattached swimmer must also add the
-        # back-reference, or the swimmer ends up on `swimmer.club` yet missing from
-        # `club.swimmers` — breaking the invariant `_attach_swimmer` guarantees.
+        # Backfill the club's back-reference too, keeping club.swimmers consistent.
         if existing.club is None and other.club is not None:
             existing.club = other.club
             other.club.swimmers.append(existing)
@@ -323,9 +306,8 @@ class _Cl2Engine(_BaseEngine):
         p = st.pending_individual
         st.pending_individual = None
         if p.swimmer.id_short is None and p.swimmer.id_long is None:
-            # No identity to key on: the swim is real, so keep it under a swimmer
-            # without an ID. Consecutive D0s for the same person (same name, sex,
-            # birthday and club) share one swimmer rather than one each.
+            # No identity: keep the swim under a swimmer without an ID, shared by
+            # consecutive D0s with the same name, sex, birthday and club.
             self._emit(
                 self.source,
                 p.line_no,
@@ -359,16 +341,11 @@ class _Cl2Engine(_BaseEngine):
         if target is None:
             target = st.swimmers_without_id[key] = swimmer
             self._attach_swimmer(st.meet, target)
-        for r in results:
-            r.swimmer = target
-            target.swims.append(r)
-            self._attach_result(st.meet, r)
-            self.report.individual_swims_parsed += 1
+        self._attach_swims(target, results)
         return target
 
     def _resolve_relay_swimmer(
         self,
-        rec: Record,
         id_short: str | None,
         id_long: str | None,
         *,
@@ -421,9 +398,7 @@ class _Cl2Engine(_BaseEngine):
         if present:
             sw.registration = replace(sw.registration or SwimmerRegistration(), **present)  # type: ignore[arg-type]
 
-    # ===================================================================== #
-    # Record handlers
-    # ===================================================================== #
+    # -- record handlers --------------------------------------------------- #
 
     def _h_a0(self, rec: Record) -> None:
         self.source_file = SourceFile(
@@ -479,22 +454,8 @@ class _Cl2Engine(_BaseEngine):
     def _m2_code[E: StrEnum](
         self, rec: Record, start: int, length: int, enum_cls: type[E], field: str, column: str
     ) -> E | None:
-        tag, val = code_value(rec.raw(start, length), enum_cls)
-        if tag == "blank":
-            self._warn(
-                rec, field, column, "M2", Severity.RECOVERED, IssueKind.MISSING, f"missing {field}"
-            )
-        elif tag == "unknown":
-            self._warn(
-                rec,
-                field,
-                column,
-                "M2",
-                Severity.RECOVERED,
-                IssueKind.UNKNOWN_CODE,
-                f"unknown {field} code {rec.raw(start, length).strip()!r}",
-            )
-        return val
+        self._m2_text(rec, start, length, field, column)  # warns if blank
+        return self._code(rec, start, length, enum_cls, field, column, "M2")
 
     def _h_b2(self, rec: Record) -> None:
         if self.state is None:
@@ -589,13 +550,12 @@ class _Cl2Engine(_BaseEngine):
             return
         org = self._code(rec, 3, 1, Organization, "organization", "3/1", "M2")
         last, first, middle = parse_name(self._require_text(rec, 12, 28, "swimmer_name", "12/28"))
-        id_short = normalize_id(rec.raw(40, 12))
+        id_short = rec.text(40, 12)
         citizenship = self._citizenship(rec, 53, 3)
         birthday = self._date(rec, 56, 8, "birthday", "56/8", "M2")
         sex = self._require_code(rec, 66, 1, Sex, "sex", "66/1")
         age_class = rec.text(64, 2)
-        # A D0 with no time in any session is an entry (entries / psych-sheet
-        # files): it has no swim date, so a blank date is only flagged on results.
+        # A D0 with no time in any session is an unswum entry with no swim date.
         has_result = any(rec.raw(cols.time, 8).strip() for cols in _INDIVIDUAL_SESSIONS)
         date_of_swim = self._date(rec, 81, 8, "date", "81/8", "M2" if has_result else None)
 
@@ -632,12 +592,9 @@ class _Cl2Engine(_BaseEngine):
 
         results: list[IndividualSwim] = []
         if any(event_fields_present):
-            # Any invalid/partial/unresolvable event field means we cannot model the
-            # swim — skip the whole record (lenient) / raise (strict). This is NOT a
-            # fatal M1: one bad/odd record (e.g. a diving event with stroke "H") must
-            # not abort an otherwise-valid file.
-            # An entry is swum in the meet's course; its seed course only says where
-            # the seed was swum (a yards seed for a long-course meet, say).
+            # A bad event skips the record rather than being fatal, so one odd record
+            # (e.g. a diving event with stroke "H") doesn't abort the file. An entry
+            # is swum in the meet's course; its seed course is only where the seed was.
             course = (
                 self._event_course(rec, _D0_COURSE_COLS, st.meet.course)
                 if has_result
@@ -726,10 +683,9 @@ class _Cl2Engine(_BaseEngine):
     def _parse_session(
         self, rec: Record, cols: SessionColumns, champ: bool, noun: str
     ) -> _SessionResult | None:
-        """Parse one session's shared result fields, or ``None`` for a blank/bad time.
+        """Parse one session's result fields, or ``None`` for a blank/bad time.
 
-        Used for both individual swims and relays; ``noun`` ("time" / "relay time")
-        only tunes the warning text so the two callers read identically.
+        ``noun`` ("time" / "relay time") only tunes the warning text.
         """
         tag, val = time_value(rec.raw(cols.time, 8))
         if tag == "blank":
@@ -753,7 +709,7 @@ class _Cl2Engine(_BaseEngine):
         else:
             assert isinstance(val, Time)
             time = val
-            ctag, _cv = course_value(rec.raw(cols.course, 1))
+            ctag = course_value(rec.raw(cols.course, 1))[0]
             if ctag == "dq":
                 status = ResultStatus.DQ
             elif ctag == "blank":
@@ -783,9 +739,7 @@ class _Cl2Engine(_BaseEngine):
             if cols.place is not None
             else None
         )
-        points = None
-        if cols.points is not None:
-            _, points = decimal_value(rec.raw(cols.points, 4))
+        points = decimal_value(rec.raw(cols.points, 4))[1] if cols.points is not None else None
         return _SessionResult(
             session=cols.session,
             status=status,
@@ -848,7 +802,7 @@ class _Cl2Engine(_BaseEngine):
             self._skip_orphan(rec, "D3 with no current swimmer")
             return
         sw = st.current_swimmer
-        id_long = normalize_id(rec.raw(3, 14))
+        id_long = rec.text(3, 14)
         preferred = rec.text(17, 15)
         if id_long is not None and sw.id_long is None:
             sw.id_long = id_long
@@ -863,29 +817,18 @@ class _Cl2Engine(_BaseEngine):
         )
         self._update_registration(
             sw,
-            ethnicity_primary=self._ethnicity(eth[0:1]),
-            ethnicity_secondary=self._ethnicity(eth[1:2]),
+            ethnicity_primary=_char_code(eth[0:1], Ethnicity),
+            ethnicity_secondary=_char_code(eth[1:2], Ethnicity),
             affiliations=affiliations if affiliations else None,
         )
 
-        # If this D3 supplies the identity for a deferred (blank-id) D0, commit now;
-        # otherwise just make the long id resolvable for an already-registered swimmer.
+        # Commit a deferred blank-id D0 this D3 identifies; else index the long id.
         pending = st.pending_individual
         if pending is not None and pending.swimmer is sw and sw.id_long is not None:
             st.pending_individual = None
             st.current_swimmer = self._register_swimmer(sw, pending.results)
         elif id_long is not None:
             st.swimmers_by_id.setdefault(id_long, sw)
-
-    @staticmethod
-    def _ethnicity(ch: str) -> Ethnicity | None:
-        ch = ch.strip().upper()
-        if not ch:
-            return None
-        try:
-            return Ethnicity(ch)
-        except ValueError:
-            return None
 
     def _h_e0(self, rec: Record) -> None:
         st = self.state
@@ -902,7 +845,6 @@ class _Cl2Engine(_BaseEngine):
         # As for D0: an E0 with no time in any session is an entered relay.
         has_result = any(rec.raw(cols.time, 8).strip() for cols in _RELAY_SESSIONS)
         date_of_swim = self._date(rec, 38, 8, "date", "38/8", "M2" if has_result else None)
-        # Unresolvable relay event -> skip record (lenient) / raise (strict), not fatal.
         course = (
             self._event_course(rec, _E0_COURSE_COLS, st.meet.course)
             if has_result
@@ -993,15 +935,14 @@ class _Cl2Engine(_BaseEngine):
             return
         last, first, middle = parse_name(self._require_text(rec, 23, 28, "swimmer_name", "23/28"))
         sex = self._require_code(rec, 76, 1, Sex, "sex", "76/1")
-        id_short = normalize_id(rec.raw(51, 12))
-        id_long = normalize_id(rec.raw(93, 14))
+        id_short = rec.text(51, 12)
+        id_long = rec.text(93, 14)
         citizenship = self._citizenship(rec, 63, 3)
         birthday = self._date(rec, 66, 8, "birthday", "66/8", "M2")
         age_class = rec.text(74, 2)
         preferred = rec.text(107, 15)
 
         swimmer = self._resolve_relay_swimmer(
-            rec,
             id_short,
             id_long,
             first=first,
@@ -1025,7 +966,7 @@ class _Cl2Engine(_BaseEngine):
 
         leg_time = self._opt_time(rec, 80)
         leg_course = self._opt_course(rec, 88)
-        tk_tag, tk = decimal_value(rec.raw(89, 4))
+        tk = decimal_value(rec.raw(89, 4))[1]
         takeoff = round(tk * 100) if tk is not None else None
 
         created: dict[Session | None, RelaySwim] = {}
@@ -1038,52 +979,22 @@ class _Cl2Engine(_BaseEngine):
             relay = st.current_relays.get(session)
             if relay is None:
                 continue
-            leg = RelaySwim(
-                swimmer=swimmer,
-                relay=relay,
-                order=order,
-                status=relay.status,
-                swimmer_age_class=age_class,
-                citizenship=citizenship,
-            )
-            if order is RelayLegOrder.ALTERNATE:
-                relay.alternates.append(leg)
-            else:
-                relay.legs.append(leg)
-                if swimmer is not None:
-                    swimmer.swims.append(leg)
-            created[session] = leg
-            # Seed the G0 split-distance index from this leg's number so the leg's
-            # following G0 record lands at the right cumulative distance even if an
-            # earlier leg's split was blank (the index then advances per G0 record).
+            created[session] = _add_leg(relay, swimmer, order, age_class, citizenship)
+            # Seed the G0 split index from the leg number so this leg's G0 lands at the
+            # right distance even if an earlier leg's split was blank.
             leg_number = _LEG_NUMBERS.get(order)
             if leg_number is not None:
                 st.relay_split_index[session] = leg_number - 1
 
         entered = st.current_relays.get(None)
         if entered is not None:
-            # An entered relay has no session: honour whichever leg order is set
-            # (finals first). Entries files usually set none — the athlete is on
-            # the relay's roster with no leg yet — so list them as an unassigned
-            # roster slot (an alternate with order NOT_SWUM).
+            # An entered relay has no session: use whichever leg order is set (finals
+            # first). Entries files usually set none, giving an unassigned roster slot
+            # (an alternate with order NOT_SWUM).
             order = orders.get(Session.FINALS) or next(
                 iter(orders.values()), RelayLegOrder.NOT_SWUM
             )
-            leg = RelaySwim(
-                swimmer=swimmer,
-                relay=entered,
-                order=order,
-                status=entered.status,
-                swimmer_age_class=age_class,
-                citizenship=citizenship,
-            )
-            if order in (RelayLegOrder.NOT_SWUM, RelayLegOrder.ALTERNATE):
-                entered.alternates.append(leg)
-            else:
-                entered.legs.append(leg)
-                if swimmer is not None:
-                    swimmer.swims.append(leg)
-            created[None] = leg
+            created[None] = _add_leg(entered, swimmer, order, age_class, citizenship)
 
         # The F0 carries one leg time/course/takeoff — file it on the finals leg.
         if created:
@@ -1103,8 +1014,6 @@ class _Cl2Engine(_BaseEngine):
             return
         seq = self._require_int(rec, 56, 1, "sequence_number", "56/1")
         if seq < 1:
-            # Sequence is 1-based; a 0/negative value would yield negative split
-            # distances. Recover by treating it as the first record.
             self._warn(
                 rec,
                 "sequence_number",
@@ -1125,12 +1034,10 @@ class _Cl2Engine(_BaseEngine):
             return
         is_relay = st.last_result_kind == "relay"
         base = (seq - 1) * _SPLITS_PER_RECORD
-        # Relay G0s carry whole-relay cumulative splits as one G0 record per leg, each
-        # restarting at slot 0. Offset this leg's slot positions by the cumulative
-        # distance of the preceding legs (the running leg index, seeded from each F0 leg
-        # number and advanced once per G0 record). Deriving distance from the leg index
-        # rather than a running count of recorded splits keeps the later marks correct
-        # when an interior split is blank or a final leg has no F0 record of its own.
+        # Relay G0s carry whole-relay cumulative splits, one record per leg, each
+        # restarting at slot 0. Offset by the preceding legs' distance using the leg
+        # index (seeded per F0, advanced per G0) rather than a count of recorded
+        # splits, so blank splits or a final leg with no F0 don't shift later marks.
         leg_offset = 0
         if is_relay:
             relay = self._g0_relay(session)
@@ -1142,14 +1049,9 @@ class _Cl2Engine(_BaseEngine):
             start = _FIRST_SPLIT_COL + j * _SPLIT_WIDTH
             tag, val = time_value(rec.raw(start, _SPLIT_WIDTH))
             if tag == "blank":
-                # Skip an empty slot rather than stopping: a blank early split
-                # followed by a recorded later split (e.g. only the final
-                # cumulative time present) must not discard that real time.
-                continue
+                continue  # a later slot may still hold a real time
             distance = leg_offset + increment * (base + j + 1)
-            self._append_split(
-                rec, target_splits, distance, tag, val, split_type, column=f"{start}/8"
-            )
+            self._append_split(rec, target_splits, distance, val, split_type, column=f"{start}/8")
 
     def _g0_relay(self, session: Session | None) -> Relay | None:
         """Resolve the relay a G0's splits belong to (by session, else finals/first)."""
@@ -1167,10 +1069,8 @@ class _Cl2Engine(_BaseEngine):
         st = self.state
         assert st is not None
         if st.last_result_kind == "relay":
-            # Whole-relay cumulative splits belong on the relay row (matching the
-            # `.hy3` reader and `Relay.splits` semantics), not on an individual
-            # leg. Attaching here also rescues relays whose G0s follow the E0
-            # directly with no F0 leg records (which would otherwise be orphaned).
+            # Splits go on the relay row (as in `.hy3`), which also covers G0s that
+            # follow the E0 with no F0 leg records.
             relay = self._g0_relay(session)
             return relay.splits if relay is not None else None
         if st.last_result_kind == "individual":
@@ -1199,8 +1099,8 @@ class _Cl2Engine(_BaseEngine):
             actual_by_letter[rt[0]] += n
         for chk in _Z0_CHECKS:
             actual = self.meets_this_file if chk.letter is None else actual_by_letter[chk.letter]
-            tag, declared = int_value(rec.raw(chk.start, chk.length))
-            if tag == "int" and declared != actual:
+            declared = int_value(rec.raw(chk.start, chk.length))[1]
+            if declared is not None and declared != actual:
                 self._warn(
                     rec,
                     chk.label,
@@ -1212,7 +1112,39 @@ class _Cl2Engine(_BaseEngine):
                 )
 
 
-# Dispatch table — every modeled record type.
+def _char_code[E: StrEnum](ch: str, enum_cls: type[E]) -> E | None:
+    """Resolve a one-character code case-insensitively; None if blank or unknown."""
+    try:
+        return enum_cls(ch.strip().upper())
+    except ValueError:
+        return None
+
+
+def _add_leg(
+    relay: Relay,
+    swimmer: Swimmer | None,
+    order: RelayLegOrder,
+    age_class: str | None,
+    citizenship: CitizenshipOrCountry | None,
+) -> RelaySwim:
+    """Create a leg on ``relay``; NOT_SWUM/ALTERNATE orders go to its alternates."""
+    leg = RelaySwim(
+        swimmer=swimmer,
+        relay=relay,
+        order=order,
+        status=relay.status,
+        swimmer_age_class=age_class,
+        citizenship=citizenship,
+    )
+    if order in (RelayLegOrder.NOT_SWUM, RelayLegOrder.ALTERNATE):
+        relay.alternates.append(leg)
+    else:
+        relay.legs.append(leg)
+        if swimmer is not None:
+            swimmer.swims.append(leg)
+    return leg
+
+
 _HANDLERS: dict[str, Callable[[_Cl2Engine, Record], None]] = {
     "A0": _Cl2Engine._h_a0,
     "B1": _Cl2Engine._h_b1,

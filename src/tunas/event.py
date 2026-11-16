@@ -20,19 +20,16 @@ _SCY = Course.SCY
 _SCM = Course.SCM
 _LCM = Course.LCM
 
-# Standard medley-relay leg order, and the (all-freestyle) free-relay legs.
 _MEDLEY_LEG_STROKES = (_BACK, _BREAST, _FLY, _FREE)
 _FREE_LEG_STROKES = (_FREE, _FREE, _FREE, _FREE)
 
 
 @total_ordering
 class Event(Enum):
-    """A unique swimming event represented by a `(distance, stroke, course)` tuple.
+    """A swimming event valued as `(distance, stroke, course)`, ordered by declaration.
 
-    Supports declaration-order comparison. Members are named with uppercase patterns
-    using abbreviated stroke names, e.g. `<STROKE>_<DISTANCE>_<COURSE>` (for individual
-    events like `FREE_50_SCY`) or `<STROKE>_<DISTANCE>_RELAY_<COURSE>` (for relays like
-    `MEDLEY_200_RELAY_LCM`).
+    Members are named `<STROKE>_<DISTANCE>_<COURSE>` (e.g. `FREE_50_SCY`) or
+    `<STROKE>_<DISTANCE>_RELAY_<COURSE>` (e.g. `MEDLEY_200_RELAY_LCM`).
     """
 
     # --- Individual, short course yards (SCY) ---
@@ -121,8 +118,6 @@ class Event(Enum):
     MEDLEY_400_RELAY_LCM = (400, _MEDLEY_R, _LCM)
     FREE_800_RELAY_LCM = (800, _FREE_R, _LCM)
 
-    # --- Component properties ---
-
     @property
     def distance(self) -> int:
         """Total event distance in yards/meters."""
@@ -138,24 +133,17 @@ class Event(Enum):
         """The event course (SCY, SCM, or LCM)."""
         return self.value[2]
 
-    # --- Lookup ---
-
     @classmethod
     def find(cls, distance: int, stroke: Stroke, course: Course) -> Event | None:
         """Resolve an event by components, or None if none matches."""
         return _BY_COMPONENTS.get((distance, stroke, course))
-
-    # --- Relay helpers ---
 
     def is_relay(self) -> bool:
         """True if this is a relay event (freestyle or medley relay)."""
         return self.stroke in (_FREE_R, _MEDLEY_R)
 
     def leg_distance(self) -> int:
-        """Calculate the per-leg distance (total distance divided by 4).
-
-        Returns:
-            The distance of a single leg in the relay.
+        """Per-leg distance of a relay (total distance / 4).
 
         Raises:
             ValueError: If the event is an individual swim rather than a relay.
@@ -165,10 +153,7 @@ class Event(Enum):
         return self.distance // 4
 
     def leg_strokes(self) -> list[Stroke]:
-        """Get the ordered sequence of strokes swum on the four legs of this relay.
-
-        Returns:
-            A list of four `Stroke` values representing each leg in order.
+        """The four leg strokes of a relay, in swim order.
 
         Raises:
             ValueError: If the event is an individual swim rather than a relay.
@@ -180,17 +165,10 @@ class Event(Enum):
         return list(_FREE_LEG_STROKES)
 
     def leg_event(self, order: int) -> Event:
-        """Resolve the individual `Event` swum on a specific relay leg.
-
-        Args:
-            order: The 1-based leg position (must be between 1 and 4).
-
-        Returns:
-            The corresponding individual `Event` swum on that leg.
+        """The individual `Event` swum on relay leg `order` (1-4).
 
         Raises:
-            ValueError: If this is an individual event, or if `order` is not
-                between 1 and 4 inclusive.
+            ValueError: If this is not a relay, or `order` is outside 1-4.
         """
         if not self.is_relay():
             raise ValueError(f"{self.name} is not a relay")
@@ -201,9 +179,6 @@ class Event(Enum):
         if event is None:  # pragma: no cover - every defined relay has real legs
             raise ValueError(f"No individual event for leg {order} of {self.name}")
         return event
-
-    # --- Ordering by declaration order ---
-    # ``@total_ordering`` derives ``<=``, ``>``, ``>=`` from ``__lt__`` + ``Enum.__eq__``.
 
     def __lt__(self, other: object) -> bool:
         if isinstance(other, Event):

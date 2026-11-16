@@ -74,39 +74,29 @@ def test_roundtrip_by_code(enum_cls: type[enum.Enum]) -> None:
         assert enum_cls(m.value) is m
 
 
-def test_sex_mixed() -> None:
-    assert Sex("X") is Sex.MIXED
-
-
-def test_meet_type_championship_codes() -> None:
-    assert MeetType("6") is MeetType.NATIONAL_CHAMPIONSHIP
-    assert MeetType("7") is MeetType.JUNIORS
+@pytest.mark.parametrize(
+    "enum_cls,code,member",
+    [
+        (Sex, "X", Sex.MIXED),
+        (MeetType, "6", MeetType.NATIONAL_CHAMPIONSHIP),
+        (MeetType, "7", MeetType.JUNIORS),
+        (Region, "1", Region.REGION_1),
+        (Region, "E", Region.REGION_14),
+        (Citizenship, "2AL", Citizenship.DUAL),
+        (Citizenship, "FGN", Citizenship.FOREIGN),
+        (FileType, "02", FileType.MEET_RESULTS),
+        # The `.hy3` code space differs from SDIF's: "07" is results there, rankings here.
+        (Hy3FileType, "07", Hy3FileType.MEET_RESULTS),
+        (FileType, "07", FileType.NATIONAL_RECORDS_RANKINGS),
+        (ResultStatus, "EX", ResultStatus.EXHIBITION),
+    ],
+)
+def test_specific_codes(enum_cls: type[enum.Enum], code: str, member: enum.Enum) -> None:
+    assert enum_cls(code) is member
 
 
 def test_region_fourteen_members() -> None:
     assert len(Region) == 14
-    assert Region("1") is Region.REGION_1
-    assert Region("E") is Region.REGION_14
-
-
-def test_citizenship_codes() -> None:
-    assert Citizenship("2AL") is Citizenship.DUAL
-    assert Citizenship("FGN") is Citizenship.FOREIGN
-
-
-def test_filetype_meet_results() -> None:
-    assert FileType("02") is FileType.MEET_RESULTS
-
-
-def test_hy3_filetype_distinct_from_sdif() -> None:
-    # The `.hy3` code space differs from SDIF's: "07" means meet results here,
-    # but national records/rankings in SDIF.
-    assert Hy3FileType("07") is Hy3FileType.MEET_RESULTS
-    assert FileType("07") is FileType.NATIONAL_RECORDS_RANKINGS
-
-
-def test_result_status_exhibition() -> None:
-    assert ResultStatus("EX") is ResultStatus.EXHIBITION
 
 
 def test_stroke_display() -> None:

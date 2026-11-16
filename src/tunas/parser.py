@@ -24,7 +24,6 @@ __all__ = [
     "IssueKind",
 ]
 
-# Path-like or iterable-of-paths or open text stream.
 type Source = str | os.PathLike[str] | Iterable[str | os.PathLike[str]] | TextIO
 
 
@@ -42,7 +41,7 @@ class MeetArchive:
         report: Diagnostic and metric report for the parsed source.
     """
 
-    source: str  # file path, or "<stream>" for a text stream
+    source: str
     meets: list[Meet] = field(default_factory=list)
     report: ParseReport = field(default_factory=ParseReport)
 
@@ -129,9 +128,8 @@ def _read(
     errors: str,
 ) -> Iterator[MeetArchive]:
     """Dispatch to the stream or path iterator; shared by both readers."""
-    if hasattr(source, "read"):  # an open text stream — a single unit of work
+    if hasattr(source, "read"):
         return _iter_stream(source, engine_cls, strict)  # type: ignore[arg-type]
-
     paths = _resolve_paths(source, suffix)
     return _iter_paths(paths, engine_cls, strict=strict, encoding=encoding, errors=errors)
 
@@ -139,7 +137,6 @@ def _read(
 def _iter_stream(
     stream: TextIO, engine_cls: type[_BaseEngine], strict: bool
 ) -> Iterator[MeetArchive]:
-    """Parse a single open text stream into exactly one archive."""
     engine = engine_cls(strict=strict)
     engine.parse_source(stream, "<stream>")
     yield MeetArchive(source="<stream>", meets=engine.meets, report=engine.report)
@@ -153,18 +150,20 @@ def _iter_paths(
     encoding: str,
     errors: str,
 ) -> Iterator[MeetArchive]:
-    """Yield one archive per path, in order, parsing each file as it is consumed."""
     for path in paths:
-        yield _parse_one(path, engine_cls, strict, encoding, errors)
+        engine = engine_cls(strict=strict)
+        with open(path, encoding=encoding, errors=errors) as fh:
+            engine.parse_source(fh, str(path))
+        yield MeetArchive(source=str(path), meets=engine.meets, report=engine.report)
 
 
 def _resolve_paths(
     source: str | os.PathLike[str] | Iterable[str | os.PathLike[str]],
     suffix: str,
 ) -> list[Path]:
-    """Expand `source` into an ordered list of file paths whose suffix matches `suffix`."""
+    """Expand `source` into an ordered list of file paths, walking directories for `suffix`."""
     if isinstance(source, (str, os.PathLike)):
-        path = Path(os.fspath(source))
+        path = Path(source)
         if path.is_dir():
             return sorted(
                 child
@@ -172,14 +171,4 @@ def _resolve_paths(
                 if child.is_file() and child.suffix.lower() == suffix
             )
         return [path]
-    return [Path(os.fspath(item)) for item in source]
-
-
-def _parse_one(
-    path: Path, engine_cls: type[_BaseEngine], strict: bool, encoding: str, errors: str
-) -> MeetArchive:
-    """Parse a single file with its own engine, returning its archive."""
-    engine = engine_cls(strict=strict)
-    with open(path, encoding=encoding, errors=errors) as fh:
-        engine.parse_source(fh, str(path))
-    return MeetArchive(source=str(path), meets=engine.meets, report=engine.report)
+    return [Path(item) for item in source]

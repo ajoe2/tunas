@@ -1,47 +1,36 @@
 /*
- * Modern, clean theme for the tunas docs.
- *
- * One brand blue (#2563eb) ties everything together: it's the color of the
- * logo and of every link, accent and selected/active element. The header is
- * kept neutral — white in light mode, near-black in dark mode — so the blue
- * logo stays crisp against it instead of camouflaging into a blue bar.
+ * One brand blue (#2563eb) for the logo, links, accents and active states. The
+ * header stays neutral (white / near-black) so the blue logo doesn't blend into it.
  */
 
 :root {
-  /* The single brand blue: logo ink == links == accents == active states. */
   --md-primary-fg-color:        #2563eb;
   --md-primary-fg-color--light: #3b82f6;
   --md-primary-fg-color--dark:  #1d4ed8;
   --md-accent-fg-color:         #1d4ed8;
 
-  /* Subtle radius shared across cards, code blocks and admonitions. */
   --tunas-radius: 0.7rem;
 
-  /* Cards sit flush with the page in light mode, with a soft blue-grey lift. */
   --tunas-card-bg:     var(--md-default-bg-color);
   --tunas-card-shadow: 0 0.5rem 1.5rem rgba(37, 99, 235, 0.12);
 
-  /* Neutral header surface + foreground for light mode. */
   --tunas-header-bg: #ffffff;
   --tunas-header-fg: #1c2330;
   --tunas-hairline:  rgba(0, 0, 0, 0.08);
 }
 
 [data-md-color-scheme="slate"] {
-  /* Same brand blue; it stays legible against the near-black surfaces. */
   --md-primary-fg-color:        #2563eb;
   --md-primary-fg-color--light: #3b82f6;
   --md-primary-fg-color--dark:  #60a5fa;
   --md-accent-fg-color:         #60a5fa;
 
-  /* Neutral black surfaces with a clear page / card / code hierarchy. */
   --md-default-bg-color:           #0d0d0d;
   --md-default-fg-color:           rgba(240, 242, 245, 0.95);
   --md-default-fg-color--light:    rgba(240, 242, 245, 0.72);
   --md-default-fg-color--lighter:  rgba(240, 242, 245, 0.42);
   --md-default-fg-color--lightest: rgba(240, 242, 245, 0.14);
 
-  /* Code blocks sit one layer above the page for legible contrast. */
   --md-code-bg-color: #1a1a1a;
   --md-code-fg-color: #e6e6e6;
 
@@ -55,11 +44,7 @@
   --tunas-hairline:  rgba(255, 255, 255, 0.09);
 }
 
-/*
- * Neutral, modern header + tabs. Material would otherwise paint these with the
- * brand color; we keep them on a calm surface so the blue logo and the active
- * states do the talking.
- */
+/* Neutral header + tabs (Material would paint them with the brand color). */
 .md-header,
 .md-tabs {
   background-color: var(--tunas-header-bg);
@@ -71,21 +56,14 @@
   border-bottom: 1px solid var(--tunas-hairline);
 }
 
-/* Active top-level tab uses the brand blue underline. */
 .md-tabs__link--active {
   color: var(--md-primary-fg-color);
   opacity: 1;
 }
 
 /*
- * Search field. Material styles the resting search box for a *colored* header:
- * it paints the icon and placeholder with --md-primary-bg-color (white) and, on
- * hover, lightens the box to near-white. Because our header is a neutral white
- * (light) / navy (dark) surface, that washed the box and its white icon out on
- * hover — the search bar appeared to vanish. Map the box, icon and placeholder
- * to theme-aware foreground colors so the field stays legible at rest and gains
- * (not loses) contrast on hover. The focused/open search keeps Material's own
- * higher-specificity styling.
+ * Material styles the resting search box for a colored header (white icon, near-white
+ * hover), which vanishes on our neutral header; use theme-aware colors instead.
  */
 .md-search__form {
   background-color: var(--md-default-fg-color--lightest);
@@ -101,7 +79,6 @@
   color: var(--md-default-fg-color--light);
 }
 
-/* Tighten heading rhythm and let Inter breathe a little. */
 .md-typeset h1 {
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -112,13 +89,11 @@
   letter-spacing: -0.01em;
 }
 
-/* Rounded code blocks. */
 .md-typeset pre > code,
 .md-typeset .highlight > pre > code {
   border-radius: var(--tunas-radius);
 }
 
-/* Grid cards: rounded, elevated, with a gentle hover lift. */
 .md-typeset .grid.cards > ul > li,
 .md-typeset .grid > .card {
   background-color: var(--tunas-card-bg);
@@ -132,13 +107,12 @@
   transform: translateY(-2px);
 }
 
-/* Rounded admonitions to match the cards. */
 .md-typeset .admonition,
 .md-typeset details {
   border-radius: var(--tunas-radius);
 }
 
-/* Centered logo hero on the landing page. */
+/* Landing-page logo. */
 .md-typeset .tunas-hero {
   text-align: center;
   margin: 1rem 0 2rem;

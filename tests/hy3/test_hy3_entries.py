@@ -2,7 +2,7 @@
 
 An `E1`/`F1` entry that no `E2`/`F2` result follows has not been swum: it is
 returned as a ``ResultStatus.ENTERED`` swim (no session, time, or date) carrying
-its seed. Records are built in-memory with the conftest builders.
+its seed.
 """
 
 from __future__ import annotations

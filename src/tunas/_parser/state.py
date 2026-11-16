@@ -44,8 +44,7 @@ class ParserState:
     current_swimmer: Swimmer | None = None
     current_individual_swims: list[IndividualSwim] = field(default_factory=list)
     pending_individual: PendingIndividual | None = None
-    # Keyed by session; an entered (not-yet-swum) relay has no session, so it is
-    # keyed by None.
+    # Keyed by session; an entered (not-yet-swum) relay is keyed by None.
     current_relays: dict[Session | None, Relay] = field(default_factory=dict)
     current_relay_legs: dict[Session | None, RelaySwim] = field(default_factory=dict)
     # Running 0-based leg index per relay session for G0 split-distance offsetting:
@@ -59,12 +58,8 @@ class ParserState:
         return None if self.unattached else self.current_club
 
 
-# --------------------------------------------------------------------------- #
-# Hy-Tek `.hy3` state — entry/result are split across separate records
-# (E1+E2 for individuals, F1+F2 for relays), so the entry is buffered until
-# its result arrives. An entry no result follows (entries / psych-sheet files)
-# is emitted as an ENTERED swim when the next record shows none is coming.
-# --------------------------------------------------------------------------- #
+# `.hy3` splits entry and result across records (E1+E2, F1+F2), so the entry is
+# buffered until its result arrives; one with no result is emitted as ENTERED.
 
 
 @dataclass

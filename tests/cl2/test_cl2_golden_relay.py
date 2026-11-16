@@ -1,35 +1,22 @@
-"""Golden-file test #2: a real relay meet vs. a hand-verified ground truth.
+"""Golden file: ``aaa_league_championship.cl2`` (relays, prelims+finals, D3 long IDs).
 
-``tests/data/aaa_league_championship.cl2`` is a real Pacific Swimming high-school
-league championship (committed with the tests). Unlike the individual-events
-golden file (``reno_walk_on_meet``), it exercises the relay path and per-session
-swims: prelim+finals individual swims with split routing by session, E0 relays,
-F0 relay legs (leg event), whole-relay cumulative splits on the relay row, and
-blank-``id_short`` swimmers resolved from a later ``D3`` long ID.
-
-``aaa_league_championship.expected.json`` is its complete expected parsed state,
-built by the independent decoder ``tests/data/build_expected_aaa.py`` (which does
-not import ``tunas``) and cross-checked against the raw records. This test parses
-the file with ``tunas`` and asserts the full result matches.
+The expected JSON is built by the independent decoder ``tests/data/build_expected_aaa.py``.
 """
 
 from __future__ import annotations
 
+import functools
 import json
-from collections import Counter
-from enum import Enum
 
+import pytest
 from conftest import DATA_DIR as DATA
+from conftest import enum_name, report_summary
 
 from tunas import IndividualSwim, Meet, RelaySwim, read_cl2
 from tunas.parser import ParseReport
 
 CL2 = DATA / "aaa_league_championship.cl2"
 EXPECTED = json.loads((DATA / "aaa_league_championship.expected.json").read_text())
-
-
-def _name(value: Enum | None) -> str | None:
-    return value.name if value is not None else None
 
 
 def _split(sp: object) -> dict:
@@ -71,10 +58,6 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
     assert len(meets) == 1
     meet = meets[0]
 
-    warning_counts: Counter[tuple[str | None, str | None, str, str]] = Counter()
-    for w in report.warnings:
-        warning_counts[(w.record_type, w.field, w.kind.name, w.severity.name)] += 1
-
     swimmers = []
     for sw in sorted(meet.swimmers, key=lambda s: (s.id_short or "", s.id_long or "")):
         swimmers.append(
@@ -87,7 +70,7 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
                 "preferred_first_name": sw.preferred_first_name,
                 "sex": sw.sex.name,
                 "birthday": sw.birthday.isoformat() if sw.birthday else None,
-                "citizenship": _name(sw.citizenship),
+                "citizenship": enum_name(sw.citizenship),
                 "club_team_code": sw.club.team_code if sw.club else None,
                 "swims": [_swim_entry(s) for s in sw.swims],
             }
@@ -119,53 +102,37 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
     assert sf is not None
     return {
         "file": CL2.name,
-        "report": {
-            "files_read": report.files_read,
-            "meets_parsed": report.meets_parsed,
-            "swimmers_parsed": report.swimmers_parsed,
-            "individual_swims_parsed": report.individual_swims_parsed,
-            "relays_parsed": report.relays_parsed,
-            "splits_parsed": report.splits_parsed,
-            "records_skipped": report.records_skipped,
-            "fields_recovered": report.fields_recovered,
-        },
-        "warnings": sorted(
-            [
-                {"record_type": rt, "field": f, "kind": k, "severity": s, "count": c}
-                for (rt, f, k, s), c in warning_counts.items()
-            ],
-            key=lambda w: (w["record_type"] or "", w["field"] or ""),
-        ),
+        **report_summary(report),
         "meet": {
             "organization": meet.organization.name,
             "name": meet.name,
             "start_date": meet.start_date.isoformat(),
             "end_date": meet.end_date.isoformat() if meet.end_date else None,
             "city": meet.city,
-            "state": _name(meet.state),
+            "state": enum_name(meet.state),
             "postal_code": meet.postal_code,
-            "country": _name(meet.country),
-            "course": _name(meet.course),
+            "country": enum_name(meet.country),
+            "course": enum_name(meet.course),
             "altitude": meet.altitude,
-            "meet_type": _name(meet.meet_type),
+            "meet_type": enum_name(meet.meet_type),
         },
         "source_file": {
-            "file_type": _name(sf.file_type),
+            "file_type": enum_name(sf.file_type),
             "sdif_version": sf.sdif_version,
             "software_name": sf.software_name,
             "software_version": sf.software_version,
             "contact_name": sf.contact_name,
             "contact_phone": sf.contact_phone,
             "created": sf.created.isoformat() if sf.created else None,
-            "submitted_by_lsc": _name(sf.submitted_by_lsc),
+            "submitted_by_lsc": enum_name(sf.submitted_by_lsc),
             "notes": sf.notes,
         },
         "clubs": [
             {
                 "team_code": c.team_code,
-                "lsc": _name(c.lsc),
+                "lsc": enum_name(c.lsc),
                 "full_name": c.full_name,
-                "country": _name(c.country),
+                "country": enum_name(c.country),
                 "swimmer_count": len(c.swimmers),
                 "individual_count": len(c.individual_swims),
                 "relay_count": len(c.relays),
@@ -185,75 +152,31 @@ def _leg(leg: RelaySwim) -> dict:
         "swimmer_id": _swimmer_id(leg.swimmer) if leg.swimmer is not None else None,
         "time": str(leg.time) if leg.time is not None else None,
         "takeoff_time": leg.takeoff_time,
-        "course": _name(leg.course),
+        "course": enum_name(leg.course),
     }
 
 
+@functools.cache
 def _actual() -> dict:
-    archive = next(iter(read_cl2(str(CL2))))  # a single file -> a single archive
+    archive = next(iter(read_cl2(str(CL2))))
     return _actual_state(archive.meets, archive.report)
 
 
-# --------------------------------------------------------------------------- #
-# Section-by-section comparison
-# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("section", EXPECTED)
+def test_section_matches(section: str) -> None:
+    assert _actual()[section] == EXPECTED[section]
 
 
-def test_report_counts() -> None:
-    assert _actual()["report"] == EXPECTED["report"]
-
-
-def test_warning_summary() -> None:
-    assert _actual()["warnings"] == EXPECTED["warnings"]
-
-
-def test_meet_and_source_file() -> None:
-    actual = _actual()
-    assert actual["meet"] == EXPECTED["meet"]
-    assert actual["source_file"] == EXPECTED["source_file"]
-
-
-def test_clubs() -> None:
-    assert _actual()["clubs"] == EXPECTED["clubs"]
+def test_no_extra_sections() -> None:
+    assert _actual().keys() == EXPECTED.keys()
 
 
 def test_relay_split_breakdown() -> None:
     meets = next(iter(read_cl2(str(CL2)))).meets
-    # Parsed splits: whole-relay cumulative marks live on the relay row.
     relay_splits = sum(len(relay.splits) for relay in meets[0].relays)
     indiv_splits = sum(len(s.splits) for s in meets[0].individual_swims)
     assert {"individual": indiv_splits, "relay": relay_splits} == EXPECTED["_split_breakdown"]
-    # Each leg derives its own splits from the row; every row mark belongs to
-    # exactly one leg, so the per-leg derived splits partition the row exactly.
+    # Per-leg derived splits partition the relay row's marks exactly.
     for relay in meets[0].relays:
         derived = sum(len(leg.splits) for leg in relay.legs)
         assert derived == len(relay.splits), f"{relay.club} {relay.relay_letter} {relay.event.name}"
-
-
-def test_swimmer_roster_matches() -> None:
-    actual = {(s["id_short"], s["id_long"]) for s in _actual()["swimmers"]}
-    expected = {(s["id_short"], s["id_long"]) for s in EXPECTED["swimmers"]}
-    assert actual == expected
-
-
-def test_each_swimmer_full_detail() -> None:
-    actual = {_key(s): s for s in _actual()["swimmers"]}
-    expected = {_key(s): s for s in EXPECTED["swimmers"]}
-    assert set(actual) == set(expected)
-    for sid, exp in expected.items():
-        assert actual[sid] == exp, f"mismatch for swimmer {sid} ({exp['last_name']})"
-
-
-def test_each_relay_full_detail() -> None:
-    actual, expected = _actual()["relays"], EXPECTED["relays"]
-    assert len(actual) == len(expected)
-    for i, (a, e) in enumerate(zip(actual, expected, strict=True)):
-        assert a == e, f"mismatch for relay #{i} ({e['club_team_code']} {e['relay_letter']})"
-
-
-def test_entire_state_matches() -> None:
-    assert _actual() == EXPECTED
-
-
-def _key(sw: dict) -> tuple[str | None, str | None]:
-    return (sw["id_short"], sw["id_long"])

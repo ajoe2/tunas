@@ -18,7 +18,6 @@ from tunas._parser.checksum import RECORD_WIDTH as HY3_RECORD_WIDTH
 from tunas._parser.diagnostics import IssueKind, Severity
 from tunas._parser.engine import _BaseEngine
 from tunas._parser.fields import Record, time_value
-from tunas._parser.ids import normalize_id
 from tunas._parser.state import Hy3Entry, Hy3RelayEntry, Hy3State
 from tunas.enums import (
     AttachStatus,
@@ -37,7 +36,6 @@ from tunas.models import (
     Club,
     IndividualSwim,
     Meet,
-    MeetResult,
     Relay,
     RelaySwim,
     SourceFile,
@@ -122,13 +120,9 @@ _POOL_LENGTH: dict[Course, int] = {Course.SCY: 25, Course.SCM: 25, Course.LCM: 5
 def _split_unit(event: Event, max_counter: int) -> float:
     """Distance one G1 split counter unit represents for ``event``.
 
-    Normally one counter unit is a pool length. But some timing systems double the
-    counter (recording at half-length granularity), which would place the furthest
-    split past the finish — e.g. a 200 SCY fly with counters 4/8/12/16 instead of
-    2/4/6/8 maps to 400 yd with a plain ``* 25``. A cumulative split can never
-    exceed the event distance, so halve the per-counter unit until the furthest
-    counter fits within the race. This also recovers the correct distance for a
-    lone finishing split (the common DQ/relay-leadoff case).
+    Normally a pool length, but some timing systems double the counter (a 200 SCY
+    with counters 4/8/12/16), so halve the unit until the furthest counter fits the
+    race. This also fixes a lone finishing split (the common DQ/relay-leadoff case).
     """
     unit: float = _POOL_LENGTH.get(event.course, 25)
     if event.distance <= 0 or max_counter <= 0:
@@ -154,8 +148,7 @@ class _Seeds(TypedDict):
 
 
 class _Hy3Engine(_BaseEngine):
-    """Stateful Hy-Tek parser. ``parse_source`` resets per-file state, so one instance
-    can parse many files in turn (each call yields only that source's results)."""
+    """Stateful Hy-Tek parser."""
 
     RECORD_WIDTH: ClassVar[int] = HY3_RECORD_WIDTH
     READER: ClassVar[str] = "read_hy3"
@@ -178,16 +171,14 @@ class _Hy3Engine(_BaseEngine):
             return
         self.file_counts[rec.type] += 1
 
-        # A buffered entry whose result doesn't come next is an unswum entry: emit
-        # it before this record changes the current athlete/team context.
+        # A buffered entry whose result doesn't come next is unswum: emit it before
+        # this record changes the athlete/team context.
         if rec.type != _ENTRY_RESULT:
             self._flush_entry()
         if rec.type not in _RELAY_ENTRY_FOLLOWERS:
             self._flush_relay_entry()
 
-        # Columns 129-130 hold a checksum that we don't validate: it isn't a data
-        # field, and `USAS Club Times Export` files omit it entirely. Field slicing
-        # only ever touches columns 1-128, so the trailing checksum is simply ignored.
+        # The checksum (cols 129-130) is not validated; see `checksum.py`.
         handler = _HANDLERS.get(rec.type)
         if handler is None:
             if rec.type not in _IGNORED:
@@ -309,9 +300,7 @@ class _Hy3Engine(_BaseEngine):
             return ResultStatus.OK, True
         return mapped
 
-    # ===================================================================== #
-    # Record handlers
-    # ===================================================================== #
+    # -- record handlers --------------------------------------------------- #
 
     def _h_a1(self, rec: Record) -> None:
         self.source_file = SourceFile(
@@ -414,20 +403,13 @@ class _Hy3Engine(_BaseEngine):
                 IssueKind.MISSING,
                 "D1 athlete with no athlete number",
             )
-            st.current_swimmer = None
-            st.current_age_class = None
-            st.current_individual_swim = None
-            st.current_relay = None
-            st.last_result_kind = None
+            self._clear_athlete()
             return
         sex = self._require_code(rec, 3, 1, Sex, "sex", "3/1")
         last = rec.text(9, 20)
         first = rec.text(29, 20)
         if last is None or first is None:
-            # A blank name is a data-quality issue, not a structural one: skip the
-            # record and reset context (so the athlete's following E1/E2/G1 records
-            # orphan-skip) rather than aborting the file. Strict mode still raises
-            # via `_emit`.
+            # Skip (not fatal) and reset context so the athlete's records orphan-skip.
             self._warn(
                 rec,
                 "first_name" if first is None else "last_name",
@@ -437,17 +419,12 @@ class _Hy3Engine(_BaseEngine):
                 IssueKind.MISSING,
                 "D1 athlete with no name; record skipped",
             )
-            st.current_swimmer = None
-            st.current_age_class = None
-            st.current_individual_swim = None
-            st.current_relay = None
-            st.last_result_kind = None
+            self._clear_athlete()
             return
 
-        # The D1 "USA-S Member ID" field (cols 70-83) is the 14-char SWIMS ID, which
-        # belongs in `id_long`; `read_cl2` stores its 12-char USS# prefix in `id_short`,
-        # so derive the same prefix here (cl2's own `id_short == id_long[:12]`).
-        member_id = normalize_id(rec.raw(70, 14))
+        # The D1 member ID is the 14-char SWIMS ID (`id_long`); `read_cl2`'s `id_short`
+        # is its 12-char prefix.
+        member_id = rec.text(70, 14)
         swimmer = Swimmer(
             meet=st.meet,
             first_name=first,
@@ -464,13 +441,19 @@ class _Hy3Engine(_BaseEngine):
         self._attach_swimmer(st.meet, swimmer)
         st.swimmers_by_number[number] = swimmer
         st.current_swimmer = swimmer
-        # cl2 stores a single "age or class" code (D0 cols 64-65): the numeric age for
-        # most meets, or a school grade (JR/SO/FR/...) for scholastic meets. `.hy3`
-        # splits these into Age (cols 98-99) and Grade/Class (cols 100-101). Mirror cl2
-        # by preferring a real (non-zero) age and falling back to the grade, so both
-        # readers surface the same value the meet recorded.
+        # cl2 has one "age or class" code; `.hy3` splits Age (98-99) and Grade (100-101).
+        # Prefer a non-zero age, else the grade, to match cl2.
         age = rec.text(98, 2)
         st.current_age_class = age if (age and age.lstrip("0")) else rec.text(100, 2)
+        st.current_individual_swim = None
+        st.current_relay = None
+        st.last_result_kind = None
+
+    def _clear_athlete(self) -> None:
+        st = self.state
+        assert st is not None
+        st.current_swimmer = None
+        st.current_age_class = None
         st.current_individual_swim = None
         st.current_relay = None
         st.last_result_kind = None
@@ -667,12 +650,10 @@ class _Hy3Engine(_BaseEngine):
     # -- unswum entries (entries / psych-sheet files) ----------------------- #
 
     def _entry_event(self, entry: Hy3Entry | Hy3RelayEntry, noun: str) -> Event | None:
-        """Resolve an entry's event without a result record to name its course.
+        """Resolve an unswum entry's event, taking the course from the meet or seeds.
 
-        Candidates, in order: the meet course (`B2` col 99), the course the seed
-        was converted to (`E1`/`F1` col 51), then the as-entered seed course (col
-        60). The seed course letters are read even for a no-time seed — they're
-        dropped from the model, but still say which pool the meet uses.
+        Seed course letters (cols 51, 60) are read even for a no-time seed: dropped
+        from the model, they still say which pool the meet uses.
         """
         st = self.state
         assert st is not None
@@ -741,8 +722,7 @@ class _Hy3Engine(_BaseEngine):
     def _flush_relay_entry(self) -> None:
         """Emit a buffered `F1` that no `F2` followed as an ENTERED relay.
 
-        The relay becomes the current relay so `F3` athlete records that follow
-        attach to it; it is not a split/DQ target, since it has no result.
+        It becomes the current relay so following `F3` athletes attach to it.
         """
         st = self.state
         if st is None or st.pending_relay_entry is None:
@@ -783,13 +763,12 @@ class _Hy3Engine(_BaseEngine):
         st = self.state
         if st is None:
             return
-        result = self._g1_result()
+        result = self._current_result()
         if result is None:
             self._skip_orphan(rec, "G1 splits could not be attached to a swim")
             return
-        # Collect the recorded slots first: the per-counter distance depends on the
-        # furthest counter in the record (see _split_unit), so resolve it once.
-        recorded: list[tuple[int, str, Time | ResultStatus | None]] = []
+        # Collect slots first: the counter unit depends on the furthest counter.
+        recorded: list[tuple[int, Time | ResultStatus | None]] = []
         for slot in range(_SPLITS_PER_RECORD):
             block = rec.raw(_FIRST_SPLIT_COL + slot * _SPLIT_WIDTH, _SPLIT_WIDTH)
             if not block.strip():
@@ -809,15 +788,15 @@ class _Hy3Engine(_BaseEngine):
             tag, val = time_value(block[3:_SPLIT_WIDTH])
             if tag == "blank" or (isinstance(val, Time) and val.centiseconds == 0):
                 continue  # blank or `0.00` placeholder for an unrecorded split
-            recorded.append((int(counter), tag, val))
+            recorded.append((int(counter), val))
         if not recorded:
             return
-        unit = _split_unit(result.event, max(c for c, _, _ in recorded))
-        for length_count, tag, val in recorded:
+        unit = _split_unit(result.event, max(c for c, _ in recorded))
+        for length_count, val in recorded:
             distance = int(round(length_count * unit))
-            self._append_split(rec, result.splits, distance, tag, val, SplitType.CUMULATIVE)
+            self._append_split(rec, result.splits, distance, val, SplitType.CUMULATIVE)
 
-    def _g1_result(self) -> IndividualSwim | Relay | None:
+    def _current_result(self) -> IndividualSwim | Relay | None:
         st = self.state
         assert st is not None
         if st.last_result_kind == "individual" and st.current_individual_swim is not None:
@@ -826,30 +805,17 @@ class _Hy3Engine(_BaseEngine):
             return st.current_relay
         return None
 
-    def _h_h1(self, rec: Record) -> None:
-        self._append_dq_reason(rec)
-
-    def _h_h2(self, rec: Record) -> None:
-        self._append_dq_reason(rec)
-
-    def _append_dq_reason(self, rec: Record) -> None:
-        st = self.state
-        if st is None:
+    def _h_dq_reason(self, rec: Record) -> None:
+        """H1/H2: append DQ description text to the current result."""
+        if self.state is None:
             return
-        result: MeetResult | None = (
-            st.current_individual_swim
-            if st.last_result_kind == "individual"
-            else st.current_relay
-            if st.last_result_kind == "relay"
-            else None
-        )
+        result = self._current_result()
         text = rec.text(5, 48)
         if result is None or text is None:
             return
         result.dq_reason = f"{result.dq_reason} {text}".strip() if result.dq_reason else text
 
 
-# Dispatch table — every record type we extract confirmed fields from.
 _HANDLERS: dict[str, Callable[[_Hy3Engine, Record], None]] = {
     "A1": _Hy3Engine._h_a1,
     "B1": _Hy3Engine._h_b1,
@@ -863,6 +829,6 @@ _HANDLERS: dict[str, Callable[[_Hy3Engine, Record], None]] = {
     "F2": _Hy3Engine._h_f2,
     "F3": _Hy3Engine._h_f3,
     "G1": _Hy3Engine._h_g1,
-    "H1": _Hy3Engine._h_h1,
-    "H2": _Hy3Engine._h_h2,
+    "H1": _Hy3Engine._h_dq_reason,
+    "H2": _Hy3Engine._h_dq_reason,
 }

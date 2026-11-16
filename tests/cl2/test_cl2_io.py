@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import io
-import os
+from collections import Counter
+from pathlib import Path
 
-import pytest
 from conftest import A0, B1, C1, Z0, d0, e0, f0, g0, parse_lines, rec
 
-from tunas import read_cl2
+from tunas import ResultStatus, read_cl2
+from tunas._parser.cl2 import _Cl2Engine
 
 
 def _single_meet_text() -> str:
@@ -30,21 +31,11 @@ def test_return_shape() -> None:
         assert not hasattr(report, absent)
 
 
-def test_file_path(tmp_path: object) -> None:
-    p = os.path.join(str(tmp_path), "meet.cl2")
-    with open(p, "w") as fh:
-        fh.write(_single_meet_text())
-    archive = next(iter(read_cl2(p)))
-    assert len(archive.meets) == 1
-    assert archive.report.files_read == 1
-
-
-def test_file_with_a_utf8_bom(tmp_path: object) -> None:
-    # Decoded as CP-1252 (the default), a UTF-8 BOM reads as "ï»¿": three extra
-    # characters that would push the A0 past the record width and drop it.
-    p = os.path.join(str(tmp_path), "meet.cl2")
-    with open(p, "wb") as fh:
-        fh.write(b"\xef\xbb\xbf" + _single_meet_text().encode("cp1252"))
+def test_file_with_a_utf8_bom(tmp_path: Path) -> None:
+    # Decoded as CP-1252 (the default), a UTF-8 BOM reads as three extra characters
+    # that would push the A0 past the record width.
+    p = tmp_path / "meet.cl2"
+    p.write_bytes(b"\xef\xbb\xbf" + _single_meet_text().encode("cp1252"))
     archive = next(iter(read_cl2(p)))
     assert archive.meets[0].source_file is not None
     without_bom = next(iter(read_cl2(io.StringIO(_single_meet_text()))))
@@ -52,65 +43,37 @@ def test_file_with_a_utf8_bom(tmp_path: object) -> None:
     assert reasons == [w.reason for w in without_bom.report.warnings]
 
 
-def test_directory_walk(tmp_path: object) -> None:
-    d = str(tmp_path)
-    for name in ("a.cl2", "b.CL2", "ignore.txt"):
-        with open(os.path.join(d, name), "w") as fh:
-            fh.write(_single_meet_text() if name.lower().endswith(".cl2") else "junk")
-    archives = list(read_cl2(d))
-    assert len(archives) == 2  # one archive per .cl2 file (the .txt is ignored)
+def test_directory_walk(tmp_path: Path) -> None:
+    for name in ("a.cl2", "b.CL2"):
+        (tmp_path / name).write_text(_single_meet_text())
+    (tmp_path / "ignore.txt").write_text("junk")
+    archives = list(read_cl2(str(tmp_path)))
+    assert len(archives) == 2
     assert sum(len(a.meets) for a in archives) == 2
 
 
-def test_iterable_of_paths(tmp_path: object) -> None:
-    paths = []
-    for name in ("one.cl2", "two.cl2"):
-        p = os.path.join(str(tmp_path), name)
-        with open(p, "w") as fh:
-            fh.write(_single_meet_text())
-        paths.append(p)
-    archives = list(read_cl2(paths))
-    assert [os.path.basename(a.source) for a in archives] == ["one.cl2", "two.cl2"]
-    assert sum(len(a.meets) for a in archives) == 2
-
-
-def test_file_like_stream() -> None:
-    archive = next(iter(read_cl2(io.StringIO(_single_meet_text()))))
-    assert len(archive.meets) == 1
-    # warnings (if any) use the stream source label
+def test_stream_source_label() -> None:
     archive = next(iter(read_cl2(io.StringIO("\n".join([A0, B1, C1, d0(birth=""), Z0]) + "\n"))))
     assert all(w.source == "<stream>" for w in archive.report.warnings)
 
 
-def test_binary_stream_raises() -> None:
-    with pytest.raises(TypeError):
-        list(read_cl2(io.BytesIO(b"A0 stuff")))  # type: ignore[arg-type]  # bytes stream rejected
-
-
 def test_engine_reuse_resets_between_files() -> None:
-    # parse_source must fully reset, so one engine instance can parse several
-    # sources without leaking the prior file's meets or accumulating its counts.
-    from tunas._parser.cl2 import _Cl2Engine
-
+    # parse_source must fully reset: no leaked meets or cumulative counts.
     lines = [A0, B1, C1, d0(), Z0]
     engine = _Cl2Engine(strict=False)
     engine.parse_source(lines, "first.cl2")
     engine.parse_source(lines, "second.cl2")
-    assert len(engine.meets) == 1  # only the second source's meet, not both
-    assert engine.report.files_read == 1  # counters are per-source, not cumulative
+    assert len(engine.meets) == 1
+    assert engine.report.files_read == 1
     assert engine.report.meets_parsed == 1
     assert engine.report.swimmers_parsed == 1
 
 
-def test_multi_file_no_merge(tmp_path: object) -> None:
-    paths = []
-    for name in ("a.cl2", "b.cl2"):
-        p = os.path.join(str(tmp_path), name)
-        with open(p, "w") as fh:
-            fh.write(_single_meet_text())
-        paths.append(p)
-    a, b = read_cl2(paths)  # one archive per file, in order
-    # same id_short, but two distinct Swimmer objects (no cross-file merge)
+def test_multi_file_no_merge(tmp_path: Path) -> None:
+    paths = [tmp_path / "a.cl2", tmp_path / "b.cl2"]
+    for p in paths:
+        p.write_text(_single_meet_text())
+    a, b = read_cl2(paths)
     assert a.meets[0].swimmers[0].id_short == b.meets[0].swimmers[0].id_short
     assert a.meets[0].swimmers[0] is not b.meets[0].swimmers[0]
 
@@ -125,26 +88,12 @@ def test_per_meet_scope_two_b1_blocks() -> None:
     assert meets[1].swimmers[0].meet is meets[1]
 
 
-def test_swimmer_grouping_total_within_meet() -> None:
-    # Two D0s sharing an id -> one Swimmer with two individual swims.
-    line2 = d0(dist="50", finals="28.00")
-    meets = parse_lines([A0, B1, C1, d0(), line2, Z0]).meets
-    assert len(meets[0].swimmers) == 1
-    sw = meets[0].swimmers[0]
-    assert len(sw.individual_swims) == 2
-    assert sw.id_short is not None
-
-
 def test_club_repeated_c1_reuses() -> None:
     meets = parse_lines([A0, B1, C1, d0(), C1, d0(dist="50", finals="28.00"), Z0]).meets
     assert len(meets[0].clubs) == 1
 
 
-def test_result_status_outcomes_and_dq_rate() -> None:
-    from collections import Counter
-
-    from tunas import ResultStatus
-
+def test_result_status_outcomes() -> None:
     lines = [
         A0,
         B1,
@@ -202,6 +151,5 @@ def test_capture_everything_full_spec() -> None:
     relay = m.relays[0]
     assert relay.legs[0].takeoff_time == 29
     assert len(relay.alternates) == 1
-    # an unparseable split survived as None
     fin = next(s for s in m.individual_swims if s.splits)
     assert any(sp.time is None for sp in fin.splits)

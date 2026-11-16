@@ -1,6 +1,6 @@
 # Parsing & Diagnostics
 
-Detailed references for the parse functions and issue diagnostics.
+The readers and their diagnostics.
 
 ::: tunas.read_cl2
 

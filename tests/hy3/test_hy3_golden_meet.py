@@ -1,34 +1,23 @@
-"""Golden-file test for ``read_hy3``: a real Hy-Tek meet vs. a hand-verified ground truth.
+"""Golden file: ``pasa_distance_intersquad.hy3`` vs. its hand-verified expected JSON.
 
-``tests/data/pasa_distance_intersquad.hy3`` is a real (small) Pacific Swimming meet
-file committed with the tests. It exercises the full `.hy3` path: A1/B1/B2 headers,
-a club, 32 athletes, individual entries+results (E1/E2) with splits (G1) and DQs
-(H1), and relays (F1/F2/F3) — including one relay result with no course that is
-correctly skipped, orphaning its F3.
-
-``pasa_distance_intersquad.expected.json`` is its complete expected parsed state,
-produced by the independent reference decoder ``tests/data/build_expected_hy3.py``
-(which does not import ``tunas``) and cross-checked against the raw records. This
-test parses the file with ``read_hy3`` and asserts the full result matches.
+Covers A1/B1/B2, E1/E2/G1/H1 and F1/F2/F3, including a course-less relay result
+that is skipped, orphaning its F3. Expected JSON: ``tests/data/build_expected_hy3.py``.
 """
 
 from __future__ import annotations
 
+import functools
 import json
-from collections import Counter
-from enum import Enum
 
+import pytest
 from conftest import DATA_DIR as DATA
+from conftest import enum_name, report_summary
 
 from tunas import IndividualSwim, Meet, read_hy3
 from tunas.parser import ParseReport
 
 HY3 = DATA / "pasa_distance_intersquad.hy3"
 EXPECTED = json.loads((DATA / "pasa_distance_intersquad.expected.json").read_text())
-
-
-def _name(value: Enum | None) -> str | None:
-    return value.name if value is not None else None
 
 
 def _swim(swim: IndividualSwim) -> dict:
@@ -59,10 +48,6 @@ def _swim(swim: IndividualSwim) -> dict:
 def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
     assert len(meets) == 1
     meet = meets[0]
-
-    warning_counts: Counter[tuple] = Counter()
-    for w in report.warnings:
-        warning_counts[(w.record_type, w.field, w.kind.name, w.severity.name)] += 1
 
     swimmers = [
         {
@@ -112,23 +97,7 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
     assert sf is not None
     return {
         "file": HY3.name,
-        "report": {
-            "files_read": report.files_read,
-            "meets_parsed": report.meets_parsed,
-            "swimmers_parsed": report.swimmers_parsed,
-            "individual_swims_parsed": report.individual_swims_parsed,
-            "relays_parsed": report.relays_parsed,
-            "splits_parsed": report.splits_parsed,
-            "records_skipped": report.records_skipped,
-            "fields_recovered": report.fields_recovered,
-        },
-        "warnings": sorted(
-            [
-                {"record_type": rt, "field": f, "kind": k, "severity": s, "count": c}
-                for (rt, f, k, s), c in warning_counts.items()
-            ],
-            key=lambda w: (w["record_type"] or "", w["field"] or ""),
-        ),
+        **report_summary(report),
         "meet": {
             "name": meet.name,
             "venue": meet.venue,
@@ -136,11 +105,11 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
             "end_date": meet.end_date.isoformat() if meet.end_date else None,
             "age_up_date": meet.age_up_date.isoformat() if meet.age_up_date else None,
             "altitude": meet.altitude,
-            "course": _name(meet.course),
+            "course": enum_name(meet.course),
             "sanction_number": meet.sanction_number,
         },
         "source_file": {
-            "hy3_file_type": _name(sf.hy3_file_type),
+            "hy3_file_type": enum_name(sf.hy3_file_type),
             "software_name": sf.software_name,
             "created": sf.created.isoformat() if sf.created else None,
             "created_time": sf.created_time.isoformat() if sf.created_time else None,
@@ -149,7 +118,7 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
         "clubs": [
             {
                 "team_code": c.team_code,
-                "lsc": _name(c.lsc),
+                "lsc": enum_name(c.lsc),
                 "full_name": c.full_name,
                 "email": c.email,
                 "swimmer_count": len(c.swimmers),
@@ -162,42 +131,16 @@ def _actual_state(meets: list[Meet], report: ParseReport) -> dict:
     }
 
 
+@functools.cache
 def _actual() -> dict:
-    archive = next(iter(read_hy3(str(HY3))))  # a single file -> a single archive
+    archive = next(iter(read_hy3(str(HY3))))
     return _actual_state(archive.meets, archive.report)
 
 
-def test_report_counts() -> None:
-    assert _actual()["report"] == EXPECTED["report"]
+@pytest.mark.parametrize("section", EXPECTED)
+def test_section_matches(section: str) -> None:
+    assert _actual()[section] == EXPECTED[section]
 
 
-def test_warning_summary() -> None:
-    assert _actual()["warnings"] == EXPECTED["warnings"]
-
-
-def test_meet_metadata() -> None:
-    assert _actual()["meet"] == EXPECTED["meet"]
-
-
-def test_source_file() -> None:
-    assert _actual()["source_file"] == EXPECTED["source_file"]
-
-
-def test_clubs() -> None:
-    assert _actual()["clubs"] == EXPECTED["clubs"]
-
-
-def test_swimmers_full_detail() -> None:
-    actual = _actual()["swimmers"]
-    expected = EXPECTED["swimmers"]
-    assert len(actual) == len(expected)
-    for a, e in zip(actual, expected, strict=True):
-        assert a == e, f"mismatch for swimmer {e['last_name']}, {e['first_name']}"
-
-
-def test_relays_full_detail() -> None:
-    assert _actual()["relays"] == EXPECTED["relays"]
-
-
-def test_entire_state_matches() -> None:
-    assert _actual() == EXPECTED
+def test_no_extra_sections() -> None:
+    assert _actual().keys() == EXPECTED.keys()

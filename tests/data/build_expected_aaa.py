@@ -1,15 +1,7 @@
-"""Build the ground-truth JSON for ``aaa_league_championship.cl2`` (relay golden file).
+"""Build the expected JSON for ``aaa_league_championship.cl2`` (relay golden file).
 
-Like ``build_expected.py`` (the individual-events golden file), this is an
-INDEPENDENT reference decoder that reads the SDIF v3 columns directly and does
-NOT import ``tunas``. It additionally covers the relay path that the smaller
-``reno`` file lacks: prelim+finals individual swims with per-session split
-routing, E0 relays, F0 relay legs (leg event, leg splits), and blank-``id_short``
-swimmers resolved from a later ``D3`` long ID.
-
-The committed ``aaa_league_championship.expected.json`` was produced here and
-cross-checked against the raw records; ``cl2/test_cl2_golden_relay.py`` compares the
-real ``tunas`` parse against it.
+An independent SDIF v3 decoder (does not import ``tunas``) covering relays, prelim+finals
+split routing, and blank-``id_short`` swimmers resolved from a later ``D3`` long ID.
 
 Re-generate with:  uv run python tests/data/build_expected_aaa.py
 """
@@ -90,7 +82,6 @@ def ages(raw: str) -> tuple[int | None, int | None]:
 
 
 def _is_initial(token: str) -> bool:
-    # A genuine middle initial: a single letter, optionally dotted ("Q" / "Q.").
     return len(token) == 1 and token.isalpha() or (len(token) == 2 and token[1] == ".")
 
 
@@ -102,9 +93,7 @@ def parse_name(raw: str) -> tuple[str, str, str | None]:
     tokens = rest.split()
     if not tokens:
         return last.strip(), "", None
-    # Only treat a trailing token as a middle initial when it is initial-like;
-    # a whole-word trailing token belongs to a compound first name (e.g.
-    # "Lam, Lok Yiu" -> first="Lok Yiu", not first="Lok", middle="Y").
+    # A trailing whole word belongs to a compound first name ("Lam, Lok Yiu").
     if len(tokens) > 1 and _is_initial(tokens[-1]):
         return last.strip(), " ".join(tokens[:-1]), tokens[-1][0]
     return last.strip(), " ".join(tokens), None
@@ -557,9 +546,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
             target_splits = None
             is_relay = False
             if last_leaf == "relay" and current_relays:
-                # Whole-relay cumulative splits attach to the relay row, not a leg
-                # (matching the reader and Relay.splits semantics). Targeting the
-                # relay also rescues no-F0 relays whose G0s would otherwise orphan.
+                # Whole-relay cumulative splits attach to the relay row, not a leg.
                 rsession = (
                     scode
                     if (scode and scode in current_relays)
@@ -568,10 +555,7 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 relay = current_relays[rsession]
                 target_splits = relay["splits"]
                 is_relay = True
-                # Each relay leg's G0 restarts at slot 0; offset its slot positions by
-                # the cumulative distance of the preceding legs (the running leg index,
-                # seeded per F0 and advanced per G0 record) so a missing interior split
-                # or an unnamed final leg keeps the later marks at their true distance.
+                # Each leg's G0 restarts at slot 0; offset by the preceding legs' distance.
                 leg_idx = relay_split_index.get(rsession, 0)
                 relay_split_index[rsession] = leg_idx + 1
                 leg_offset = leg_idx * (relay["_dist"] // 4)
@@ -587,8 +571,6 @@ def build() -> dict:  # noqa: C901 - a faithful single-pass decoder
                 raw = fld(line, 64 + j * 8, 8)
                 if not raw:
                     continue
-                # Relay distance offsets the per-record slot by the preceding legs'
-                # cumulative distance (leg_offset); individual splits index by slot.
                 distance = (leg_offset if is_relay else 0) + inc * (base + j + 1)
                 target_splits.append(
                     {

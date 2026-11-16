@@ -1,8 +1,4 @@
-"""Record-level coverage for ``read_hy3`` — every handler, enum mapping, and edge case.
-
-Builds `.hy3` records in-memory with the conftest builders (each carries a valid
-checksum) and asserts the assembled object graph and diagnostics.
-"""
+"""Record-level coverage for ``read_hy3``: every handler, enum mapping, and edge case."""
 
 from __future__ import annotations
 
@@ -29,6 +25,7 @@ from conftest import (
 )
 
 from tunas import (
+    AttachStatus,
     Course,
     Hy3FileType,
     IssueKind,
@@ -42,7 +39,6 @@ from tunas import (
 )
 from tunas.event import Event
 
-# A minimal valid single-swim meet, reused as a backbone in many tests.
 _HEAD = [A1, B1_HY3, B2_HY3, C1_HY3]
 
 
@@ -50,9 +46,7 @@ def _one_swim(**e2_kw: str) -> list[str]:
     return [*_HEAD, d1(), e1(), e2(**e2_kw)]
 
 
-# --------------------------------------------------------------------------- #
-# File / meet / source-file records (A1, B1, B2)
-# --------------------------------------------------------------------------- #
+# -- File / meet / source-file records (A1, B1, B2) ----------------------------
 
 
 def test_a1_source_file() -> None:
@@ -64,7 +58,6 @@ def test_a1_source_file() -> None:
     assert sf.created == datetime.date(2021, 5, 1)
     assert sf.created_time == datetime.time(6, 52)
     assert sf.licensee == "Pacific Swimming"
-    # SDIF-only fields are never populated by the .hy3 reader.
     assert sf.file_type is None and sf.submitted_by_lsc is None
 
 
@@ -106,27 +99,22 @@ def test_b1_meet_metadata() -> None:
 
 
 def test_organization_is_none() -> None:
-    # `.hy3` carries no ORG code, so it must never be fabricated: every node that
-    # has an `organization` field is left as None rather than defaulted to USS.
+    # `.hy3` carries no ORG code, so it is never defaulted to USS.
     archive = parse_hy3_lines(_one_swim())
     meet = archive.meets[0]
     assert meet.organization is None
     assert all(club.organization is None for club in meet.clubs)
-    assert meet.clubs  # guard: the assertion above is vacuous on an empty meet
+    assert meet.clubs
     assert all(result.organization is None for result in meet.results)
     assert meet.results
 
 
-def test_b1_missing_start_date_is_fatal() -> None:
-    b1 = hy3_rec((1, "B1"), (3, "No Date Meet"))
+@pytest.mark.parametrize(
+    "b1", [hy3_rec((1, "B1"), (3, "No Date Meet")), hy3_rec((1, "B1"), (93, "05012021"))]
+)
+def test_b1_missing_start_date_or_name_is_fatal(b1: str) -> None:
     with pytest.raises(ParseError):
         parse_hy3_lines([A1, b1, C1_HY3, d1(), e1(), e2()])
-
-
-def test_b1_missing_name_is_fatal() -> None:
-    b1 = hy3_rec((1, "B1"), (93, "05012021"))
-    with pytest.raises(ParseError):
-        parse_hy3_lines([A1, b1, C1_HY3])
 
 
 def test_b2_course_and_sanction() -> None:
@@ -144,15 +132,13 @@ def test_b2_lcm_course() -> None:
     assert archive.meets[0].individual_swims[0].event is Event.FREE_100_LCM
 
 
-# --------------------------------------------------------------------------- #
-# Team records (C1, C3) and the ignored C2
-# --------------------------------------------------------------------------- #
+# -- Team records (C1, C3) and the ignored C2 ----------------------------------
 
 
 def test_c1_club() -> None:
     archive = parse_hy3_lines(_one_swim())
     club = archive.meets[0].clubs[0]
-    # team_code carries the LSC prefix to match read_cl2 ("PC" + "PASA").
+    # LSC-prefixed to match read_cl2.
     assert club.team_code == "PCPASA"
     assert club.full_name == "Palo Alto Stanford Aquatics"
     assert club.lsc is not None and club.lsc.name == "PACIFIC"
@@ -160,7 +146,6 @@ def test_c1_club() -> None:
 
 
 def test_c1_team_code_without_lsc() -> None:
-    # When the LSC field is blank the team code stays bare (same fallback as cl2).
     c1 = hy3_rec((1, "C1"), (3, "ABC"), (8, "Some Team"))
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1, d1(), e1(), e2()])
     club = archive.meets[0].clubs[0]
@@ -169,8 +154,7 @@ def test_c1_team_code_without_lsc() -> None:
 
 
 def test_c1_team_code_keeps_an_lsc_it_does_not_know() -> None:
-    # read_cl2 keeps whatever LSC its C1 code carries, so an unknown one (here
-    # "US") must still prefix the code for the club to match across the files.
+    # read_cl2 keeps whatever LSC its C1 code carries, so an unknown one still prefixes.
     c1 = hy3_rec((1, "C1"), (3, "MAC"), (8, "Some Team"), (54, "US"))
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1, d1(), e1(), e2()])
     club = archive.meets[0].clubs[0]
@@ -184,27 +168,20 @@ def test_c3_email() -> None:
     assert archive.meets[0].clubs[0].email == "coach@pasa.org"
 
 
-def test_c2_ignored_without_warning() -> None:
-    c2 = hy3_rec((1, "C2"), (3, "123 Pool St"), (63, "Palo Alto"))
-    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c2, d1(), e1(), e2()])
-    assert len(archive.meets[0].clubs) == 1
-    assert not archive.report.warnings_for(record_type="C2")
-
-
-def test_c8_ignored_without_warning() -> None:
-    c8 = hy3_rec((1, "C8"))
-    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c8, d1(), e1(), e2()])
-    assert not archive.report.warnings_for(record_type="C8")
-
-
-@pytest.mark.parametrize("code", ["C4", "C5", "C6", "C7"])
-def test_coach_contact_records_ignored_without_warning(code: str) -> None:
-    # Team Manager (C4/C5) and Meet Manager entries exports (C6/C7) carry coach
-    # and contact names; the records are known, so they don't warn.
-    line = hy3_rec((1, code), (3, "Pat Coach"))
+@pytest.mark.parametrize(
+    "line",
+    [
+        hy3_rec((1, "C2"), (3, "123 Pool St"), (63, "Palo Alto")),
+        hy3_rec((1, "C8")),
+        # Coach/contact names from Team Manager (C4/C5) and Meet Manager entries (C6/C7).
+        *(hy3_rec((1, code), (3, "Pat Coach")) for code in ("C4", "C5", "C6", "C7")),
+    ],
+)
+def test_known_team_records_ignored_without_warning(line: str) -> None:
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, d1(), e1(), e2()])
+    assert len(archive.meets[0].clubs) == 1
     assert len(archive.meets[0].individual_swims) == 1
-    assert not archive.report.warnings_for(record_type=code)
+    assert not archive.report.warnings_for(record_type=line[:2])
 
 
 def test_c1_repeated_team_reused() -> None:
@@ -233,11 +210,10 @@ def test_unattached_team_creates_no_club() -> None:
     assert m.clubs == []
     assert m.swimmers[0].club is None
     assert m.individual_swims[0].club is None
+    assert m.individual_swims[0].attach_status is AttachStatus.UNATTACHED
 
 
-# --------------------------------------------------------------------------- #
-# Athlete (D1)
-# --------------------------------------------------------------------------- #
+# -- Athlete (D1) --------------------------------------------------------------
 
 
 def test_d1_swimmer_fields() -> None:
@@ -259,46 +235,23 @@ def test_d1_swimmer_fields() -> None:
     assert (sw.last_name, sw.first_name) == ("Lim", "Adrian")
     assert sw.preferred_first_name == "AJ"
     assert sw.middle_initial == "Q"
-    # The D1 member-ID field (cols 70-83) is the 14-char SWIMS ID -> id_long; id_short
-    # is its 12-char prefix, matching read_cl2 (whose id_short == id_long[:12]).
+    # The 14-char member ID is id_long; id_short is its 12-char prefix, as in read_cl2.
     assert sw.id_long == "ADR*LIM*082299"
     assert sw.id_short == "ADR*LIM*0822"
     assert sw.birthday == datetime.date(1999, 8, 22)
     assert sw.citizenship is not None and sw.citizenship.name == "UNITED_STATES"
-    # D1 age is surfaced as the per-swim age class.
     assert sw.individual_swims[0].swimmer_age_class == "17"
 
 
-def test_d1_age_class_prefers_grade_when_age_absent() -> None:
-    # Scholastic meets record a grade (cols 100-101) with a blank/zero age (cols 98-99);
-    # surface the grade so it matches read_cl2's single "age or class" field.
-    line = d1(age="0", grade="JR")
+@pytest.mark.parametrize("age,expected", [("0", "JR"), ("17", "17")])
+def test_d1_age_class_age_wins_over_grade(age: str, expected: str) -> None:
+    # Scholastic meets record a grade with a zero age; matches read_cl2's "age or class".
+    line = d1(age=age, grade="JR")
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
-    assert archive.meets[0].swimmers[0].individual_swims[0].swimmer_age_class == "JR"
-
-
-def test_d1_age_class_prefers_real_age_over_grade() -> None:
-    # When both a real age and a grade are present, the numeric age wins (read_cl2
-    # stores the age in this field for non-scholastic meets).
-    line = d1(age="17", grade="JR")
-    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
-    assert archive.meets[0].swimmers[0].individual_swims[0].swimmer_age_class == "17"
-
-
-def test_d1_unattached_swim_marks_attach_status() -> None:
-    # A swimmer under the "UN" Unattached team swims unattached, matching read_cl2.
-    from tunas.enums import AttachStatus
-
-    c1_un = hy3_rec((1, "C1"), (3, "UN"), (8, "Unattached"), (54, "PC"))
-    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, c1_un, d1(), e1(), e2()])
-    swim = archive.meets[0].individual_swims[0]
-    assert swim.attach_status is AttachStatus.UNATTACHED
-    assert swim.club is None
+    assert archive.meets[0].swimmers[0].individual_swims[0].swimmer_age_class == expected
 
 
 def test_d1_attached_swim_default_attach_status() -> None:
-    from tunas.enums import AttachStatus
-
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, d1(), e1(), e2()])
     assert archive.meets[0].individual_swims[0].attach_status is AttachStatus.ATTACHED
 
@@ -315,7 +268,6 @@ def test_d1_wodob_blank_birthday() -> None:
 def test_d1_no_number_skipped() -> None:
     line = d1(number="")
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(number=""), e2()])
-    # No swimmer registered; the following E2 has no athlete to attach to.
     assert archive.meets[0].swimmers == []
     assert archive.report.warnings_for(
         record_type="D1", field="athlete_number", severity=Severity.SKIPPED
@@ -323,23 +275,16 @@ def test_d1_no_number_skipped() -> None:
 
 
 def test_d1_blank_first_name_skipped() -> None:
-    # A blank name is data-quality, not structural: skip the record in lenient
-    # mode (it used to abort the whole file) and orphan the following results.
-    line = d1(first="")
-    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()])
+    # Data quality, not structural: skipped leniently, raises only under strict.
+    lines = [A1, B1_HY3, B2_HY3, C1_HY3, d1(first=""), e1(), e2()]
+    archive = parse_hy3_lines(lines)
     assert archive.meets[0].swimmers == []
     assert archive.meets[0].individual_swims == []
     assert archive.report.warnings_for(
         record_type="D1", field="first_name", severity=Severity.SKIPPED
     )
-
-
-def test_d1_blank_first_name_strict_raises() -> None:
-    from tunas import ParseError
-
-    line = d1(first="")
     with pytest.raises(ParseError):
-        parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, e1(), e2()], strict=True)
+        parse_hy3_lines(lines, strict=True)
 
 
 def test_d1_orphan_without_meet() -> None:
@@ -347,9 +292,7 @@ def test_d1_orphan_without_meet() -> None:
     assert archive.report.warnings_for(record_type="D1", kind=IssueKind.ORPHANED)
 
 
-# --------------------------------------------------------------------------- #
-# Individual entry + result (E1, E2)
-# --------------------------------------------------------------------------- #
+# -- Individual entry + result (E1, E2) ----------------------------------------
 
 
 def test_e1_e2_individual_swim() -> None:
@@ -380,16 +323,16 @@ def test_e1_e2_individual_swim() -> None:
 
 
 @pytest.mark.parametrize(
-    "letter,stroke,sex",
+    "letter,stroke",
     [
-        ("A", Stroke.FREESTYLE, None),
-        ("B", Stroke.BACKSTROKE, None),
-        ("C", Stroke.BREASTSTROKE, None),
-        ("D", Stroke.BUTTERFLY, None),
-        ("E", Stroke.INDIVIDUAL_MEDLEY, None),
+        ("A", Stroke.FREESTYLE),
+        ("B", Stroke.BACKSTROKE),
+        ("C", Stroke.BREASTSTROKE),
+        ("D", Stroke.BUTTERFLY),
+        ("E", Stroke.INDIVIDUAL_MEDLEY),
     ],
 )
-def test_e1_stroke_letters(letter: str, stroke: Stroke, sex: object) -> None:
+def test_e1_stroke_letters(letter: str, stroke: Stroke) -> None:
     archive = parse_hy3_lines([*_HEAD, d1(), e1(dist="100", stroke=letter), e2(course="Y")])
     assert archive.meets[0].individual_swims[0].event.stroke is stroke
 
@@ -412,8 +355,7 @@ def test_e1_event_sex_mapping(code: str, sex: Sex) -> None:
 
 
 def test_e1_nt_seed_has_no_course() -> None:
-    # A `0.00` (no time) seed still carries a course letter in `.hy3`; it reads as
-    # no seed at all, matching how `read_cl2` reports an NT seed.
+    # A `0.00` seed still carries a course letter; it reads as no seed, like read_cl2's NT.
     lines = [*_HEAD, d1(), e1(seed="0.00", seed_course="Y", conv_seed="0.00"), e2()]
     swim = parse_hy3_lines(lines).meets[0].individual_swims[0]
     assert swim.seed_time is None and swim.seed_course is None
@@ -427,7 +369,6 @@ def test_e1_unknown_event_sex_skips_swim() -> None:
 
 
 def test_e1_blank_event_sex_skips_swim_silently() -> None:
-    # A blank event-sex is not a code error; the swim is skipped (no event_sex warning).
     archive = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=" "), e2()])
     assert archive.meets[0].individual_swims == []
     assert not archive.report.warnings_for(field="event_sex")
@@ -447,14 +388,11 @@ def test_e2_blank_course_unresolvable_skipped() -> None:
 
 
 def test_unresolvable_event_warning_reports_entry_stroke_not_heat() -> None:
-    # The stroke lives on E1; the E2 result record has a heat number at col 22. The
-    # skip warning must report the parsed entry stroke, not whatever digit sits in
-    # the E2 heat column. Here the stroke maps (A->Free) but the blank course makes
-    # the event unresolvable.
+    # The warning must report E1's stroke, not the digit in E2's heat column (col 22).
     archive = parse_hy3_lines([*_HEAD, d1(), e1(stroke="A"), e2(course="", heat="25")])
     warning = archive.report.warnings_for(field="event", severity=Severity.SKIPPED)[0]
-    assert f"stroke={Stroke.FREESTYLE}" in warning.reason  # parsed stroke, e.g. "stroke=1"
-    assert "stroke=2" not in warning.reason  # the heat tens digit must not leak in
+    assert f"stroke={Stroke.FREESTYLE}" in warning.reason
+    assert "stroke=2" not in warning.reason
 
 
 def test_e2_orphan_without_e1() -> None:
@@ -464,7 +402,6 @@ def test_e2_orphan_without_e1() -> None:
 
 
 def test_e2_no_athlete_skipped() -> None:
-    # E1 references an unknown athlete number, so its E2 cannot attach.
     archive = parse_hy3_lines([*_HEAD, d1(number="1"), e1(number="999"), e2()])
     assert archive.meets[0].individual_swims == []
     assert archive.report.warnings_for(record_type="E2", kind=IssueKind.ORPHANED)
@@ -531,13 +468,10 @@ def test_e2_backup_times() -> None:
         [*_HEAD, d1(), e1(), e2(time="61.64", watch1="61.60", watch2="61.70", watch3="0.00")]
     )
     swim = archive.meets[0].individual_swims[0]
-    # The 0.00 watch slot is dropped; the two real backups are kept.
     assert [str(t) for t in swim.backup_times] == ["1:01.60", "1:01.70"]
 
 
-# --------------------------------------------------------------------------- #
-# Relays (F1, F2, F3)
-# --------------------------------------------------------------------------- #
+# -- Relays (F1, F2, F3) -------------------------------------------------------
 
 
 def _relay_meet() -> list[str]:
@@ -565,7 +499,6 @@ def test_relay_basic() -> None:
     assert relay.rank == 1
     assert [leg.order.name for leg in relay.legs] == ["LEG_1", "LEG_2"]
     assert [leg.swimmer.last_name for leg in relay.legs] == ["Aa", "Bb"]
-    # Counting legs are surfaced on their swimmers' swims.
     assert archive.meets[0].swimmers[0].relay_swims[0].relay is relay
 
 
@@ -587,7 +520,6 @@ def test_relay_alternate_leg() -> None:
     relay = archive.meets[0].relays[0]
     assert relay.legs == []
     assert len(relay.alternates) == 1 and relay.alternates[0].swimmer is not None
-    # Alternates are excluded from the swimmer's counting relay swims.
     assert archive.meets[0].swimmers[0].relay_swims == []
 
 
@@ -625,9 +557,7 @@ def test_relay_unresolvable_event_skipped() -> None:
     assert archive.report.warnings_for(field="event", severity=Severity.SKIPPED)
 
 
-# --------------------------------------------------------------------------- #
-# Splits (G1)
-# --------------------------------------------------------------------------- #
+# -- Splits (G1) ---------------------------------------------------------------
 
 
 def test_g1_individual_splits() -> None:
@@ -695,8 +625,7 @@ def test_g1_orphan_without_swim() -> None:
 
 
 def test_g1_continuation_across_records() -> None:
-    # A 1000 free has 20 length-counter splits (2,4,...,40), spilling past the
-    # 11-block limit into a second G1 record.
+    # A 1000 free's 20 splits spill past the 11-block limit into a second G1.
     blocks1 = [g1_block("F", c, f"{c * 15}.00") for c in range(2, 24, 2)]  # counters 2..22
     blocks2 = [g1_block("F", c, f"{c * 15}.00") for c in range(24, 42, 2)]  # counters 24..40
     lines = [
@@ -715,9 +644,7 @@ def test_g1_continuation_across_records() -> None:
 
 
 def test_g1_doubled_counter_scales_to_event_distance() -> None:
-    # Some timing systems record at half-length granularity: a 200 SCY shows
-    # counters 4/8/12/16 (odd slots blank) instead of 2/4/6/8. The cumulative
-    # distances must still resolve to 50/100/150/200, not 100/200/300/400.
+    # Half-length granularity: a 200 SCY with counters 4/8/12/16 is still 50/100/150/200.
     blocks = [
         g1_block("F", 2, "0.00"),
         g1_block("F", 4, "27.72"),
@@ -735,8 +662,7 @@ def test_g1_doubled_counter_scales_to_event_distance() -> None:
 
 
 def test_g1_lone_finishing_split_uses_event_distance() -> None:
-    # A lone finishing split for a 100 IM arrives with the doubled counter 8; it
-    # must map to the event distance (100), not 200.
+    # A lone finishing split with doubled counter 8 maps to the 100, not 200.
     lines = [
         *_HEAD,
         d1(),
@@ -749,9 +675,7 @@ def test_g1_lone_finishing_split_uses_event_distance() -> None:
     assert [s.distance for s in splits] == [100]
 
 
-# --------------------------------------------------------------------------- #
-# DQ reason (H1 / H2)
-# --------------------------------------------------------------------------- #
+# -- DQ reason (H1 / H2) -------------------------------------------------------
 
 
 def test_h1_dq_reason() -> None:
@@ -782,21 +706,17 @@ def test_h1_on_relay() -> None:
 
 
 def test_h1_without_result_ignored() -> None:
-    # An H1 right after D1 (no result yet) attaches to nothing and is dropped silently.
     archive = parse_hy3_lines([*_HEAD, d1(), h1()])
     assert not archive.report.warnings_for(record_type="H1")
 
 
-# --------------------------------------------------------------------------- #
-# Structural: checksum, unknown records, lengths, strict mode
-# --------------------------------------------------------------------------- #
+# -- Structural: checksum, unknown records, lengths, strict mode ---------------
 
 
 def test_trailing_checksum_is_ignored() -> None:
-    # The 2-digit checksum (cols 129-130) is not validated: `USAS Club Times
-    # Export` files omit it, and it is not a data field. A wrong checksum still parses.
+    # Not validated: `USAS Club Times Export` files omit it.
     good = e2(time="61.64")
-    corrupt = good[:128] + "99"  # valid data body, deliberately wrong checksum
+    corrupt = good[:128] + "99"
     archive = parse_hy3_lines([*_HEAD, d1(), e1(), corrupt])
     assert str(archive.meets[0].individual_swims[0].time) == "1:01.64"
     assert not archive.report.warnings_for(field="checksum")
@@ -814,10 +734,9 @@ def test_over_long_line_skipped() -> None:
 
 
 def test_short_line_padded() -> None:
-    # A blank-ish C1 truncated short still parses after right-padding.
     short = "C1   ABCD"
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, short, d1(), e1(), e2()])
-    assert archive.meets[0].individual_swims  # parsing continued past the short line
+    assert archive.meets[0].individual_swims
 
 
 def test_blank_lines_skipped() -> None:

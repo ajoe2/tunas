@@ -4,9 +4,7 @@
 
 # tunas
 
-A Python library for parsing USA Swimming meet result files (`.cl2` / SDIF v3 and Hy-Tek `.hy3`) into structured Python objects and querying offline motivational time standards.
-
-`tunas` parses results files into clean, idiomatic objects — [`Meet`][tunas.models.Meet], [`Club`][tunas.models.Club], [`Swimmer`][tunas.models.Swimmer], [`IndividualSwim`][tunas.models.IndividualSwim], and [`Relay`][tunas.models.Relay]. Parsing is lenient by default, collecting warnings in a [`ParseReport`][tunas.ParseReport] to prevent data loss.
+Parse USA Swimming meet files (`.cl2` / SDIF v3 and Hy-Tek `.hy3`) into typed objects — [`Meet`][tunas.models.Meet], [`Club`][tunas.models.Club], [`Swimmer`][tunas.models.Swimmer], [`IndividualSwim`][tunas.models.IndividualSwim], [`Relay`][tunas.models.Relay] — and look up motivational time standards offline. Parsing is lenient by default: problems are collected in a [`ParseReport`][tunas.ParseReport] instead of dropping data.
 
 ## Install
 
@@ -14,21 +12,21 @@ A Python library for parsing USA Swimming meet result files (`.cl2` / SDIF v3 an
 pip install tunas
 ```
 
-Requires Python 3.12+. At present the runtime depends only on the Python standard library.
+Requires Python 3.12+. No runtime dependencies.
 
 ## Quick example
 
 ```python
 from tunas import read_cl2, read_hy3
 
-# read_cl2 yields one MeetArchive (meets + a parse report) per source file
+# One MeetArchive (meets + parse report) per source file
 for archive in read_cl2("results.cl2"):
     for meet in archive.meets:
         print(meet.name, "—", len(meet.swimmers), "swimmers")
         for swim in meet.individual_swims:
             print(swim.swimmer.full_name, swim.event.name, swim.time)
 
-# read_hy3 parses Hy-Tek files into the exact same object graph
+# Same object graph from Hy-Tek files
 for archive in read_hy3("results.hy3"):
     for meet in archive.meets:
         print(meet.name, "—", len(meet.swimmers), "swimmers")
@@ -42,7 +40,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Install `tunas` and parse your first `.cl2` file in a few lines.
+    Parse your first `.cl2` file in a few lines.
 
     [:octicons-arrow-right-24: Get up and running](guide/getting_started.md)
 
@@ -50,7 +48,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Understand the parsing modes and the never-lose-data error model.
+    Lenient vs. strict parsing and the error model.
 
     [:octicons-arrow-right-24: Parsing files](guide/parsing.md)
 
@@ -58,7 +56,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Copy-paste practical recipes for common analysis tasks.
+    Recipes for common analysis tasks.
 
     [:octicons-arrow-right-24: Browse recipes](guide/cookbook.md)
 
@@ -66,7 +64,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Learn the object graph — `Meet`, `Club`, `Swimmer`, `Relay`.
+    The object graph: `Meet`, `Club`, `Swimmer`, `Relay`.
 
     [:octicons-arrow-right-24: Domain model](guide/models.md)
 
@@ -74,7 +72,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Look up a specific class, function, or exception.
+    Every class, function, and exception.
 
     [:octicons-arrow-right-24: API reference](reference/index.md)
 
@@ -82,7 +80,7 @@ for archive in read_hy3("results.hy3"):
 
     ---
 
-    Understand the architecture and the decisions behind it.
+    Architecture and the decisions behind it.
 
     [:octicons-arrow-right-24: Design notes](about/architecture.md)
 

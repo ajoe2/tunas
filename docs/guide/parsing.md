@@ -1,16 +1,10 @@
 # Parsing & errors
 
-The parser is exposed as two top-level functions that parse `.cl2` (SDIF) and `.hy3` (Hy-Tek) result files into structured [`Meet`](models.md) objects:
-
-```python
-from tunas import read_cl2, read_hy3
-```
-
-Both return a **lazy iterator** of [`MeetArchive`](#meetarchive) objects — one per source file. Parsing is lenient by default, recovering from non-fatal formatting issues and collecting warnings.
+`read_cl2` (SDIF) and `read_hy3` (Hy-Tek) parse files into [`Meet`](models.md) objects. Both return a **lazy iterator** of [`MeetArchive`](#meetarchive) objects, one per source file, and are lenient by default.
 
 ## `MeetArchive`
 
-Each item yielded by a reader is the parse result for a single source file (or stream):
+The parse result for one source file (or stream):
 
 ```python
 @dataclass(slots=True)
@@ -20,7 +14,7 @@ class MeetArchive:
     report: ParseReport        # diagnostics and counts for THIS source only
 ```
 
-Because the readers yield archives lazily and per file, a large corpus is parsed one file at a time — the whole object graph is never held in memory at once, and each file's diagnostics stay attached to that file rather than being merged into one global report. To pull everything into memory, drain the iterator:
+Files are parsed one at a time as the iterator is consumed, and each file's diagnostics stay on its own archive. To load everything, drain the iterator:
 
 ```python
 # all meets, flattened across files
@@ -49,22 +43,10 @@ def read_cl2(
 |---|---|---|
 | `source` | `str \| Path \| Iterable[Path] \| TextIO` | Input source — path, directory, list of paths, or text stream. |
 | `strict` | `bool` | If `True`, any warning raises a `ParseError`. If `False` (default), collects warnings and continues. **M1 structural violations always raise.** |
-| `encoding` | `str` | Text encoding for file paths. Defaults to `"cp1252"` (common for SDIF/DOS files) to preserve alignments and accented names. |
+| `encoding` | `str` | Text encoding for file paths. `"cp1252"` (the default) keeps column alignment and accented names intact. |
 | `errors` | `str` | Encoding error policy. Defaults to `"replace"`. |
 
-### Lazy iteration
-
-Parsing is single-threaded and lazy: each file is read and parsed only when you consume its archive, so a whole season's corpus is processed one file at a time without ever holding every meet in memory at once.
-
-```python
-for arc in read_cl2("season_archive/"):
-    handle(arc.meets, arc.report)  # previous archive is freed before the next file is parsed
-```
-
-Archives are yielded in source order, and in `strict` mode the earliest failing file raises first. The lazy iterator (one archive per file) keeps peak memory flat regardless of corpus size — that is the main scaling lever.
-
-!!! note "Why single-threaded"
-    Parsing is CPU-bound pure Python. On a standard (GIL) interpreter a thread pool only overlaps file I/O and can be measurably *slower* under contention; even on a free-threaded build (3.13t+) the speed-up is sublinear and plateaus — cross-thread contention on shared immutables (`Event`/`Stroke`/`Course` enum members, interned strings) and cyclic-GC coordination over the cross-referenced meet graph dominate. A concurrent reader added complexity for no reliable gain, so `tunas` parses sequentially. To use multiple cores, shard the file list across separate processes.
+Parsing is sequential and single-threaded: it is CPU-bound pure Python, and threads gave no reliable speed-up even on free-threaded builds. To use multiple cores, shard the file list across processes. In `strict` mode the earliest failing file raises first.
 
 ### Source types
 
@@ -92,17 +74,7 @@ except ParseError as exc:
 
 ## `read_hy3`
 
-`read_hy3` parses Hy-Tek's proprietary `.hy3` format into the same [`Meet`](models.md) structure as `read_cl2`. Its signature, options, and source handling behavior are identical to `read_cl2`:
-
-```python
-def read_hy3(
-    source: str | os.PathLike | Iterable[str | os.PathLike] | TextIO,
-    *,
-    strict: bool = False,
-    encoding: str = "cp1252",
-    errors: str = "replace",
-) -> Iterator[MeetArchive]: ...
-```
+`read_hy3` parses Hy-Tek's proprietary `.hy3` format into the same [`Meet`](models.md) structure, with the same signature and source handling as `read_cl2` (directories are walked for `*.hy3`):
 
 ```python
 from tunas import read_hy3
@@ -127,27 +99,24 @@ The following model fields are populated exclusively by `read_hy3` (remaining `N
 | [`MeetResult`][tunas.models.MeetResult]`.dq_code` / `.dq_reason` | `E2`/`F2` + `H1`/`H2` |
 | `MeetResult.converted_seed_time` / `.converted_seed_course` | `E1`/`F1` (converted seed) |
 | `MeetResult.backup_times` | `E2`/`F2` manual watch times |
-| [`Relay`][tunas.models.Relay]`.splits` | `G1` (whole-relay cumulative splits) |
 
 Exhibition swims (status `S`) are parsed as [`ResultStatus`][tunas.ResultStatus]`.EXHIBITION`.
 
 ### Differences from `read_cl2`
-
-These differences reflect genuine format variation, not parser limitations:
 
 - **Zero times**: A `.hy3` time of `0.00` ("no time") is parsed as `None`.
 - **Disqualifications**: Preserves the swum `time` (SDIF sets it to `None`) and populates `dq_code` and `dq_reason`.
 - **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields. A `0.00` ("no time") seed reads as `seed_time=None` with `seed_course=None`, as an SDIF `NT` seed does, even though the `.hy3` record still carries a course letter.
 - **Team Manager exports**: Team Manager writes event sex `F` for women's/girls' events and round `T` for a single timed swim; these read as `Sex.FEMALE` and `Session.FINALS`.
 - **Relay splits**: Parsed into `Relay.splits` as whole-relay cumulative splits. Individual splits attach to `IndividualSwim.splits` as usual. `0.00` placeholders are ignored.
-- **Swimmer IDs**: The 14-character `.hy3` member ID is stored in `id_long`, and `id_short` is derived as its 12-character prefix — matching `read_cl2`, where the same swimmer's `id_short`/`id_long` carry the 12- and 14-char forms.
+- **Swimmer IDs**: The 14-character `.hy3` member ID is `id_long`; `id_short` is its 12-character prefix, matching `read_cl2`.
 - **Club codes**: `Club.team_code` carries the LSC prefix (e.g. `PCSCSC`) to match `read_cl2`; the bare code is kept only when the `C1` record has no LSC.
 - **Blank athlete names**: A `D1` with a blank first/last name is skipped (with a `SKIPPED` warning) rather than aborting the file in lenient mode.
 - **Checksums**: Line checksums (columns 129–130) are not validated, as they are omitted in some exports (e.g. `USAS Club Times Export`).
 
 ## Entries files (psych sheets)
 
-Both readers also parse **entries files** — the seeded entries a psych sheet is printed from, before anything is swum:
+Both readers parse **entries files**: the seeded entries a psych sheet is printed from.
 
 | Format | Header | Produced by |
 |---|---|---|
@@ -339,29 +308,16 @@ Detailed structural contracts enforced by the parser:
 
 **`G0` — Splits (Leaf)**
 - *M1 (fatal):* `"G0"` header, **sequence number**, **split distance**, **split type**.
-- *Attaches to:* Preceding `IndividualSwim` or `RelaySwim` matching the G0 session code (`P`/`F`/`S`).
+- *Attaches to:* the preceding `IndividualSwim`, or the preceding `Relay` row, matching the G0 session code (`P`/`F`/`S`).
 - *Blank slots:* An empty split slot is skipped (not treated as end-of-list), so a record that fills only a later slot — e.g. just the final cumulative time — still contributes that split, at the cumulative distance implied by its slot position.
 
 **`Z0` — File terminator**
 - *M1:* `"Z0"` header. Resets parser context. Notes map to `SourceFile.notes`. FILE code is cross-checked against parsed record counts (mismatch warns).
 
-## Edge cases handled
+## Relays and splits
 
-- **BOM & Line Endings:** Stripped and normalized.
-- **Short/Long Lines:** Right-padded (< 160) or skipped (> 160).
-- **Unattached:** Auto-detected by LSC prefix or `"unattached"` names.
-- **Missing course byte `*`:** Kept with `course=None` + warning. Course `X` sets `status=DQ` and retains recorded time.
-- **Relay-only swimmers:** Created with no `IndividualSwim` if all event fields are blank.
+- **BOMs and line endings** are stripped and normalized.
 - **Relay alternates:** Swimmers with order `ALTERNATE` are routed to `Relay.alternates` instead of `legs`, and excluded from `Swimmer.swims`.
 - **Relay legs fanning out:** A single `F0` spanning multiple sessions creates one `RelaySwim` per session. The single `F0` leg time is filed on the finals leg.
-- **Relay splits:** A relay's `G0` records carry whole-relay cumulative splits, attached to the relay row (`Relay.splits`) with distances climbing 50/100/150/200/… across the records — matching the `.hy3` reader. Relays whose `G0`s follow the `E0` with no `F0` legs still attach to the row rather than being dropped. Each leg's `RelaySwim.splits` is then *derived* from that row (re-based to the leg start), and empty when there is nothing to derive.
-- **Individual splits attachment:** For individual swims, `G0` splits link to the preceding `D0` swum session based on the G0's `prelims/finals` code.
-- **Blank split slots:** Skipped individually; a recorded split in a later slot is still kept (no information is lost when an earlier split is missing).
-
-## Performance
-
-- Scans single-pass.
-- Performs **O(1)** swimmer and club lookups.
-- Scales linearly with file size.
-- Streams files line-by-line.
-- Yields archives lazily, one file at a time: a consumer that processes and discards each archive keeps peak memory bounded by a single file's object graph, not the whole corpus.
+- **Relay splits:** A relay's `G0` records carry whole-relay cumulative splits, attached to `Relay.splits` with distances climbing 50/100/150/… across the records, as in `read_hy3`. `G0`s right after an `E0` with no `F0` legs still attach to the row. Each leg's `RelaySwim.splits` is derived from that row, re-based to the leg start (empty when there is nothing to derive).
+- **Individual splits** link to the preceding `D0`'s session per the G0's session code.

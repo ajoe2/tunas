@@ -22,7 +22,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/ajoe2/tunas"
-Documentation = "https://github.com/ajoe2/tunas/tree/main/docs"
+Documentation = "https://ajoe2.github.io/tunas/"
 Repository = "https://github.com/ajoe2/tunas"
 Issues = "https://github.com/ajoe2/tunas/issues"
 Changelog = "https://github.com/ajoe2/tunas/blob/main/CHANGELOG.md"

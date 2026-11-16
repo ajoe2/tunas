@@ -13,6 +13,7 @@ from tunas import (
     Ethnicity,
     Event,
     FileType,
+    IssueKind,
     RelayLegOrder,
     ResultStatus,
     Session,
@@ -164,6 +165,8 @@ def test_d0_missing_id_kept_without_an_id() -> None:
     assert archive.report.records_skipped == 0
     (warning,) = archive.report.warnings_for(record_type="D0", field="id_short")
     assert warning.severity.name == "RECOVERED"
+    assert warning.kind is IssueKind.MISSING
+    assert warning.raw_line.startswith("D0")
 
 
 def test_d0s_missing_id_for_one_person_share_a_swimmer() -> None:
@@ -181,38 +184,6 @@ def test_d0_id_long_fallback() -> None:
     assert sw.id_long == "49AC52F6961843"
     assert archive.report.records_skipped == 0
     assert len(sw.individual_swims) == 1
-
-
-def test_d0_relay_only() -> None:
-    archive = parse_lines(
-        [
-            A0,
-            B1,
-            C1,
-            d0(
-                esex="",
-                dist="",
-                stroke="",
-                eage="",
-                finals="",
-                seed="",
-                seed_course="",
-                finals_course="",
-                finals_place="",
-            ),
-            Z0,
-        ]
-    )
-    assert len(archive.meets[0].swimmers) == 1
-    assert archive.meets[0].individual_swims == []
-
-
-def test_d0_outcome_codes() -> None:
-    archive = parse_lines([A0, B1, C1, d0(finals="NS"), Z0])
-    res = archive.meets[0].swimmers[0].individual_swims[0]
-    assert res.status is ResultStatus.NS
-    assert res.time is None
-    assert not archive.report.warnings_for(record_type="D0", field="finals_time")
 
 
 def test_d0_course_x_dq_keeps_time() -> None:
@@ -264,7 +235,6 @@ def test_d1_d2_contact_and_registration() -> None:
     assert sw.registration.member_status is not None
     assert sw.registration.registration_date == datetime.date(2024, 9, 1)
     assert sw.registration.season is not None
-    # No phantom fields.
     assert not hasattr(sw.contact, "email")
     assert not hasattr(sw.contact, "address_2")
 
@@ -337,7 +307,7 @@ def test_f0_new_swimmer_from_relay() -> None:
 
 
 def test_relay_per_session_and_split_routing() -> None:
-    # E0 with both a prelim time (55/8 + course 63/1) and a finals time (73/8 + course 81/1).
+    # E0 with both a prelim time (55/8, course 63/1) and a finals time (73/8, course 81/1).
     e0pf = rec(
         (1, "E0"),
         (3, "1"),
@@ -371,9 +341,7 @@ def test_g0_splits_after_d0() -> None:
 
 
 def test_g0_relay_splits_on_relay_row_cumulative() -> None:
-    # Whole-relay cumulative splits attach to the Relay row (matching the .hy3
-    # reader and the Relay.splits contract) and climb 50/100/... across the
-    # per-leg G0 records, instead of collapsing onto each leg at distance 50.
+    # Whole-relay cumulative splits go on the Relay row and climb across the per-leg G0s.
     leg1 = f0(name="One, Ann", uss="49AC52F69611", order_finals="1")
     leg2 = f0(name="Two, Bea", uss="49AC52F69622", order_finals="2")
     g1 = g0(uss="49AC52F69611", times=("26.50",), total="1", session="F")
@@ -381,16 +349,12 @@ def test_g0_relay_splits_on_relay_row_cumulative() -> None:
     archive = parse_lines([A0, B1, C1, e0(), leg1, g1, leg2, g2, Z0])
     relay = archive.meets[0].relays[0]
     assert [(s.distance, str(s.time)) for s in relay.splits] == [(50, "26.50"), (100, "55.00")]
-    # Each leg derives its slice from the row, re-based to the leg start.
     assert [(s.distance, str(s.time)) for s in relay.legs[0].splits] == [(50, "26.50")]
     assert [(s.distance, str(s.time)) for s in relay.legs[1].splits] == [(50, "28.50")]
 
 
 def test_g0_relay_splits_skip_missing_interior_split() -> None:
-    # A 200 medley relay (4x50) whose 3rd leg records no split. The remaining marks
-    # must keep their true per-leg cumulative distances: the final (leg 4) mark belongs
-    # at 200 (the full distance, == the relay time), NOT 150. Distance is derived from
-    # each leg's position, so a missing interior split does not shift the later marks.
+    # Distance comes from each leg's position, so leg 3's missing split doesn't shift leg 4's.
     e = e0(finals="2:36.00")
     leg1 = f0(name="One, Ann", uss="AAAAAAAAAAA1", order_finals="1")
     g1 = g0(uss="AAAAAAAAAAA1", times=("41.70",), total="1", session="F")
@@ -409,10 +373,7 @@ def test_g0_relay_splits_skip_missing_interior_split() -> None:
 
 
 def test_g0_relay_splits_without_f0_legs_attach_to_row() -> None:
-    # Some relays list their cumulative G0 splits straight after the E0 with no
-    # F0 leg records; these attach to the relay row instead of being orphaned.
-    from tunas import IssueKind
-
+    # G0s straight after the E0 with no F0 legs attach to the row, not orphaned.
     gr = g0(times=("26.50", "55.00"), total="2", session="F")
     archive = parse_lines([A0, B1, C1, e0(), gr, Z0])
     relay = archive.meets[0].relays[0]
@@ -441,8 +402,7 @@ def test_g0_unparseable_split_kept_as_none() -> None:
 
 
 def test_g0_outcome_code_in_split_kept_as_none() -> None:
-    # Some exporters write the swim's outcome (e.g. `DQ`) where the next split
-    # time belongs; it is recovered like a malformed split rather than crashing.
+    # Some exporters write the outcome (e.g. `DQ`) where the next split time belongs.
     gr = g0(times=("1:21.93", "DQ"), total="2")
     archive = parse_lines([A0, B1, C1, d0(), gr, Z0])
     finals = next(s for s in archive.meets[0].individual_swims if s.session is Session.FINALS)
@@ -454,8 +414,6 @@ def test_g0_outcome_code_in_split_kept_as_none() -> None:
 def test_z0_count_mismatch() -> None:
     z0_bad = rec((1, "Z0"), (3, "1"), (12, "02"), (58, "999"))
     archive = parse_lines([A0, B1, C1, d0(), z0_bad])
-    from tunas import IssueKind
-
     assert archive.report.warnings_for(kind=IssueKind.COUNT_MISMATCH)
     assert archive.report.fields_recovered == 0  # COUNT_MISMATCH excluded
 
@@ -463,7 +421,5 @@ def test_z0_count_mismatch() -> None:
 def test_unknown_record_type() -> None:
     j0 = rec((1, "J0"), (12, "qualifying time"))
     archive = parse_lines([A0, B1, j0, C1, d0(), Z0])
-    from tunas import IssueKind
-
     assert archive.report.warnings_for(kind=IssueKind.UNKNOWN_RECORD)
     assert len(archive.meets[0].swimmers) == 1  # parse continues

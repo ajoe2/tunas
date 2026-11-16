@@ -1,35 +1,17 @@
-"""Red-team / fuzz tests: feed the parser deliberately nasty input.
-
-The contract under attack: lenient ``read_cl2`` must NEVER crash on bad data —
-it recovers, skips, or warns. Only structural M1 violations raise (and only a
-clean ``ParseError``, never an unexpected exception). Strict mode may raise, but
-only ``ParseError``.
-"""
+"""Nasty input: lenient ``read_cl2`` recovers or warns; only M1 violations raise ParseError."""
 
 from __future__ import annotations
 
+import contextlib
 import io
-import os
+from pathlib import Path
 
 import pytest
 from conftest import A0, B1, C1, Z0, d0, e0, f0, g0, parse_lines, rec
 
-from tunas import IssueKind, MeetArchive, ParseError, ResultStatus, read_cl2
+from tunas import IssueKind, ParseError, ResultStatus, read_cl2
 
-
-def _no_unexpected_exception(lines: list[str]) -> MeetArchive:
-    """Lenient parse must not raise anything other than (optionally) ParseError."""
-    try:
-        return parse_lines(lines)
-    except ParseError:
-        raise
-    except Exception as exc:  # pragma: no cover - this failing IS the bug
-        raise AssertionError(f"lenient parse raised non-ParseError: {exc!r}") from exc
-
-
-# --------------------------------------------------------------------------- #
-# Degenerate / empty inputs
-# --------------------------------------------------------------------------- #
+# -- Degenerate / empty inputs ---------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -50,7 +32,7 @@ def _no_unexpected_exception(lines: list[str]) -> MeetArchive:
     ],
 )
 def test_degenerate_inputs_never_crash(lines: list[str]) -> None:
-    archive = _no_unexpected_exception(lines)
+    archive = parse_lines(lines)
     assert isinstance(archive.meets, list)
     assert archive.report.files_read == 1
 
@@ -64,55 +46,34 @@ def test_completely_empty_stream() -> None:
 def test_only_garbage_lines() -> None:
     archive = parse_lines(["garbage", "!!!!", "12345", "??", "\x00\x01\x02"])
     assert archive.meets == []
-    # every line is an unknown/short record, warned not crashed
     assert archive.report.has_warnings
 
 
-# --------------------------------------------------------------------------- #
-# Line-length and line-ending abuse
-# --------------------------------------------------------------------------- #
+# -- Line-length and line-ending abuse -----------------------------------------
 
 
 @pytest.mark.parametrize("length", [0, 1, 2, 3, 159, 160, 161, 320, 1000])
 def test_arbitrary_line_lengths(length: int) -> None:
-    # A line that merely starts with "D0" but is otherwise garbage may hit a fatal
-    # M1 (e.g. an invalid sex byte). That is contract-correct; the only thing the
-    # red-team forbids is an *unexpected* exception type.
+    # Garbage "D0..." may hit a fatal M1 (e.g. an invalid sex byte); only ParseError is allowed.
     line = ("D0" + "x" * 1000)[:length]
-    try:
-        archive = parse_lines([A0, B1, C1, line, Z0])
-    except ParseError:
-        return
-    except Exception as exc:  # pragma: no cover - this failing IS the bug
-        raise AssertionError(f"unexpected non-ParseError: {exc!r}") from exc
-    assert isinstance(archive.meets, list)
+    with contextlib.suppress(ParseError):
+        parse_lines([A0, B1, C1, line, Z0])
 
 
-def test_overlong_line_warns_bad_length() -> None:
-    report = parse_lines([A0, B1, C1, "D0" + "z" * 300, Z0]).report
+@pytest.mark.parametrize("line", ["D0" + "z" * 300, "X" * 200])
+def test_overlong_line_warns_bad_length(line: str) -> None:
+    report = parse_lines([A0, B1, C1, d0(), line, Z0]).report
     assert report.warnings_for(kind=IssueKind.BAD_LENGTH)
 
 
-def test_crlf_and_cr_line_endings() -> None:
-    text = "\r\n".join([A0, B1, C1, d0(), Z0]) + "\r\n"
+@pytest.mark.parametrize(
+    "prefix,sep,end", [("", "\r\n", "\r\n"), ("", "\n", ""), ("\ufeff", "\n", "\n")]
+)
+def test_line_endings_and_bom(prefix: str, sep: str, end: str) -> None:
+    text = prefix + sep.join([A0, B1, C1, d0(), Z0]) + end
     archive = next(iter(read_cl2(io.StringIO(text))))
     assert len(archive.meets) == 1
-    # bare-CR inside a StringIO line still rstrip'd
-    archive = next(iter(read_cl2(io.StringIO("\n".join([A0, B1, C1, d0(), Z0]) + "\n"))))
-    assert len(archive.meets) == 1
-
-
-def test_no_trailing_newline() -> None:
-    text = "\n".join([A0, B1, C1, d0(), Z0])  # no final newline
-    archive = next(iter(read_cl2(io.StringIO(text))))
-    assert len(archive.meets) == 1
-
-
-def test_bom_on_first_line() -> None:
-    text = "﻿" + "\n".join([A0, B1, C1, d0(), Z0]) + "\n"
-    archive = next(iter(read_cl2(io.StringIO(text))))
-    assert len(archive.meets) == 1
-    assert archive.meets[0].source_file is not None  # A0 still recognized despite BOM
+    assert archive.meets[0].source_file is not None  # A0 recognized despite a BOM
 
 
 def test_trailing_whitespace_padding() -> None:
@@ -121,15 +82,21 @@ def test_trailing_whitespace_padding() -> None:
     assert len(archive.meets[0].swimmers) == 1
 
 
-# --------------------------------------------------------------------------- #
-# Malformed numeric / coded fields
-# --------------------------------------------------------------------------- #
+# -- Malformed numeric / coded fields ------------------------------------------
 
 
-@pytest.mark.parametrize("dist", ["ABCD", "    ", "12X", "-50", "9999", "0000"])
-def test_garbage_event_distance_never_crashes(dist: str) -> None:
-    archive = _no_unexpected_exception([A0, B1, C1, d0(dist=dist), Z0])
-    assert isinstance(archive.meets, list)
+@pytest.mark.parametrize(
+    "line",
+    [d0(dist=v) for v in ["ABCD", "    ", "12X", "-50", "9999", "0000"]]
+    + [
+        d0(finals=v)
+        for v in ["::", ".", "1:2:3.4", "999999:99.99", "-1.00", "  :  .  ", "abc", "1:.", ":12.34"]
+    ]
+    + [d0(eage=v) for v in ["UNUN", "OVOV", "ABCD", "9999", "1 12", "U12", "    "]]
+    + [d0(name="Bad\x07\x00Name, X")],
+)
+def test_garbage_fields_never_crash(line: str) -> None:
+    assert isinstance(parse_lines([A0, B1, C1, line, Z0]).meets, list)
 
 
 @pytest.mark.parametrize(
@@ -137,22 +104,7 @@ def test_garbage_event_distance_never_crashes(dist: str) -> None:
 )
 def test_garbage_birthdate_kept_as_none(birth: str) -> None:
     archive = parse_lines([A0, B1, C1, d0(birth=birth), Z0])
-    # record kept (id present), birthday recovered to None
     assert archive.meets[0].swimmers[0].birthday is None
-
-
-@pytest.mark.parametrize(
-    "t", ["::", ".", "1:2:3.4", "999999:99.99", "-1.00", "  :  .  ", "abc", "1:.", ":12.34"]
-)
-def test_garbage_time_never_crashes(t: str) -> None:
-    archive = _no_unexpected_exception([A0, B1, C1, d0(finals=t), Z0])
-    assert isinstance(archive.meets, list)
-
-
-@pytest.mark.parametrize("eage", ["UNUN", "OVOV", "ABCD", "9999", "1 12", "U12", "    "])
-def test_garbage_event_age_never_crashes(eage: str) -> None:
-    archive = _no_unexpected_exception([A0, B1, C1, d0(eage=eage), Z0])
-    assert isinstance(archive.meets, list)
 
 
 def test_huge_altitude_truncated_to_field_width() -> None:
@@ -182,13 +134,11 @@ def test_unknown_codes_across_fields_never_crash() -> None:
     line = d0()
     line = line[:51] + "Z" + line[52:]  # ATTACH (52/1) bogus
     line = line[:52] + "ZZZ" + line[55:]  # CITIZEN (53/3) bogus
-    archive = _no_unexpected_exception([A0, B1, C1, line, Z0])
+    archive = parse_lines([A0, B1, C1, line, Z0])
     assert len(archive.meets[0].swimmers) == 1
 
 
-# --------------------------------------------------------------------------- #
-# G0 split arithmetic abuse
-# --------------------------------------------------------------------------- #
+# -- G0 split arithmetic abuse -------------------------------------------------
 
 
 def test_g0_sequence_zero_no_negative_distances() -> None:
@@ -234,9 +184,7 @@ def test_g0_bad_split_type_is_fatal() -> None:
         parse_lines([A0, B1, C1, d0(), gb, Z0])
 
 
-# --------------------------------------------------------------------------- #
-# Relay abuse
-# --------------------------------------------------------------------------- #
+# -- Relay abuse ---------------------------------------------------------------
 
 
 def test_more_than_four_relay_legs_all_retained() -> None:
@@ -265,13 +213,11 @@ def test_f0_before_e0_orphaned() -> None:
     assert archive.report.warnings_for(record_type="F0", kind=IssueKind.ORPHANED)
 
 
-# --------------------------------------------------------------------------- #
-# Out-of-order / misplaced records
-# --------------------------------------------------------------------------- #
+# -- Out-of-order / misplaced records ------------------------------------------
 
 
 def test_records_before_meet_are_orphans_or_ignored() -> None:
-    archive = _no_unexpected_exception([A0, g0(), f0(), d0(), e0(), B1, C1, d0(), Z0])
+    archive = parse_lines([A0, g0(), f0(), d0(), e0(), B1, C1, d0(), Z0])
     assert len(archive.meets) == 1
     assert len(archive.meets[0].swimmers) == 1  # only the post-B1 D0 counted
 
@@ -291,16 +237,7 @@ def test_lowercase_record_header_is_unknown() -> None:
     assert len(archive.meets[0].swimmers) == 1
 
 
-def test_multiple_meets_and_terminators() -> None:
-    archive = parse_lines([A0, B1, C1, d0(), Z0, B1, C1, d0(dist="50", finals="28.00"), Z0])
-    assert len(archive.meets) == 2
-    # entities are not shared between meets
-    assert archive.meets[0].swimmers[0] is not archive.meets[1].swimmers[0]
-
-
-# --------------------------------------------------------------------------- #
-# Conflicting / duplicate identity data
-# --------------------------------------------------------------------------- #
+# -- Conflicting / duplicate identity data -------------------------------------
 
 
 def test_same_id_conflicting_names_first_wins() -> None:
@@ -323,9 +260,7 @@ def test_same_id_in_two_clubs_groups_once() -> None:
     assert len(archive.meets[0].clubs) == 2
 
 
-# --------------------------------------------------------------------------- #
-# Unicode / control characters / encoding
-# --------------------------------------------------------------------------- #
+# -- Unicode / control characters / encoding -----------------------------------
 
 
 def test_accented_and_unicode_names() -> None:
@@ -335,30 +270,20 @@ def test_accented_and_unicode_names() -> None:
     assert sw.first_name == "José"
 
 
-def test_control_chars_in_fields_do_not_crash() -> None:
-    nasty = d0(name="Bad\x07\x00Name, X")
-    archive = _no_unexpected_exception([A0, B1, C1, nasty, Z0])
-    assert isinstance(archive.meets, list)
-
-
 def test_binary_stream_rejected() -> None:
     with pytest.raises(TypeError):
-        list(read_cl2(io.BytesIO(b"\x00\x01\x02 A0 B1")))  # type: ignore[arg-type]  # bytes rejected
+        list(read_cl2(io.BytesIO(b"\x00\x01\x02 A0 B1")))  # type: ignore[arg-type]
 
 
-def test_invalid_utf8_with_replace_errors(tmp_path: object) -> None:
-    # Write latin-1/cp1252 bytes, read as utf-8 with replace -> no crash.
-    p = os.path.join(str(tmp_path), "bytes.cl2")  # type: ignore[arg-type]
-    with open(p, "wb") as fh:
-        for line in (A0, B1, C1, d0(name="Mu\xf1oz, A"), Z0):
-            fh.write(line.encode("cp1252", errors="replace") + b"\n")
+def test_invalid_utf8_with_replace_errors(tmp_path: Path) -> None:
+    p = tmp_path / "bytes.cl2"
+    lines = (A0, B1, C1, d0(name="Mu\xf1oz, A"), Z0)
+    p.write_bytes(b"".join(line.encode("cp1252") + b"\n" for line in lines))
     archive = next(iter(read_cl2(p, encoding="utf-8", errors="replace")))
     assert len(archive.meets) == 1
 
 
-# --------------------------------------------------------------------------- #
-# Strict mode: anything dirty raises, but only ParseError
-# --------------------------------------------------------------------------- #
+# -- Strict mode: anything dirty raises, but only ParseError -------------------
 
 
 @pytest.mark.parametrize(
@@ -370,19 +295,10 @@ def test_strict_mode_only_raises_parse_error(line: str) -> None:
         parse_lines([A0, B1, C1, line, Z0], strict=True)
 
 
-def test_strict_returns_nothing_on_raise() -> None:
-    # When strict raises, no partial result leaks out.
-    with pytest.raises(ParseError):
-        result = parse_lines([A0, B1, C1, d0(uss=""), Z0], strict=True)
-        assert result is None  # unreachable
+# -- Outcome-code abuse in time fields -----------------------------------------
 
 
-# --------------------------------------------------------------------------- #
-# Outcome-code abuse in time fields
-# --------------------------------------------------------------------------- #
-
-
-@pytest.mark.parametrize("code", ["NT", "NS", "DNF", "DQ", "SCR", "nt", "Dq", "scr"])
+@pytest.mark.parametrize("code", ["nt", "Dq", "scr"])
 def test_outcome_codes_case_insensitive(code: str) -> None:
     archive = parse_lines([A0, B1, C1, d0(finals=code), Z0])
     res = archive.meets[0].swimmers[0].individual_swims[0]

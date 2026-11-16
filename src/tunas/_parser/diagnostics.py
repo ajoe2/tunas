@@ -38,7 +38,7 @@ class ParseWarning:
         record_type: Coded record type (e.g. "D0", "F0").
         field: Name of the problematic field.
         column: SDIF "start/length" (e.g. "40/12").
-        mandatory: Requirement level ("M1", "M2", "*", "**", etc.).
+        mandatory: Requirement level ("M1", "M2", "M1#", "*", "**"), or None.
         severity: Handling outcome (FATAL, SKIPPED, RECOVERED).
         kind: Classification of the issue (MISSING, MALFORMED, etc.).
         reason: Explanation of the validation failure.
@@ -49,12 +49,12 @@ class ParseWarning:
     line_no: int
     record_type: str | None
     field: str | None
-    column: str | None  # SDIF "start/length", e.g. "40/12"
-    mandatory: str | None  # "M1" | "M2" | "M1#" | "*" | "**" | None
+    column: str | None
+    mandatory: str | None
     severity: Severity
     kind: IssueKind
     reason: str
-    raw_line: str  # truncated to 200 chars
+    raw_line: str
 
 
 @dataclass
@@ -73,7 +73,7 @@ class ParseReport:
         relays_parsed: Count of parsed relay squads.
         splits_parsed: Count of split-time objects parsed.
         records_skipped: Count of records dropped entirely.
-        fields_recovered: Count of recovered (nulled) optional fields.
+        fields_recovered: Count of recovered (nulled) fields, excluding COUNT_MISMATCH.
     """
 
     warnings: list[ParseWarning] = field(default_factory=list)
@@ -83,11 +83,11 @@ class ParseReport:
     individual_swims_parsed: int = 0
     relays_parsed: int = 0
     splits_parsed: int = 0
-    records_skipped: int = 0  # records dropped entirely
-    fields_recovered: int = 0  # nulled M2 fields (excludes COUNT_MISMATCH)
+    records_skipped: int = 0
+    fields_recovered: int = 0
 
     def merge(self, other: ParseReport) -> None:
-        """Fold another report into this report: append warnings and sum all counts."""
+        """Fold `other` into this report: append warnings and sum all counts."""
         self.warnings.extend(other.warnings)
         for f in fields(self):
             if f.name != "warnings":

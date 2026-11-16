@@ -32,7 +32,7 @@ class TimeStandard(IntEnum):
         return self.name
 
 
-# Single-year age groups as (inclusive upper bound, label) ordered youngest first.
+# (inclusive upper age, label), youngest first.
 _AGE_GROUPS: tuple[tuple[int, str], ...] = (
     (10, "10_U"),
     (12, "11_12"),
@@ -82,11 +82,9 @@ def _cutoff(standard: TimeStandard, event: Event, age: int, sex: Sex) -> int | N
 
 
 def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard | None:
-    """Determine the fastest USA Swimming motivational standard achieved for the given event,
-    age, and sex.
+    """Return the fastest motivational standard `time` achieves, or `None`.
 
-    Uses a youngest-first lookup for the swimmer's age group (10 & Under, 11-12, 13-14, 15-16,
-    17-18).
+    Age groups are 10 & Under, 11-12, 13-14, 15-16 and 17-18.
 
     Args:
         time: The swimmer's time.
@@ -95,23 +93,17 @@ def qualifies_for(time: Time, event: Event, age: int, sex: Sex) -> TimeStandard 
         sex: The swimmer's sex (must be MALE or FEMALE).
 
     Returns:
-        The fastest achieved `TimeStandard` (from slowest B to fastest AAAA), or `None`
-        if the time does not qualify for any motivational standard.
+        The fastest achieved `TimeStandard`, or `None` if none is met.
 
     Raises:
         ValueError: If `sex` is `Sex.MIXED`.
     """
-    _check_sex(sex)
-    best: TimeStandard | None = None
-    for standard in TimeStandard:
-        cutoff = _cutoff(standard, event, age, sex)
-        if cutoff is not None and time.centiseconds <= cutoff:
-            best = standard
-    return best
+    qualified = all_qualified(time, event, age, sex)
+    return qualified[-1] if qualified else None
 
 
 def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStandard]:
-    """Retrieve all USA Swimming motivational standards qualified for by the given time.
+    """Return every motivational standard `time` achieves.
 
     Args:
         time: The swimmer's time.
@@ -120,7 +112,7 @@ def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStan
         sex: The swimmer's sex (must be MALE or FEMALE).
 
     Returns:
-        A list of all qualified `TimeStandard` values, ordered from slowest (B) to fastest (AAAA).
+        Qualified `TimeStandard` values, slowest (B) to fastest (AAAA).
 
     Raises:
         ValueError: If `sex` is `Sex.MIXED`.
@@ -135,7 +127,7 @@ def all_qualified(time: Time, event: Event, age: int, sex: Sex) -> list[TimeStan
 
 
 def standard_time(standard: TimeStandard, event: Event, age: int, sex: Sex) -> Time | None:
-    """Get the cutoff time required to achieve a specific motivational standard.
+    """Return the cutoff time for `standard`.
 
     Args:
         standard: The target motivational standard.
@@ -144,8 +136,7 @@ def standard_time(standard: TimeStandard, event: Event, age: int, sex: Sex) -> T
         sex: The swimmer's sex (must be MALE or FEMALE).
 
     Returns:
-        The cutoff `Time` required to achieve the standard, or `None` if the standard
-        is undefined for the event/age/sex combination.
+        The cutoff `Time`, or `None` if undefined for this event/age/sex.
 
     Raises:
         ValueError: If `sex` is `Sex.MIXED`.

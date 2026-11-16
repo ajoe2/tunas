@@ -9,15 +9,10 @@ __all__ = ["Time"]
 
 @dataclass(order=True, frozen=True, slots=True)
 class Time:
-    """An immutable, hashable swim time with centisecond precision.
+    """An immutable, hashable swim time stored as non-negative centiseconds.
 
-    Stored internally as a non-negative centiseconds integer. Faster times compare
-    as less than slower times (i.e. smaller values indicate faster swims). Supports
-    addition and subtraction between `Time` instances.
-
-    String formatting returns `"M:SS.HH"` if the time is at least one minute, or
-    `"SS.HH"` if under a minute. The formatted string zero-pads seconds and hundredths
-    but does not pad the minute component.
+    Faster times compare less. Supports `+` and `-` between `Time`s. `str()` gives
+    `"M:SS.HH"` from one minute up, else `"S.HH"` (seconds unpadded under a minute).
 
     Attributes:
         centiseconds: Duration of the swim in hundredths of a second.
@@ -31,22 +26,19 @@ class Time:
 
     @classmethod
     def parse(cls, s: str) -> Time:
-        """Parse a swim-time string formatted as `[M:]SS.HH` (the minutes part is optional).
+        """Parse `[M:]SS.HH`, ignoring surrounding whitespace.
 
-        Strips leading/trailing whitespace. Tolerates 1- or 2-digit minutes and
-        seconds; fractions of a second are taken to centisecond precision, with
-        any extra digits rounded to the nearest hundredth (e.g. ``"1:04.875"`` ->
-        ``1:04.88``).
+        Fractions beyond hundredths are rounded (``"1:04.875"`` -> ``1:04.88``).
 
         Args:
             s: The time string to parse (e.g., `"1:04.87"`, `"23.4"`, `"8.23"`).
 
         Returns:
-            A new `Time` instance with the parsed centiseconds duration.
+            The parsed `Time`.
 
         Raises:
-            ValueError: If the string is empty, lacks a decimal point, contains
-                non-numeric digits, or has more than two segments separated by colons.
+            ValueError: If empty, missing a decimal point, non-numeric, or with
+                more than one colon.
         """
         raw = s.strip()
         if not raw:
@@ -70,10 +62,9 @@ class Time:
         minutes = int(minutes_str)
         seconds = int(seconds_str)
         if len(frac_str) <= 2:
-            hundredths = int((frac_str + "00")[:2])  # 1- or 2-digit fraction: exact
+            hundredths = int((frac_str + "00")[:2])
         else:
-            # Round any extra precision to the nearest hundredth; a value that
-            # rounds up to 100 carries cleanly since we store total centiseconds.
+            # Rounding up to 100 carries cleanly since we store total centiseconds.
             hundredths = round(int(frac_str) / 10 ** len(frac_str) * 100)
         return cls(minutes * 6000 + seconds * 100 + hundredths)
 

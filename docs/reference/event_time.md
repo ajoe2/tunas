@@ -2,8 +2,7 @@
 
 ## Events
 
-[`Event`][tunas.event.Event] is a 90+ member enum; each member is a `(distance, stroke,
-course)` tuple, named `<STROKE>_<DISTANCE>_<COURSE>` for individual events (e.g.
+Each [`Event`][tunas.event.Event] member is a `(distance, stroke, course)` tuple, named `<STROKE>_<DISTANCE>_<COURSE>` for individual events (e.g.
 `FREE_100_SCY`) and `<STROKE>_<DISTANCE>_RELAY_<COURSE>` for relays (e.g.
 `MEDLEY_400_RELAY_LCM`). Members compare in **declaration order**, so `sorted(...)` yields a
 natural event ordering.

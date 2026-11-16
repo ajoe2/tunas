@@ -12,22 +12,13 @@ from tunas import Time
         ("12:34.56", 75456),
         ("  23.45  ", 2345),
         ("5.2", 520),  # 1-digit fraction tolerated
+        ("1:04.875", 6488),  # long fractions round to the nearest hundredth
+        ("23.874", 2387),
+        ("4.996", 500),  # rounding carries into the next second
+        ("23.4567", 2346),
     ],
 )
-def test_parse_formats(text: str, cs: int) -> None:
-    assert Time.parse(text).centiseconds == cs
-
-
-@pytest.mark.parametrize(
-    "text,cs",
-    [
-        ("1:04.875", 6488),  # 3-digit fraction rounds up to the nearest hundredth
-        ("23.874", 2387),  # ...and down
-        ("4.996", 500),  # rounding to 100 carries into the next second
-        ("23.4567", 2346),  # 4-digit fraction
-    ],
-)
-def test_parse_rounds_long_fractions(text: str, cs: int) -> None:
+def test_parse(text: str, cs: int) -> None:
     assert Time.parse(text).centiseconds == cs
 
 

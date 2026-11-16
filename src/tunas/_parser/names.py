@@ -6,22 +6,17 @@ __all__ = ["parse_name"]
 
 
 def _is_initial(token: str) -> bool:
-    """True if ``token`` is a middle initial: a single letter, optionally dotted."""
     if len(token) == 1:
         return token.isalpha()
     return len(token) == 2 and token[1] == "." and token[0].isalpha()
 
 
 def parse_name(raw: str) -> tuple[str, str, str | None]:
-    """Split an SDIF `Last, First [MI]` NAME field into `(last_name, first_name, middle_initial)`.
+    """Split an SDIF `Last, First [MI]` NAME field into `(last, first, middle_initial)`.
 
-    Only the first comma separates last from first; everything after it is the
-    given name. A *trailing* single-letter (optionally dotted) token is the middle
-    initial — e.g. `Smith, John Q` -> first `John`, middle `Q`. A trailing token
-    that is a whole word is part of a compound first name, not an initial, so it
-    stays in `first_name` — e.g. `Zhou, Melissa Hanlin` -> first `Melissa Hanlin`,
-    no middle initial (rather than truncating "Hanlin" to "H"). A field with no
-    comma is treated as a bare last name (empty first name, no middle initial).
+    Only the first comma splits. A trailing single-letter (optionally dotted) token is
+    the middle initial (`Smith, John Q`); a trailing whole word stays in the first name
+    (`Zhou, Melissa Hanlin`). No comma means a bare last name.
     """
     text = raw.strip()
     if "," not in text:

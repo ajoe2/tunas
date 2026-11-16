@@ -1,25 +1,19 @@
 # Getting started
 
-Install `tunas` and parse your first meet results file.
-
 ## Install
 
 ```
-pip install tunas
+pip install tunas   # or: uv add tunas
 ```
 
-`tunas` requires Python 3.12 or newer. With `uv`:
-
-```
-uv add tunas
-```
+Requires Python 3.12+.
 
 ## A first example
 
 ```python
 from tunas import read_cl2, Event
 
-# read_cl2 yields one MeetArchive per source file (path, dir, list of paths, or file-like)
+# One MeetArchive per source file (path, directory, list of paths, or text stream)
 for archive in read_cl2("results/"):
     for meet in archive.meets:
         swimmer = next((s for s in meet.swimmers
@@ -32,15 +26,11 @@ for archive in read_cl2("results/"):
             print(f"{meet.name}: {swimmer.full_name} {session} {outcome}")
 ```
 
-Every `tunas` program parses input into self-contained [`Meet`](models.md) objects and traverses the resulting data graph.
-
 ## Walkthrough
 
 ### 1. Parsing
 
-`read_cl2` parses a file path, directory, list of paths, or text stream, yielding a lazy iterator of [`MeetArchive`](parsing.md#meetarchive) objects — one per file. Each archive carries that file's `meets` and its own `report`.
-
-Parsing is lenient by default. Malformed records are skipped or recovered, and recorded as warnings in the per-file report:
+`read_cl2` lazily yields one [`MeetArchive`](parsing.md#meetarchive) per file, carrying that file's `meets` and its own `report`. Parsing is lenient: malformed records are skipped or recovered and recorded as warnings:
 
 ```python
 for archive in read_cl2("results/"):
@@ -48,35 +38,21 @@ for archive in read_cl2("results/"):
         print(f"{warning.source}:{warning.line_no}: {warning.reason}")
 ```
 
-Each `report` aggregates running metrics for its file like `files_read`, `meets_parsed`, `swimmers_parsed`, and `individual_swims_parsed`:
+The report also counts what was parsed (`meets_parsed`, `swimmers_parsed`, `individual_swims_parsed`, ...):
 
 ```python
 print(archive.report.meets_parsed, "meets,", archive.report.individual_swims_parsed, "swims")
 ```
 
-Pass `strict=True` to fail fast and raise `ParseError` on the first warning. For large datasets, the iterator is lazy — files are parsed one at a time as you consume archives, so peak memory stays flat regardless of corpus size. See [parsing.md](parsing.md) for more details.
+`strict=True` raises `ParseError` on the first warning. Files are parsed one at a time as you consume archives, so memory stays flat. See [parsing.md](parsing.md).
 
-### 2. Finding a Swimmer
+### 2. Swimmers and swims
 
-Swimmers are grouped within each meet by member ID (`id_short` falling back to `id_long`):
+Swimmers are grouped within each meet by member ID (`id_short`, falling back to `id_long`). `swimmer.swims_in(event)` returns every individual swim and relay leg in that event, including prelims, finals, scratches, and DQs. Both share the `Swim` interface (`time`, `status`, `event`, `date`, `meet`, `swimmer`).
 
-```python
-swimmer = next((s for s in meet.swimmers if s.id_short == "ABC123456789"), None)
-```
+### 3. Time standards
 
-### 3. Querying Swims
-
-`swimmer.swims_in(event)` returns all flat-start individual swims and relay legs for the given event, including prelims, finals, scratches, and disqualifications:
-
-```python
-swims = swimmer.swims_in(Event.FLY_200_LCM)
-```
-
-Both `IndividualSwim` and `RelaySwim` share the uniform `Swim` interface (`time`, `status`, `event`, `date`, `meet`, `swimmer`).
-
-### 4. Time Standards
-
-USA Swimming motivational cuts (B through AAAA) are bundled locally for offline use:
+USA Swimming motivational cuts (B through AAAA) are bundled for offline use:
 
 ```python
 from tunas import qualifies_for, all_qualified, standard_time, TimeStandard
@@ -91,7 +67,7 @@ standards = all_qualified(swim.time, swim.event, age=12, sex=swimmer.sex)
 target = standard_time(TimeStandard.AAAA, swim.event, age=12, sex=swimmer.sex)
 ```
 
-Ages are bucketed into single-year groups (10 & under, 11-12, 13-14, 15-16, 17-18). Lookups are defined for `MALE` and `FEMALE` only; `Sex.MIXED` raises `ValueError`.
+Ages are bucketed into 10 & under, 11-12, 13-14, 15-16, and 17-18; `Sex.MIXED` raises `ValueError`.
 
 ## What's in the box
 
@@ -109,11 +85,3 @@ Ages are bucketed into single-year groups (10 & under, 11-12, 13-14, 15-16, 17-1
 | An event | [`Event`][tunas.event.Event] | [API reference](../reference/event_time.md) |
 | Strokes, courses, etc. | [`Stroke`][tunas.enums.Stroke], [`Course`][tunas.enums.Course], ... | [API reference](../reference/enums.md) |
 | Time standards | [`qualifies_for`][tunas.standards.qualifies_for], [`standard_time`][tunas.standards.standard_time], [`TimeStandard`][tunas.standards.TimeStandard] | [API reference](../reference/standards.md) |
-
-## Where to go next
-
-- [parsing.md](parsing.md) — `read_cl2` options and error handling.
-- [models.md](models.md) — the complete object graph.
-- [cookbook.md](cookbook.md) — recipes for common tasks.
-- [architecture.md](../about/architecture.md) — codebase design and layout.
-

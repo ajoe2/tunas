@@ -1,10 +1,7 @@
 """Shared parse-engine base for the SDIF (`.cl2`) and Hy-Tek (`.hy3`) readers.
 
-`_BaseEngine` owns everything the two fixed-width formats have in common: the
-streaming line loop, record sizing/padding, structured diagnostics, and the
-typed field-coercion helpers that wrap :mod:`tunas._parser.fields`. Each format
-subclasses it and supplies its own per-meet state, record width, and handler
-dispatch (see :mod:`tunas._parser.cl2` and :mod:`tunas._parser.hy3`).
+`_BaseEngine` owns the line loop, record padding, diagnostics and typed field
+helpers; each format subclass supplies its state, record width and dispatch.
 """
 
 from __future__ import annotations
@@ -37,10 +34,9 @@ _BOMS = ("﻿", "ï»¿")
 
 
 class _BaseEngine:
-    """Stateful fixed-width parser. ``parse_source`` resets all per-file state, so one
-    instance can parse many files in turn (each call yields only that source's results)."""
+    """Stateful fixed-width parser; ``parse_source`` resets all per-file state."""
 
-    #: Total record width (data + any trailing checksum); padded/limited per line.
+    #: Total record width (data + any trailing checksum).
     RECORD_WIDTH: ClassVar[int]
     #: Public reader name, used in the bytes-source error message.
     READER: ClassVar[str]
@@ -57,11 +53,7 @@ class _BaseEngine:
     # -- public driver ----------------------------------------------------- #
 
     def parse_source(self, lines: Iterable[object], source: str) -> None:
-        """Parse one file/stream's lines into a fresh ``meets``/``report`` pair.
-
-        Fully resets every per-file accumulator, so one engine instance is safe
-        to reuse across files: each call yields results for *this source only*.
-        """
+        """Parse one file/stream's lines into a fresh ``meets``/``report`` pair."""
         self.source = source
         self.meets = []
         self.report = ParseReport()
@@ -95,7 +87,7 @@ class _BaseEngine:
         """Flush any pending state at end of file."""
 
     def _sized_record(self, line: str, line_no: int) -> Record | None:
-        """Length-check and right-pad a line to ``RECORD_WIDTH``, or skip if too long."""
+        """Right-pad a line to ``RECORD_WIDTH``, or skip it if too long."""
         width = self.RECORD_WIDTH
         if len(line) > width:
             self._emit(
@@ -111,9 +103,7 @@ class _BaseEngine:
                 line,
             )
             return None
-        if len(line) < width:
-            line = line.ljust(width)
-        return Record(line, line_no, self.source)
+        return Record(line.ljust(width), line_no, self.source)
 
     # -- diagnostics ------------------------------------------------------- #
 
@@ -130,12 +120,7 @@ class _BaseEngine:
         reason: str,
         raw_line: str,
     ) -> None:
-        """Record one diagnostic — or raise it.
-
-        A ``FATAL`` issue, or any issue while ``strict``, raises :class:`ParseError`
-        immediately. Otherwise the warning is appended to the report and the matching
-        counter (``records_skipped`` / ``fields_recovered``) is bumped.
-        """
+        """Record one diagnostic, or raise :class:`ParseError` if FATAL or ``strict``."""
         warning = ParseWarning(
             source=source,
             line_no=line_no,
@@ -186,20 +171,8 @@ class _BaseEngine:
     def _fatal(
         self, rec: Record, field: str, column: str, mandatory: str, kind: IssueKind, reason: str
     ) -> NoReturn:
-        raise ParseError(
-            ParseWarning(
-                source=rec.source,
-                line_no=rec.line_no,
-                record_type=rec.type,
-                field=field,
-                column=column,
-                mandatory=mandatory,
-                severity=Severity.FATAL,
-                kind=kind,
-                reason=reason,
-                raw_line=rec.line[:200],
-            )
-        )
+        self._warn(rec, field, column, mandatory, Severity.FATAL, kind, reason)
+        raise AssertionError("unreachable")  # pragma: no cover - FATAL always raises
 
     # -- typed field helpers ----------------------------------------------- #
 
@@ -207,7 +180,6 @@ class _BaseEngine:
         v = rec.text(start, length)
         if v is None:
             self._fatal(rec, field, column, "M1", IssueKind.MISSING, f"missing {field}")
-        assert v is not None  # _fatal raised
         return v
 
     def _require_code[E: StrEnum](
@@ -278,23 +250,20 @@ class _BaseEngine:
         return val
 
     def _opt_int(self, rec: Record, start: int, length: int) -> int | None:
-        _, val = int_value(rec.raw(start, length))
-        return val
+        return int_value(rec.raw(start, length))[1]
 
     def _require_int(self, rec: Record, start: int, length: int, field: str, column: str) -> int:
-        tag, val = int_value(rec.raw(start, length))
-        if tag != "int" or val is None:
+        val = int_value(rec.raw(start, length))[1]
+        if val is None:
             self._fatal(rec, field, column, "M1", IssueKind.MALFORMED, f"missing/malformed {field}")
-        assert val is not None
         return val
 
     def _opt_time(self, rec: Record, start: int, length: int = 8) -> Time | None:
-        tag, val = time_value(rec.raw(start, length))
-        return val if tag == "time" and isinstance(val, Time) else None
+        val = time_value(rec.raw(start, length))[1]
+        return val if isinstance(val, Time) else None
 
     def _opt_course(self, rec: Record, start: int) -> Course | None:
-        tag, val = course_value(rec.raw(start, 1))
-        return val if tag == "ok" else None
+        return course_value(rec.raw(start, 1))[1]
 
     def _citizenship(self, rec: Record, start: int, length: int) -> CitizenshipOrCountry | None:
         v = rec.raw(start, length).strip()
@@ -321,11 +290,7 @@ class _BaseEngine:
     # -- shared assembly helpers ------------------------------------------- #
 
     def _attach_swimmer(self, meet: Meet, swimmer: Swimmer) -> None:
-        """Link a new swimmer into its meet (and club, if attached) and count it.
-
-        Centralizes the meet/club back-references so a swimmer can never end up
-        registered on one side of the graph but missing from the other.
-        """
+        """Link a new swimmer into its meet (and club, if attached) and count it."""
         meet.swimmers.append(swimmer)
         if swimmer.club is not None:
             swimmer.club.swimmers.append(swimmer)
@@ -333,11 +298,7 @@ class _BaseEngine:
 
     @staticmethod
     def _attach_result(meet: Meet, result: MeetResult) -> None:
-        """Link a result into its meet (and club, if attached).
-
-        Counting is left to the caller because the metric differs by result type
-        (``individual_swims_parsed`` vs ``relays_parsed``).
-        """
+        """Link a result into its meet (and club, if attached); the caller counts it."""
         meet.results.append(result)
         if result.club is not None:
             result.club.results.append(result)
@@ -346,14 +307,12 @@ class _BaseEngine:
     def _entry_course(
         distance: int | None, stroke: Stroke | None, *candidates: Course | None
     ) -> Course | None:
-        """Pick the course an entry (no result yet) is swum in.
+        """Pick the course an unswum entry is in: the first candidate the event exists in.
 
-        ``candidates`` come in priority order: the meet course, then the course the
-        seed was swum or converted in. A candidate is taken only if the event exists
-        in that course, since some exports mislabel the meet course (1997-98 CL II
-        entries files mark yards meets ``L``), and a 500 or 1650 free is never long
-        course. Failing that, the first known candidate is returned so the caller's
-        unresolvable-event warning names it.
+        Candidates are in priority order (meet course, then seed courses). The event
+        check matters because some exports mislabel the meet course (1997-98 CL II
+        entries files mark yards meets ``L``). Falls back to the first known candidate
+        so the caller's unresolvable-event warning names it.
         """
         known = [c for c in candidates if c is not None]
         if distance is not None and stroke is not None:
@@ -378,12 +337,10 @@ class _BaseEngine:
         stroke_display: str,
         extra_ok: bool = True,
     ) -> Event | None:
-        """Resolve a `(distance, stroke, course)` event, or warn and return None.
+        """Resolve the event, or warn (SKIPPED) and return None.
 
-        Every component must be present and resolve to a defined :class:`Event`;
-        any gap (or a falsy ``extra_ok``, for format-specific guards like a bad
-        age range) means the swim can't be modeled, so the record is skipped
-        (lenient) or raises (strict). The caller resets its own per-swim state.
+        A missing component or a falsy ``extra_ok`` (a format-specific guard such as a
+        bad age range) makes the event unresolvable.
         """
         event = (
             Event.find(distance, stroke, course)
@@ -412,19 +369,15 @@ class _BaseEngine:
         rec: Record,
         target: list[Split],
         distance: int,
-        tag: str,
         val: Time | ResultStatus | None,
         split_type: SplitType,
         *,
         column: str | None = None,
     ) -> None:
-        """Append one parsed split to ``target`` and count it.
+        """Append and count one split; a bad time or outcome code becomes ``time=None``.
 
-        ``tag``/``val`` come from :func:`time_value`; a ``"bad"`` time, or an outcome
-        code where a time belongs (some exporters write ``DQ`` in the split after a
-        disqualification), is recovered as a ``Split`` with ``time=None`` plus a
-        warning; anything else stores the time. Blank/placeholder slots are filtered
-        out by the caller beforehand.
+        Some exporters write ``DQ`` in the split after a disqualification. The caller
+        filters out blank slots.
         """
         if isinstance(val, Time):
             target.append(Split(distance=distance, time=val, split_type=split_type))

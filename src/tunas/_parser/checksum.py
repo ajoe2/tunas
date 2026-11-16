@@ -11,8 +11,8 @@ from __future__ import annotations
 
 __all__ = ["DATA_WIDTH", "RECORD_WIDTH", "hy3_checksum"]
 
-DATA_WIDTH = 128  # columns 1-128 hold the data fields
-RECORD_WIDTH = 130  # 128 data columns + a 2-digit checksum
+DATA_WIDTH = 128
+RECORD_WIDTH = 130
 
 
 def hy3_checksum(data: bytes) -> str:

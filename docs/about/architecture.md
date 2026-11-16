@@ -1,106 +1,49 @@
 # Architecture
 
-This document describes the design decisions and parser internals of `tunas`.
-
-## Scope
-
-- **SDIF v3 (`.cl2`) Parsing:** Parses all results-related record types, including relays and splits.
-- **Hy-Tek (`.hy3`) Parsing:** `read_hy3` parses the reverse-engineered `.hy3` results format (confirmed fields only) into the same domain model.
-- **Domain Model:** Dataclasses representing `Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`, and supporting structures.
-- **Value Types:** Immutable representation of `Time`, `Event`, and enums.
-- **Offline Standards:** Motivational time standard lookups.
-- **Error Model:** Lenient-by-default parsing via `ParseWarning` collections, with optional `strict=True` validation.
-
-## Repository Layout
-
-```
-tunas/
-├── pyproject.toml          Project metadata and build config (Hatchling)
-├── README.md               PyPI long-description
-├── LICENSE                 MIT License
-├── CHANGELOG.md            Semantic version changelog
-├── src/tunas/              Source package (src-layout)
-│   ├── __init__.py             Public API exports
-│   ├── py.typed                PEP 561 type-marker
-│   ├── _version.py             Package version
-│   ├── time.py                 Time value type
-│   ├── enums.py                SDIF enums
-│   ├── geography.py            LSC, US state, and country enums
-│   ├── event.py                Event enum and helper properties
-│   ├── exceptions.py           Error hierarchy
-│   ├── models.py               Slotted domain dataclasses
-│   ├── parser.py               read_cl2, read_hy3, MeetArchive, ParseReport, ParseWarning
-│   ├── standards.py            Time-standards lookups
-│   ├── _parser/                Per-record parsing logic (internal)
-│   └── _data/                  Bundled package data (JSON standards, spec doc)
-├── tests/                  Pytest suite (fully self-contained, no network)
-│   ├── conftest.py             Shared record builders + fixtures
-│   ├── unit/                   Value types, enums, models, standards (no file I/O)
-│   ├── cl2/                    `read_cl2` records, I/O, parallelism, diagnostics, golden meets
-│   ├── hy3/                    `read_hy3` records, I/O, golden meet
-│   └── data/                   Committed real `.cl2`/`.hy3` meets + golden expected JSON
-├── scripts/                Developer tools (e.g., standard sheets parser)
-├── docs/                   Markdown documentation
-└── .github/workflows/      CI (test.yml) and PyPI release (publish.yml)
-```
-
-The package uses a **src-layout** to ensure tests run against the installed wheel rather than the working directory.
+Design decisions and parser internals. The repository layout and development workflow are in [CONTRIBUTING.md](https://github.com/ajoe2/tunas/blob/main/CONTRIBUTING.md).
 
 ## Design Decisions
 
 ### Self-contained meets
 
-Meets are independent; swimmers and clubs are scoped to their respective `Meet`. A swimmer competing in multiple meets exists as distinct, unrelated `Swimmer` objects, grouped by `id_short` (falling back to `id_long`). Cross-meet grouping is delegated to application code (see [cookbook.md](../guide/cookbook.md)).
+Swimmers and clubs are scoped to their `Meet`; an athlete in two meets is two unrelated `Swimmer` objects, grouped within each meet by `id_short` (falling back to `id_long`). Cross-meet grouping is left to the application (see the [cookbook](../guide/cookbook.md)).
 
 ### Lenient parsing by default
 
-Formatting errors are common in real-world `.cl2` files due to buggy exporters. `read_cl2` defaults to `strict=False`, skipping corrupt records and accumulating warnings in `ParseReport` to maximize data recovery. Use `strict=True` for strict validation.
+Buggy exporters make formatting errors common, so the readers default to `strict=False`: corrupt records are skipped or recovered and recorded in the `ParseReport`.
 
 ### Slotted domain dataclasses
 
-We use slotted dataclasses (`@dataclass(slots=True)`) to minimize memory overhead and accelerate attribute lookups. Value types (`Time`, `Split`, `SwimmerContact`, `ParseWarning`) are frozen and hashable, while aggregates (`Meet`, `Club`, `Swimmer`, `IndividualSwim`, `Relay`) are mutable to support single-pass parsing.
-
-Aggregate classes use `kw_only=True` to keep wide constructors readable and avoid field ordering constraints in subclassing. We use identity equality (`eq=False`) to avoid stack overflows from cyclic graph references (`meet ⇄ results`) and because the parser does not deduplicate objects.
+Aggregates (`Meet`, `Club`, `Swimmer`, the result types) are mutable `@dataclass(slots=True, kw_only=True, eq=False)` classes, built up during a single pass. `kw_only` keeps wide constructors readable and frees subclass field ordering; identity equality avoids recursing through the cyclic graph (`meet ⇄ results`), and the parser never deduplicates objects anyway. Value types (`Time`, `Split`, `SwimmerContact`, `ParseWarning`, ...) are frozen and hashable.
 
 ### Pre-populated cross-references
 
-The parser wires all graph references (e.g., `Meet.results`, `Swimmer.swims`, and back-references) in a single pass. Subsequent reads are O(1) instead of computed.
+The parser wires every reference (`Meet.results`, `Swimmer.swims`, back-references) as it goes, so reads are attribute lookups, not computations.
 
 ### `Time`: a centisecond integer value type
 
-`Time` stores `centiseconds: int` internally, exposing minutes, seconds, and hundredths as properties. This ensures precise comparisons and arithmetic without floating-point drift.
+`Time` stores `centiseconds: int` and exposes minutes, seconds, and hundredths as properties, so comparisons and arithmetic are exact.
 
 ### `Event`: a hand-rolled enum
 
-`Event` is a 90+ member enum representing swim distances, strokes, and courses. Hand-rolling provides static autocomplete and helpers (e.g., `Event.find`).
+`Event` enumerates every `(distance, stroke, course)` explicitly, giving static autocomplete plus helpers such as `Event.find`.
 
 ### Zero setup time standards
 
-Motivational standards are bundled as JSON (`src/tunas/_data/standards-2025-2028.json`)
-and lazily loaded into an O(1) index keyed by `(standard, age_group, sex, event)` on
-first use; subsequent lookups hit the per-process cache. Each row is flat —
-`standard`, `age_group`, `sex`, `event`, and `cutoff_centiseconds` — and duplicate
-rows raise `StandardsError` on load. USA Swimming revises the cuts every four years,
-so refreshing them is just a matter of upgrading the package; no setup or network
-access is required.
+Motivational standards ship as JSON (`src/tunas/_data/standards-2025-2028.json`), loaded
+on first use into a cached dict keyed by `(standard, age_group, sex, event)`. Each row is
+flat (`standard`, `age_group`, `sex`, `event`, `cutoff_centiseconds`); duplicate rows raise
+`StandardsError`. New cuts ship with new releases.
 
 ### Lightweight runtime footprint
 
-At present `tunas` relies only on the Python standard library at runtime. This reflects the
-current scope rather than a zero-dependency rule — third-party libraries are adopted on merit
-where they are the better tool.
-
-### Pythonic API
-
-Data is exposed via plain attributes and properties rather than getter/setter methods, facilitating clean IDE auto-complete and static typing.
+`tunas` currently needs only the standard library at runtime. That reflects scope, not a rule: dependencies are adopted on merit.
 
 ## Parser internals
 
-`read_cl2` and `read_hy3` are thin entry points in `parser.py` that share one generic driver
-(path resolution, then a lazy archive iterator). They validate arguments eagerly and return an
-iterator that yields one `MeetArchive` (a file's `meets` plus its own `ParseReport`) per source,
-parsing each file only as the consumer advances. Each engine lives in the internal `_parser/`
-package and runs a single streaming pass per file:
+`read_cl2` and `read_hy3` are thin entry points in `parser.py` sharing one driver: resolve the
+source eagerly, then lazily yield one `MeetArchive` per file, parsing each only as the consumer
+advances. The engines live in the internal `_parser/` package and make one streaming pass per file:
 
 | Module | Responsibility |
 |---|---|
@@ -111,7 +54,6 @@ package and runs a single streaming pass per file:
 | `state.py` | `ParserState` (SDIF) and `Hy3State` — per-meet mutable context (current club/swimmer/relay, pending records), reset at every meet record. |
 | `fields.py` | Fixed-width field extraction: slicing `start/length` columns and coercing to `int` / `date` / `Time` / code enums, emitting diagnostics on failure. |
 | `names.py` | SDIF `NAME` parsing (`Last, First MI` → components). |
-| `ids.py` | Member-ID (USS#) normalization and the `id_short` → `id_long` identity rule. |
 | `diagnostics.py` | `Severity`, `IssueKind`, `ParseWarning`, `ParseReport` (re-exported from `parser.py`). |
 
 **Data flow.** Each line is decoded (CP-1252 by default), normalised (BOM and line endings
@@ -122,52 +64,9 @@ populate the shared `SourceFile`; `B1` opens a `Meet`; `C1`/`C2` establish club 
 adds relay legs. The `.hy3` flow is analogous but splits athlete/entry/result across `D1`
 (athlete), `E1` (entry/seed), and `E2` (result), with relays in `F1`/`F2`/`F3`.
 
-Each file is parsed by its own engine, so files never share mutable state. The driver iterates
-files lazily and sequentially, yielding one archive per file in source order; a file is only read
-and parsed when its archive is consumed, keeping peak memory flat regardless of corpus size.
-Parsing is single-threaded by design: the work is CPU-bound pure Python, so a thread pool serializes
-under the GIL and (even on a free-threaded build) plateaus at a sublinear ~2.4× before regressing,
-as workers contend on atomic refcounts over shared immutables and on cyclic-GC coordination over the
-meet graph — complexity that bought no reliable gain. To use multiple cores, shard the file list
-across separate processes. Callers that want a single combined report can fold the per-file ones
-with `ParseReport.merge`.
-
-## Development
-
-The project is managed with [`uv`](https://docs.astral.sh/uv/) and Python 3.12+.
-
-```bash
-uv sync                       # create/refresh the virtual environment (incl. dev deps)
-
-uv run pytest                 # run the test suite
-uv run pytest --cov=tunas     # run with coverage (gated at 95% via pyproject)
-uv run ruff check             # lint
-uv run ruff format            # auto-format (use --check in CI)
-uv run mypy src/tunas         # type-check (strict)
-```
-
-The test suite is **fully self-contained and offline**: real-world coverage comes
-from committed "golden" files under `tests/data/` (a real meet `.cl2` plus its
-hand-verified expected-state JSON), so no data download or external checkout is
-needed. CI (`.github/workflows/test.yml`) runs lint, type-check, and the
-coverage-gated suite on Python 3.12 and 3.13.
-
-> If `uv run pytest` fails with "Failed to spawn", the virtual environment is
-> stale (e.g. the project directory was renamed) — run `rm -rf .venv && uv sync`.
-
-### Releasing
-
-Releases publish to PyPI automatically via `.github/workflows/publish.yml`
-(PyPI [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) — no API
-token is stored). To cut a release:
-
-1. Bump `__version__` in `src/tunas/_version.py` and update `CHANGELOG.md`.
-2. Push, and let CI pass.
-3. Create a GitHub Release whose tag matches the version (e.g. `v0.1.0`). The
-   workflow verifies the tag matches `__version__`, builds the sdist + wheel,
-   runs `twine check`, and uploads to PyPI.
-
-One-time setup: register a Trusted Publisher (or a "pending publisher" for the
-first upload) on PyPI for owner `ajoe2`, repo `tunas`, workflow `publish.yml`,
-environment `pypi`.
-
+Each file gets a fresh engine state, so files never share mutable state, and peak memory is one
+file's graph. Parsing is single-threaded by design: the work is CPU-bound pure Python, so threads
+serialize under the GIL, and even free-threaded builds plateaued at a sublinear ~2.4× before
+regressing (contention on refcounts of shared immutables and cyclic-GC coordination). To use
+multiple cores, shard the file list across processes. `ParseReport.merge` folds per-file reports
+into one.

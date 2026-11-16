@@ -1,72 +1,38 @@
-"""The M1/M2 + lose-no-information contract — the heart of v1."""
+"""The M1/M2 + lose-no-information contract."""
 
 from __future__ import annotations
 
 import pytest
-from conftest import A0, B1, C1, Z0, d0, e0, f0, parse_lines, rec
+from conftest import A0, B1, C1, Z0, d0, g0, parse_lines, rec
 
-from tunas import IssueKind, ParseError, Severity
-
-
-def _warning_count(report: object) -> int:
-    return len(report.warnings)  # type: ignore[attr-defined]
-
+from tunas import IssueKind, ParseError, ResultStatus, Severity
 
 # -- M1: fatal in both modes ------------------------------------------------- #
 
 
 @pytest.mark.parametrize(
-    "line",
+    "lines",
     [
-        d0(name=""),  # missing swimmer name
-        d0(sex=""),  # missing sex
+        [A0, B1, C1, d0(name=""), Z0],
+        [A0, B1, C1, d0(sex=""), Z0],
+        [A0, rec((1, "B1"), (3, "1"), (122, "01012025")), C1, d0(), Z0],  # no meet name
+        [A0, rec((1, "B1"), (3, "1"), (12, "Meet")), C1, d0(), Z0],  # no start date
     ],
 )
-def test_m1_raises_in_lenient_mode(line: str) -> None:
+def test_m1_raises_in_lenient_mode(lines: list[str]) -> None:
     with pytest.raises(ParseError) as exc:
-        parse_lines([A0, B1, C1, line, Z0])
+        parse_lines(lines)
     assert exc.value.warning.severity is Severity.FATAL
 
 
 def test_partial_event_fields_skipped_not_fatal() -> None:
-    # Partial/odd event fields are a data-quality issue, not structural corruption:
-    # the record is skipped in lenient mode and raises only under strict.
+    # Data quality, not structural corruption: skipped leniently, raises only under strict.
     line = d0(esex="", dist="100", stroke="1", eage="1314")
     archive = parse_lines([A0, B1, C1, line, Z0])
     assert archive.meets[0].individual_swims == []
     assert archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
     with pytest.raises(ParseError):
         parse_lines([A0, B1, C1, line, Z0], strict=True)
-
-
-def test_m1_missing_meet_name() -> None:
-    bad_b1 = rec((1, "B1"), (3, "1"), (122, "01012025"))  # no name
-    with pytest.raises(ParseError):
-        parse_lines([A0, bad_b1, C1, d0(), Z0])
-
-
-def test_m1_missing_meet_start_date() -> None:
-    bad_b1 = rec((1, "B1"), (3, "1"), (12, "Meet"))  # no start date
-    with pytest.raises(ParseError):
-        parse_lines([A0, bad_b1, C1, d0(), Z0])
-
-
-# -- M2 identity: skip D0, keep F0 ------------------------------------------- #
-
-
-def test_m2_identity_d0_kept_without_an_id() -> None:
-    archive = parse_lines([A0, B1, C1, d0(uss=""), Z0])
-    assert len(archive.meets[0].swimmers) == 1
-    assert archive.report.records_skipped == 0
-    w = archive.report.warnings_for(record_type="D0", severity=Severity.RECOVERED)[0]
-    assert w.kind is IssueKind.MISSING
-    assert w.raw_line.startswith("D0")
-
-
-def test_m2_identity_f0_keeps_leg() -> None:
-    archive = parse_lines([A0, B1, C1, e0(), f0(uss="", id_long=""), Z0])
-    assert archive.meets[0].relays[0].legs[0].swimmer is None
-    assert archive.report.warnings_for(record_type="F0", severity=Severity.RECOVERED)
 
 
 # -- Other M2: keep + null + RECOVERED --------------------------------------- #
@@ -81,24 +47,14 @@ def test_m2_blank_city_kept() -> None:
     assert archive.report.warnings_for(record_type="B1", field="city", severity=Severity.RECOVERED)
 
 
-def test_m2_blank_birthdate_kept() -> None:
-    archive = parse_lines([A0, B1, C1, d0(birth=""), Z0])
-    assert archive.meets[0].swimmers[0].birthday is None
-    assert archive.report.fields_recovered >= 1
-
-
 # -- Unresolvable event: skip (lenient) / raise (strict) --------------------- #
 
 
-def test_unresolvable_event_skipped_lenient() -> None:
+def test_unresolvable_event() -> None:
     line = d0(dist="25", stroke="3", finals="30.00", finals_course="L", seed="", seed_course="")
     archive = parse_lines([A0, B1, C1, line, Z0])
     assert archive.meets[0].individual_swims == []
     assert archive.report.warnings_for(record_type="D0", severity=Severity.SKIPPED)
-
-
-def test_unresolvable_event_raises_strict() -> None:
-    line = d0(dist="25", stroke="3", finals="30.00", finals_course="L", seed="", seed_course="")
     with pytest.raises(ParseError):
         parse_lines([A0, B1, C1, line, Z0], strict=True)
 
@@ -108,8 +64,6 @@ def test_unresolvable_event_raises_strict() -> None:
 
 @pytest.mark.parametrize("code", ["NT", "NS", "DNF", "DQ", "SCR"])
 def test_outcome_codes_kept_no_warning(code: str) -> None:
-    from tunas import ResultStatus
-
     archive = parse_lines([A0, B1, C1, d0(finals=code), Z0])
     res = archive.meets[0].swimmers[0].individual_swims[0]
     assert res.status is ResultStatus[code]
@@ -118,12 +72,6 @@ def test_outcome_codes_kept_no_warning(code: str) -> None:
 
 
 # -- Conditionals ------------------------------------------------------------ #
-
-
-def test_conditional_star_missing_course() -> None:
-    archive = parse_lines([A0, B1, C1, d0(finals="1:00.00", finals_course=""), Z0])
-    assert len(archive.meets[0].individual_swims) == 1
-    assert [w for w in archive.report.warnings if w.mandatory == "*"]
 
 
 def test_conditional_starstar_no_raise_at_championship() -> None:
@@ -163,18 +111,13 @@ def test_conditional_hash_relay_only() -> None:
 # -- Lines and unknown records ----------------------------------------------- #
 
 
-def test_overlong_line_skipped() -> None:
-    archive = parse_lines([A0, B1, C1, d0(), "X" * 200, Z0])
-    assert archive.report.warnings_for(kind=IssueKind.BAD_LENGTH)
-
-
 def test_short_line_padded_and_parsed() -> None:
     archive = parse_lines([A0, B1, C1, d0()[:130], Z0])
     assert len(archive.meets[0].swimmers) == 1
 
 
 def test_unknown_code_field() -> None:
-    # Unknown ATTACH code on D0 (52/1) -> RECOVERED UNKNOWN_CODE, record kept.
+    # Unknown ATTACH code on D0 (52/1): recovered, record kept.
     line = d0()
     line = line[:51] + "Z" + line[52:]
     archive = parse_lines([A0, B1, C1, line, Z0])
@@ -185,30 +128,12 @@ def test_unknown_code_field() -> None:
 # -- Orphans ----------------------------------------------------------------- #
 
 
-def test_orphan_f0_without_e0() -> None:
-    archive = parse_lines([A0, B1, C1, f0(), Z0])
-    assert archive.meets[0].relays == []
-    assert archive.report.warnings_for(record_type="F0", kind=IssueKind.ORPHANED)
-
-
 def test_orphan_g0_without_swim() -> None:
-    from conftest import g0
-
     archive = parse_lines([A0, B1, C1, g0(), Z0])
     assert archive.report.warnings_for(record_type="G0", kind=IssueKind.ORPHANED)
 
 
 # -- Strict mode escalation -------------------------------------------------- #
-
-
-def test_strict_escalates_recovered() -> None:
-    with pytest.raises(ParseError):
-        parse_lines([A0, B1, C1, d0(birth=""), Z0], strict=True)
-
-
-def test_strict_escalates_skipped() -> None:
-    with pytest.raises(ParseError):
-        parse_lines([A0, B1, C1, d0(uss=""), Z0], strict=True)
 
 
 def test_strict_escalates_unknown_record() -> None:

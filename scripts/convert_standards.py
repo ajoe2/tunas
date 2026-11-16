@@ -9,7 +9,7 @@ from pathlib import Path
 
 import openpyxl
 
-from tunas.enums import Stroke
+from tunas.enums import Course, Stroke
 from tunas.event import Event
 
 # file basename -> TimeStandard name (the six motivational standards)
@@ -81,16 +81,13 @@ def _resolve_event(label: str, course: str) -> Event | None:
     stroke = _STROKES.get(stroke_token)
     if stroke is None:
         return None
-    from tunas.enums import Course
-
-    course_enum = {"SCY": Course.SCY, "SCM": Course.SCM, "LCM": Course.LCM}[course]
     if dist_token in _MERGED_DISTANCE:
         distance = _MERGED_DISTANCE[dist_token][course]
     elif dist_token.isdigit():
         distance = int(dist_token)
     else:
         return None
-    return Event.find(distance, stroke, course_enum)
+    return Event.find(distance, stroke, Course[course])
 
 
 def convert(source_dir: Path) -> list[dict[str, object]]:
@@ -117,8 +114,7 @@ def convert(source_dir: Path) -> list[dict[str, object]]:
                         continue
                     event = _resolve_event(label, course)
                     if event is None:
-                        # A real cutoff we couldn't map to an Event — flag it rather
-                        # than silently dropping (e.g. a new/renamed distance).
+                        # Flag real cutoffs we can't map rather than dropping silently.
                         unresolved.add((label, course))
                         continue
                     rows.append(
@@ -150,7 +146,6 @@ def _source_dir() -> Path:
 
 def main() -> None:
     rows = convert(_source_dir())
-    # Detect duplicates (would break the runtime index).
     seen: set[tuple[object, ...]] = set()
     for r in rows:
         key = (r["standard"], r["age_group"], r["sex"], r["event"])

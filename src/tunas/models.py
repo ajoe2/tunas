@@ -1,9 +1,9 @@
 """Tunas domain model.
 
 Aggregates (Meet, Club, Swimmer, MeetResult subclasses, RelaySwim) are slotted,
-keyword-only dataclasses with identity equality (eq=False) to support efficient
-single-pass parsing. Value types (Time, Split, SwimmerContact, SwimmerRegistration,
-MeetHost, SourceFile, ClubEntryCounts) are frozen and hashable.
+keyword-only dataclasses with identity equality (eq=False). Value types (Split,
+SwimmerContact, SwimmerRegistration, MeetHost, SourceFile, ClubEntryCounts) are
+frozen and hashable.
 """
 
 from __future__ import annotations
@@ -40,8 +40,6 @@ from tunas.time import Time
 if TYPE_CHECKING:
     from tunas.enums import Session
 
-# A swimmer/leg citizenship is either one of the two non-country SDIF codes or a
-# country code (see :class:`~tunas.enums.Citizenship`).
 type CitizenshipOrCountry = Citizenship | Country
 
 # Relay leg position -> 1-based leg number (NOT_SWUM/ALTERNATE are absent).
@@ -53,34 +51,20 @@ _LEG_NUMBERS: dict[RelayLegOrder, int] = {
 }
 
 
-# --------------------------------------------------------------------------- #
-# repr / str helpers
-# --------------------------------------------------------------------------- #
-#
-# The aggregates form a cyclic graph (Meet <-> Club <-> Swimmer <-> result),
-# so the dataclass-generated ``__repr__`` walks the back-references and explodes
-# combinatorially -- a populated meet renders into megabytes and effectively
-# hangs. Each aggregate therefore defines a concise ``__repr__``/``__str__`` that
-# summarises collections by count and references related objects by a short
-# label (below) rather than recursing into their full repr, which breaks the
-# cycle.
+# The aggregates form a cyclic graph (Meet <-> Club <-> Swimmer <-> result), so the
+# generated ``__repr__`` would recurse combinatorially and effectively hang. Each
+# aggregate defines a concise ``__repr__``/``__str__`` using these short labels instead.
 
 
 def _enum_name(value: object) -> str:
-    """Render an enum member by its bare ``name`` (or ``"None"``).
-
-    Avoids the verbose default enum repr (e.g. ``<Organization.USS: '1'>``).
-    """
     return value.name if value is not None else "None"  # type: ignore[attr-defined]
 
 
 def _club_label(club: Club | None) -> str | None:
-    """A club's identifying ``team_code`` (or ``None``), without recursing into it."""
     return club.team_code if club is not None else None
 
 
 def _swimmer_label(swimmer: Swimmer | None) -> str | None:
-    """A swimmer's ``full_name`` (or ``None``), without recursing into it."""
     return swimmer.full_name if swimmer is not None else None
 
 
@@ -102,14 +86,9 @@ __all__ = [
 ]
 
 
-# --------------------------------------------------------------------------- #
-# Value types (frozen, hashable)
-# --------------------------------------------------------------------------- #
-
-
 @dataclass(frozen=True)
 class Split:
-    """A split entry representing the swim time at a cumulative distance of a swim.
+    """A swim's time at a distance from the start.
 
     Attributes:
         distance: Cumulative distance from start (50, 100, 150, etc.).
@@ -117,8 +96,8 @@ class Split:
         split_type: Split representation style (INTERVAL or CUMULATIVE).
     """
 
-    distance: int  # Cumulative distance from start (50, 100, 150, etc.)
-    time: Time | None  # None if split was present but unparseable
+    distance: int
+    time: Time | None
     split_type: SplitType
 
 
@@ -261,17 +240,12 @@ class ClubEntryCounts:
     num_split_records: int | None = None
 
 
-# --------------------------------------------------------------------------- #
-# Swim interface
-# --------------------------------------------------------------------------- #
-
-
 class Swim(ABC):
-    """Abstract base class for a swimmer's swim (IndividualSwim or RelaySwim).
+    """Abstract base for a swimmer's swim (IndividualSwim or RelaySwim).
 
-    Declares no instance fields to prevent slotted layout conflicts. Both subclasses
-    expose a uniform interface (swimmer, time, status, session, event, date, meet,
-    course, swimmer_age_class, splits, is_relay_leg).
+    Declares no fields to avoid slot layout conflicts. Both subclasses expose swimmer,
+    time, status, session, event, date, meet, course, swimmer_age_class, splits and
+    is_relay_leg.
     """
 
     __slots__ = ()
@@ -280,11 +254,6 @@ class Swim(ABC):
     @abstractmethod
     def is_relay_leg(self) -> bool:
         """True for a RelaySwim, False for an IndividualSwim."""
-
-
-# --------------------------------------------------------------------------- #
-# Meet results
-# --------------------------------------------------------------------------- #
 
 
 @dataclass(slots=True, kw_only=True, eq=False)
@@ -315,8 +284,9 @@ class MeetResult:
         event_min_time_class: Minimum entry time class required.
         event_max_time_class: Maximum entry time class.
         dq_code: 2-character Hy-Tek DQ code (e.g. "3D").
-        dq_reason: Human-readable DQ description.
-        converted_seed_time: Seed time converted to the meet's course (Hy-Tek only).
+        dq_reason: Human-readable DQ description (Hy-Tek only).
+        converted_seed_time: Seed time converted to the meet's course (Hy-Tek only;
+            SDIF stores only the as-entered ``seed_time``).
         converted_seed_course: Seed course converted to the meet's course (Hy-Tek only).
         backup_times: Watch or manual backup times (Hy-Tek only).
     """
@@ -341,13 +311,11 @@ class MeetResult:
     seed_course: Course | None = None
     event_min_time_class: EventTimeClass | None = None
     event_max_time_class: EventTimeClass | None = None
-    dq_code: str | None = None  # 2-char Hy-Tek DQ code (e.g. "3D"); see `dq_reason`
-    dq_reason: str | None = None  # human-readable DQ text (`.hy3` H1/H2 records)
-    # `.hy3` carries both an as-entered seed (`seed_time`) and a copy converted to
-    # the meet's course; SDIF stores only the as-entered seed.
+    dq_code: str | None = None
+    dq_reason: str | None = None
     converted_seed_time: Time | None = None
     converted_seed_course: Course | None = None
-    backup_times: tuple[Time, ...] = ()  # manual watch/backup times (`.hy3`-only)
+    backup_times: tuple[Time, ...] = ()
 
     def __repr__(self) -> str:
         return (
@@ -413,7 +381,7 @@ class Relay(MeetResult):
     total_age: int | None = None
     legs: list[RelaySwim] = field(default_factory=list)
     alternates: list[RelaySwim] = field(default_factory=list)
-    splits: list[Split] = field(default_factory=list)  # whole-relay cumulative splits
+    splits: list[Split] = field(default_factory=list)
 
     def __repr__(self) -> str:
         return (
@@ -437,7 +405,7 @@ class RelaySwim(Swim):
         order: Leg sequence or alternate order.
         time: Time swum on this specific leg, or None.
         status: The leg's result status.
-        takeoff_time: Hundredths of a second takeoff reaction time.
+        takeoff_time: Takeoff reaction time in hundredths of a second.
         course: Course code (derived or stored).
         swimmer_age_class: Coded age class at the time of the swim.
         citizenship: Citizenship or country code.
@@ -448,7 +416,7 @@ class RelaySwim(Swim):
     order: RelayLegOrder | None = None
     time: Time | None = None
     status: ResultStatus = ResultStatus.OK
-    takeoff_time: int | None = None  # hundredths of a second
+    takeoff_time: int | None = None
     course: Course | None = None
     swimmer_age_class: str | None = None
     citizenship: CitizenshipOrCountry | None = None
@@ -484,20 +452,12 @@ class RelaySwim(Swim):
 
     @property
     def splits(self) -> list[Split]:
-        """This leg's splits, derived from the relay's whole-relay cumulative splits.
+        """This leg's splits, derived from :attr:`Relay.splits`.
 
-        Both readers store splits on the relay row (:attr:`Relay.splits`) as
-        whole-relay cumulative marks (e.g. 50/100/150/200 for a 4×50). A leg's
-        splits are the marks swum during that leg, re-based to the leg start so
-        the leg reads like a flat-start swim: distances count from 0 and a
-        cumulative time is measured from the leg's takeoff. (Interval splits keep
-        their per-segment time; only the distance is re-based.) A cumulative
-        split's time is None when the relay has no mark at the leg's start: the
-        takeoff time it would be measured from is unknown.
-
-        Empty when there is nothing to derive — the relay carries no splits, the
-        slot is an alternate / has no leg number, or no relay mark falls within
-        this leg's distance window.
+        The relay marks within this leg, re-based so the leg reads like a flat-start
+        swim: distances count from 0 and cumulative times from the leg's takeoff
+        (interval times are kept). A cumulative time is None when the relay has no
+        mark at the leg's start. Empty for alternates or when no mark falls in the leg.
         """
         relay_splits = self.relay.splits
         leg_number = _LEG_NUMBERS.get(self.order) if self.order is not None else None
@@ -508,8 +468,6 @@ class RelaySwim(Swim):
         window = [s for s in relay_splits if lo < s.distance <= hi]
         if not window:
             return []
-        # Leg-start cumulative time: zero for the lead-off leg, otherwise the
-        # relay mark at the leg boundary (left as None if that mark is absent).
         start: Time | None = (
             Time(0) if lo == 0 else next((s.time for s in relay_splits if s.distance == lo), None)
         )
@@ -539,11 +497,6 @@ class RelaySwim(Swim):
         return self.relay.session
 
 
-# --------------------------------------------------------------------------- #
-# Aggregates
-# --------------------------------------------------------------------------- #
-
-
 @dataclass(slots=True, kw_only=True, eq=False)
 class Swimmer:
     """A swimmer scoped to one meet.
@@ -569,8 +522,8 @@ class Swimmer:
     first_name: str
     last_name: str
     sex: Sex
-    id_short: str | None = None  # 12-char short ID (USS#)
-    id_long: str | None = None  # 14-char new long ID
+    id_short: str | None = None
+    id_long: str | None = None
     middle_initial: str | None = None
     preferred_first_name: str | None = None
     birthday: datetime.date | None = None
@@ -633,7 +586,7 @@ class Club:
         coach: Head coach name.
         coach_phone: Coach contact phone.
         short_name: Alternate short name.
-        email: Contact email address.
+        email: Contact email address (Hy-Tek only).
         entry_counts: Official entry counts from the file.
         results: Club's individual and relay results at the meet.
         swimmers: Swimmers representing this club at the meet.
@@ -655,7 +608,7 @@ class Club:
     coach: str | None = None
     coach_phone: str | None = None
     short_name: str | None = None
-    email: str | None = None  # contact email (`.hy3` C3 record)
+    email: str | None = None
     entry_counts: ClubEntryCounts | None = None
     results: list[MeetResult] = field(default_factory=list)
     swimmers: list[Swimmer] = field(default_factory=list)
@@ -699,9 +652,9 @@ class Meet:
         course: Course code (SCY, SCM, LCM).
         altitude: Venue altitude in feet or meters.
         meet_type: Meet classification code.
-        venue: Facility or pool name.
-        age_up_date: Age-determination date for the meet.
-        sanction_number: Meet sanction identifier.
+        venue: Facility or pool name (Hy-Tek only).
+        age_up_date: Age-determination date for the meet (Hy-Tek only).
+        sanction_number: Meet sanction identifier (Hy-Tek only).
         host: Host details.
         source_file: Metadata of the file this meet was parsed from.
         results: All individual and relay results at this meet.
@@ -722,9 +675,9 @@ class Meet:
     course: Course | None = None
     altitude: int | None = None
     meet_type: MeetType | None = None
-    venue: str | None = None  # facility / location name (`.hy3` B1 record)
-    age_up_date: datetime.date | None = None  # age-determination date (`.hy3` B1 record)
-    sanction_number: str | None = None  # sanction number (`.hy3` B2 record)
+    venue: str | None = None
+    age_up_date: datetime.date | None = None
+    sanction_number: str | None = None
     host: MeetHost | None = None
     source_file: SourceFile | None = None
     results: list[MeetResult] = field(default_factory=list)

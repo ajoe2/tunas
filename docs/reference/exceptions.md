@@ -1,5 +1,5 @@
 # Exceptions
 
-Custom exception and warning classes used by the library.
+The exception hierarchy.
 
 ::: tunas.exceptions

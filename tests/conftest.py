@@ -3,42 +3,37 @@
 from __future__ import annotations
 
 import io
+from collections import Counter
 from collections.abc import Iterator
+from enum import Enum
 from pathlib import Path
 
 import pytest
 
-from tunas import MeetArchive
+from tunas import MeetArchive, ParseReport
 from tunas._parser.checksum import hy3_checksum
 from tunas.parser import read_cl2, read_hy3
 from tunas.standards import _load_index
 
-RECORD_WIDTH = 160
-
-# Committed golden-file fixtures (`.cl2`/`.hy3` + their `.expected.json`), resolved
-# here so tests reference them independent of which subfolder they live in.
 DATA_DIR = Path(__file__).resolve().parent / "data"
+
+
+def _place(width: int, fields: tuple[tuple[int, str], ...]) -> str:
+    buf = [" "] * width
+    for start, text in fields:
+        buf[start - 1 : start - 1 + len(text)] = text
+    return "".join(buf)
 
 
 def rec(*fields: tuple[int, str]) -> str:
     """Build a 160-char SDIF line by placing ``(start_1indexed, text)`` fields."""
-    buf = [" "] * RECORD_WIDTH
-    for start, text in fields:
-        for i, ch in enumerate(text):
-            buf[start - 1 + i] = ch
-    return "".join(buf)
+    return _place(160, fields)
 
 
 def parse_lines(lines: list[str], *, strict: bool = False) -> MeetArchive:
-    """Parse record lines from an in-memory stream into its single MeetArchive.
-
-    A stream is one source, so the reader yields exactly one archive — this returns
-    it directly, the way a caller of a single source would consume the iterator.
-    """
+    """Parse SDIF lines into the single MeetArchive an in-memory stream yields."""
     return next(iter(read_cl2(io.StringIO("\n".join(lines) + "\n"), strict=strict)))
 
-
-# -- Reusable building blocks -------------------------------------------------
 
 A0 = rec(
     (1, "A0"),
@@ -92,32 +87,27 @@ def d0(
     finals_course: str = "Y",
     finals_place: str = "1",
 ) -> str:
-    fields = [(1, "D0"), (3, "1"), (12, name), (56, birth), (64, age_class), (66, sex), (81, date)]
-    if uss:
-        fields.append((40, uss))
-    if esex:
-        fields.append((67, esex))
-    if dist:
-        fields.append((68, dist))
-    if stroke:
-        fields.append((72, stroke))
-    if eage:
-        fields.append((77, eage))
-    if seed:
-        fields.append((89, seed))
-    if seed_course:
-        fields.append((97, seed_course))
-    if prelim:
-        fields.append((98, prelim))
-    if prelim_course:
-        fields.append((106, prelim_course))
-    if finals:
-        fields.append((116, finals))
-    if finals_course:
-        fields.append((124, finals_course))
-    if finals_place:
-        fields.append((136, finals_place))
-    return rec(*fields)
+    return rec(
+        (1, "D0"),
+        (3, "1"),
+        (12, name),
+        (56, birth),
+        (64, age_class),
+        (66, sex),
+        (81, date),
+        (40, uss),
+        (67, esex),
+        (68, dist),
+        (72, stroke),
+        (77, eage),
+        (89, seed),
+        (97, seed_course),
+        (98, prelim),
+        (106, prelim_course),
+        (116, finals),
+        (124, finals_course),
+        (136, finals_place),
+    )
 
 
 def e0(
@@ -169,7 +159,7 @@ def f0(
     leg_course: str = "Y",
     takeoff: str = "0.29",
 ) -> str:
-    fields = [
+    return rec(
         (1, "F0"),
         (3, "1"),
         (16, team),
@@ -183,12 +173,9 @@ def f0(
         (80, leg_time),
         (88, leg_course),
         (89, takeoff),
-    ]
-    if uss:
-        fields.append((51, uss))
-    if id_long:
-        fields.append((93, id_long))
-    return rec(*fields)
+        (51, uss),
+        (93, id_long),
+    )
 
 
 def g0(
@@ -201,7 +188,7 @@ def g0(
     times: tuple[str, ...] = ("29.00", "1:00.00"),
     session: str = "F",
 ) -> str:
-    fields = [
+    return rec(
         (1, "G0"),
         (3, "1"),
         (44, uss),
@@ -209,35 +196,22 @@ def g0(
         (57, total),
         (59, split_dist),
         (63, split_type),
-    ]
-    for i, t in enumerate(times):
-        fields.append((64 + i * 8, t))
-    if session:
-        fields.append((144, session))
-    return rec(*fields)
+        *((64 + i * 8, t) for i, t in enumerate(times)),
+        (144, session),
+    )
 
 
-# --------------------------------------------------------------------------- #
-# Hy-Tek `.hy3` builders (130-char records: 128 data columns + a 2-digit checksum)
-# --------------------------------------------------------------------------- #
+# -- Hy-Tek `.hy3` builders (128 data columns + a 2-digit checksum) ----------
 
 
 def hy3_rec(*fields: tuple[int, str]) -> str:
-    """Build a valid 130-char `.hy3` line, placing ``(start_1indexed, text)`` fields.
-
-    The trailing 2-digit checksum is computed over the data body so the line
-    passes :func:`tunas._parser.checksum.checksum_matches`.
-    """
-    buf = [" "] * 128
-    for start, text in fields:
-        for i, ch in enumerate(text):
-            buf[start - 1 + i] = ch
-    body = "".join(buf)
+    """Build a 130-char `.hy3` line with a valid trailing checksum."""
+    body = _place(128, fields)
     return body + hy3_checksum(body.encode("cp1252"))
 
 
 def parse_hy3_lines(lines: list[str], *, strict: bool = False) -> MeetArchive:
-    """Parse `.hy3` record lines from an in-memory stream into its single MeetArchive."""
+    """Parse `.hy3` lines into the single MeetArchive an in-memory stream yields."""
     return next(iter(read_hy3(io.StringIO("\n".join(lines) + "\n"), strict=strict)))
 
 
@@ -281,7 +255,7 @@ def d1(
     grade: str = "",
     citizen: str = "",
 ) -> str:
-    fields = [
+    return hy3_rec(
         (1, "D1"),
         (3, sex),
         (4, number.rjust(5)),
@@ -291,14 +265,10 @@ def d1(
         (70, member),
         (89, birth),
         (98, age.rjust(2)),
-    ]
-    if grade:
-        fields.append((100, grade))  # Grade/Class code (SR/JR/SO/FR)
-    if middle:
-        fields.append((69, middle))
-    if citizen:
-        fields.append((113, citizen))
-    return hy3_rec(*fields)
+        (100, grade),
+        (69, middle),
+        (113, citizen),
+    )
 
 
 def e1(
@@ -342,7 +312,7 @@ def e2(
     watch3: str = "",
     date: str = "05012021",
 ) -> str:
-    fields = [
+    return hy3_rec(
         (1, "E2"),
         (3, rnd),
         (5, time.rjust(7)),
@@ -351,15 +321,12 @@ def e2(
         (25, lane.rjust(2)),
         (31, place.rjust(3)),
         (88, date),
-    ]
-    if status:
-        fields.append((13, status))
-    if dqcode:
-        fields.append((14, dqcode))
-    for col, w in ((38, watch1), (46, watch2), (54, watch3)):
-        if w:
-            fields.append((col, w.rjust(7)))
-    return hy3_rec(*fields)
+        (13, status),
+        (14, dqcode),
+        (38, watch1.rjust(7)),
+        (46, watch2.rjust(7)),
+        (54, watch3.rjust(7)),
+    )
 
 
 def f1(
@@ -395,7 +362,7 @@ def f2(
     place: str = "1",
     date: str = "05012021",
 ) -> str:
-    fields = [
+    return hy3_rec(
         (1, "F2"),
         (3, rnd),
         (6, time.rjust(6)),
@@ -404,12 +371,9 @@ def f2(
         (25, lane.rjust(2)),
         (31, place.rjust(3)),
         (103, date),
-    ]
-    if status:
-        fields.append((13, status))
-    if dqcode:
-        fields.append((14, dqcode))
-    return hy3_rec(*fields)
+        (13, status),
+        (14, dqcode),
+    )
 
 
 def f3_slot(sex: str, number: str, last5: str, rnd: str, leg: str) -> str:
@@ -419,10 +383,7 @@ def f3_slot(sex: str, number: str, last5: str, rnd: str, leg: str) -> str:
 
 def f3(*slots: str) -> str:
     """Build an F3 record from up to 8 :func:`f3_slot` strings."""
-    fields = [(1, "F3")]
-    for i, slot in enumerate(slots):
-        fields.append((3 + i * 13, slot))
-    return hy3_rec(*fields)
+    return hy3_rec((1, "F3"), *((3 + i * 13, s) for i, s in enumerate(slots)))
 
 
 def g1_block(rnd: str, counter: int, time: str) -> str:
@@ -432,14 +393,44 @@ def g1_block(rnd: str, counter: int, time: str) -> str:
 
 def g1(*blocks: str) -> str:
     """Build a G1 splits record from up to 11 :func:`g1_block` strings."""
-    fields = [(1, "G1")]
-    for i, block in enumerate(blocks):
-        fields.append((3 + i * 11, block))
-    return hy3_rec(*fields)
+    return hy3_rec((1, "G1"), *((3 + i * 11, b) for i, b in enumerate(blocks)))
 
 
 def h1(*, code: str = "3D", text: str = "Scissors kick") -> str:
     return hy3_rec((1, "H1"), (3, code), (5, text))
+
+
+# -- Golden-file rendering shared by the expected-JSON tests -----------------
+
+
+def enum_name(value: Enum | None) -> str | None:
+    return value.name if value is not None else None
+
+
+def report_summary(report: ParseReport) -> dict[str, object]:
+    """Render a report's counts and grouped warnings in the expected-JSON shape."""
+    counts: Counter[tuple[str | None, str | None, str, str]] = Counter(
+        (w.record_type, w.field, w.kind.name, w.severity.name) for w in report.warnings
+    )
+    return {
+        "report": {
+            "files_read": report.files_read,
+            "meets_parsed": report.meets_parsed,
+            "swimmers_parsed": report.swimmers_parsed,
+            "individual_swims_parsed": report.individual_swims_parsed,
+            "relays_parsed": report.relays_parsed,
+            "splits_parsed": report.splits_parsed,
+            "records_skipped": report.records_skipped,
+            "fields_recovered": report.fields_recovered,
+        },
+        "warnings": sorted(
+            (
+                {"record_type": rt, "field": f, "kind": k, "severity": sev, "count": c}
+                for (rt, f, k, sev), c in counts.items()
+            ),
+            key=lambda w: (w["record_type"] or "", w["field"] or ""),
+        ),
+    }
 
 
 @pytest.fixture(autouse=True)

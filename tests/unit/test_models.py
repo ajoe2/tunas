@@ -206,9 +206,7 @@ def test_open_ended_age_and_optionals() -> None:
 
 
 def test_relay_leg_splits_derived_and_rebased() -> None:
-    # Splits live on the relay row as whole-relay cumulative marks; each leg
-    # derives its own splits from that row, re-based to the leg start so it reads
-    # like a flat-start swim.
+    # Legs derive splits from the relay row's cumulative marks, re-based to the leg start.
     m = _meet()
     relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
     cum = ["23.84", "49.52", "1:14.48", "1:44.17", "2:11.09", "2:41.36", "3:07.62", "3:35.91"]
@@ -218,17 +216,14 @@ def test_relay_leg_splits_derived_and_rebased() -> None:
     ]
     leg1 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_1)
     leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
-    # Lead-off leg: marks are already leg-relative (start time 0).
     assert [(s.distance, str(s.time)) for s in leg1.splits] == [(50, "23.84"), (100, "49.52")]
-    # Second leg: distances and cumulative times re-based to the leg start (49.52).
     assert [(s.distance, str(s.time)) for s in leg2.splits] == [(50, "24.96"), (100, "54.65")]
 
 
 def test_relay_leg_splits_without_the_leg_start_mark_have_no_time() -> None:
-    # Re-basing needs the relay's mark at the leg start. Without it the relay's
-    # running time would pass for the leg's own (a 50 leg reading 1:44.17).
+    # Without the leg-start mark the relay's running time would pass for the leg's own.
     m = _meet()
-    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
+    relay = _relay(m)
     relay.splits = [
         Split(distance=d, time=Time.parse(t), split_type=SplitType.CUMULATIVE)
         for d, t in [(50, "23.84"), (150, "1:14.48"), (200, "1:44.17")]  # no 100 mark
@@ -238,10 +233,9 @@ def test_relay_leg_splits_without_the_leg_start_mark_have_no_time() -> None:
 
 
 def test_relay_leg_splits_ignore_a_mark_before_the_leg_start() -> None:
-    # A corrupt mark earlier than the leg's start can't be re-based (and must not
-    # raise from a property while iterating splits).
+    # A corrupt mark earlier than the leg start can't be re-based and must not raise.
     m = _meet()
-    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg
+    relay = _relay(m)
     relay.splits = [
         Split(distance=d, time=Time.parse(t), split_type=SplitType.CUMULATIVE)
         for d, t in [(100, "49.52"), (150, "45.00"), (200, "1:44.17")]
@@ -251,16 +245,14 @@ def test_relay_leg_splits_ignore_a_mark_before_the_leg_start() -> None:
 
 
 def test_relay_leg_splits_interval_type_keeps_time() -> None:
-    # INTERVAL splits already carry per-segment times: only the distance is
-    # re-based to the leg, the time is passed through unchanged (not subtracted).
+    # INTERVAL times are per-segment: only the distance is re-based.
     m = _meet()
-    relay = _relay(m)  # FREE_400_RELAY_SCY -> 100 per leg, marks every 50
+    relay = _relay(m)
     relay.splits = [
         Split(distance=50 * (i + 1), time=Time.parse(t), split_type=SplitType.INTERVAL)
         for i, t in enumerate(["23.84", "25.68", "24.96", "29.69"])
     ]
     leg2 = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_2)
-    # window = marks at 150/200 -> distances re-based to 50/100; times kept as-is.
     assert [(s.distance, str(s.time), s.split_type.name) for s in leg2.splits] == [
         (50, "24.96", "INTERVAL"),
         (100, "29.69", "INTERVAL"),
@@ -268,18 +260,15 @@ def test_relay_leg_splits_interval_type_keeps_time() -> None:
 
 
 def test_relay_leg_splits_empty_when_no_row_splits() -> None:
-    # Nothing to derive from -> empty list, keeping the uniform Swim.splits type.
     m = _meet()
-    relay = _relay(m)  # no splits on the row
+    relay = _relay(m)
     leg = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.LEG_1)
     alt = RelaySwim(swimmer=None, relay=relay, order=RelayLegOrder.ALTERNATE)
     assert leg.splits == []
-    assert alt.splits == []  # alternates have no leg window either
+    assert alt.splits == []
 
 
-# --------------------------------------------------------------------------- #
-# repr / str — must stay concise and finite despite the cyclic object graph
-# --------------------------------------------------------------------------- #
+# -- repr / str: concise and finite despite the cyclic object graph ----------
 
 
 def _fully_wired_meet() -> Meet:
@@ -297,13 +286,7 @@ def _fully_wired_meet() -> Meet:
 
 
 def test_repr_terminates_on_cyclic_graph() -> None:
-    """Every aggregate's repr is finite and small even with cycles wired up.
-
-    The dataclass-default repr walks back-references (Meet<->Club<->Swimmer<->
-    result) and blows up combinatorially; a populated meet would render into
-    megabytes. The custom reprs summarise collections by count and reference
-    related objects by a short label, so each stays a single short line.
-    """
+    # The dataclass-default repr would walk back-references and blow up combinatorially.
     m = _fully_wired_meet()
     ind, relay = m.results
     leg = relay.legs[0]  # type: ignore[attr-defined]
@@ -311,19 +294,6 @@ def test_repr_terminates_on_cyclic_graph() -> None:
     for obj in (m, s, ind, relay, leg):
         assert len(repr(obj)) < 250
         assert len(str(obj)) < 250
-
-
-def test_repr_does_not_recurse_into_related_objects() -> None:
-    """A repr names related objects by a short label, never their full repr."""
-    m = _fully_wired_meet()
-    # Meet shows collection counts, not the nested Swimmer/Club/result reprs.
-    assert "Swimmer(" not in repr(m)
-    assert "IndividualSwim(" not in repr(m)
-    assert "clubs=" in repr(m) and "swimmers=" in repr(m) and "results=" in repr(m)
-    # A swim references its swimmer by name, not by expanding the Swimmer repr.
-    ind = m.results[0]
-    assert "Swimmer(" not in repr(ind)
-    assert "Irene Q Zhong" in repr(ind)
 
 
 def test_meet_repr_and_str() -> None:
@@ -341,7 +311,6 @@ def test_club_repr_and_str() -> None:
         "Club(team_code='ABC', lsc=None, full_name='ABC Aquatics', swimmers=0, results=0)"
     )
     assert str(c) == "ABC Aquatics"
-    # Falls back to the team code when no full name is set.
     bare = Club(meet=m, organization=Organization.USS, team_code="XYZ")
     assert str(bare) == "XYZ"
 
@@ -373,7 +342,6 @@ def test_relay_repr_and_str() -> None:
         "Relay(relay_letter='A', event=FREE_400_RELAY_SCY, club=None, "
         "status=OK, time=3:30.00, legs=0)"
     )
-    # No club -> "?" placeholder rather than a recursion-prone label.
     assert str(relay) == "? A FREE_400_RELAY_SCY 3:30.00"
 
 
@@ -389,7 +357,6 @@ def test_relay_swim_repr_and_str() -> None:
 
 
 def test_repr_handles_none_swimmer_and_order() -> None:
-    """An alternate roster slot (no swimmer, no leg order) still renders."""
     m = _meet()
     alt = RelaySwim(swimmer=None, relay=_relay(m), order=None)
     assert repr(alt) == "RelaySwim(swimmer=None, order=None, time=None, status=OK, relay='A')"
@@ -397,7 +364,6 @@ def test_repr_handles_none_swimmer_and_order() -> None:
 
 
 def test_meetresult_base_repr_uses_runtime_type_name() -> None:
-    """The base repr defers the class name so subclasses inherit it safely."""
     m = _meet()
     base = MeetResult(
         meet=m,

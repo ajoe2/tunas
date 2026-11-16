@@ -1,10 +1,6 @@
-"""Build the ground-truth JSON for ``pasa_distance_intersquad.hy3`` (golden-file test).
+"""Build the expected JSON for ``pasa_distance_intersquad.hy3`` (golden-file test).
 
-This is an INDEPENDENT reference decoder for the Hy-Tek `.hy3` format: it reads
-the documented columns directly and does NOT import ``tunas``. The committed
-``pasa_distance_intersquad.expected.json`` was produced by this script and
-cross-checked against the raw records; ``hy3/test_hy3_golden_meet.py`` compares the
-real ``read_hy3`` parse against that static JSON, so a parser regression fails the test.
+An independent `.hy3` decoder (does not import ``tunas``), hand-verified against the raw records.
 
 Re-generate with:  uv run python tests/data/build_expected_hy3.py
 """

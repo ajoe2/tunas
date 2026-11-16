@@ -1,10 +1,10 @@
 # Data model
 
-`read_cl2` yields one [`MeetArchive`](parsing.md#meetarchive) per file, each wrapping a list of self-contained [`Meet`][tunas.models.Meet] objects. This page explains the object graph and its scoping rules. For field-by-field reference, see the [API Reference](../reference/models.md).
+Each [`MeetArchive`](parsing.md#meetarchive) wraps a list of self-contained [`Meet`][tunas.models.Meet] objects. This page covers the object graph and its scoping rules; the [API Reference](../reference/models.md) has every field.
 
 ## Object graph
 
-**Inheritance** — two small base types sit above the concrete results:
+**Inheritance**: two base types sit above the concrete results:
 
 ```
 Swim (one swimmer's swim)           MeetResult (a row in Meet.results)
@@ -12,15 +12,16 @@ Swim (one swimmer's swim)           MeetResult (a row in Meet.results)
 └── RelaySwim                       └── Relay
 ```
 
-**Containment** — each `Meet` owns its results, swimmers, and clubs:
+**Containment**: each `Meet` owns its results, swimmers, and clubs:
 
 ```
-list[Meet]                                ← one Meet per .cl2 file
+list[Meet]                                ← usually one Meet per file
 └── Meet
     ├── results   : list[MeetResult]      ← IndividualSwim or Relay
     │   ├── IndividualSwim
     │   │   └── swimmer  : Swimmer
     │   └── Relay
+    │       ├── splits     : list[Split]        ← whole-relay cumulative marks
     │       ├── legs       : list[RelaySwim]    ← the ≤4 swum legs (LEG_1–LEG_4)
     │       │   └── RelaySwim
     │       │       ├── swimmer : Swimmer
@@ -36,14 +37,10 @@ list[Meet]                                ← one Meet per .cl2 file
             └── swimmers : list[Swimmer]
 ```
 
-The parser wires every reference (including back-references like `RelaySwim.relay`)
-in a single pass, so traversals are plain attribute reads.
-
-Because those back-references make the graph cyclic, each aggregate defines a
-**concise `repr()`/`str()`** that summarises its collections by count and names
-related objects by a short label (a club's `team_code`, a swimmer's `full_name`)
-rather than expanding them. Printing a `Meet` therefore stays a single line and
-never walks the whole graph:
+Every reference, including back-references like `RelaySwim.relay`, is wired during
+parsing, so traversals are plain attribute reads. Because the graph is cyclic, each
+aggregate's `repr()`/`str()` summarises collections by count and names related objects by
+a short label, so printing a `Meet` stays one line:
 
 ```python
 >>> meet
@@ -54,15 +51,11 @@ Champs (2025-01-01)
 
 ## Two ways to look at a result
 
-The same row can be viewed through two lenses, which is why there are two base
-classes:
-
 - **[`MeetResult`][tunas.models.MeetResult]** is a *row in `Meet.results`* — an
   [`IndividualSwim`][tunas.models.IndividualSwim] or a [`Relay`][tunas.models.Relay].
   It holds the shared event/place/time context but no `swimmer` or `splits`.
 - **[`Swim`][tunas.models.Swim]** is *one swimmer's swim* — an `IndividualSwim` or a
-  [`RelaySwim`][tunas.models.RelaySwim]. It is
-  the common type behind `Swimmer.swims`, giving both kinds a uniform interface
+  [`RelaySwim`][tunas.models.RelaySwim], the common type behind `Swimmer.swims`
   (`swimmer`, `time`, `status`, `session`, `event`, `date`, `meet`, `course`,
   `splits`, `is_relay_leg`).
 
@@ -72,17 +65,13 @@ legs are the `RelaySwim`s.
 
 ## Relay legs and their events
 
-A `Relay` carries its swimmers as `RelaySwim` legs. Swimmers who raced are in
-`legs` (ordered `LEG_1`–`LEG_4`); rostered swimmers who did not race are in
-`alternates` and are **excluded** from `Swimmer.swims`. The squad's splits are
-whole-relay cumulative marks on `Relay.splits` (e.g. 50/100/150/200 for a 4×50),
-populated identically by both readers. Each leg's `RelaySwim.splits` is **derived
-from that row** — the marks swum during the leg, re-based to the leg start so the
-leg reads like a flat-start swim (distances from 0, cumulative time from the
-leg's takeoff). A cumulative split's `time` is `None` when the relay has no mark at
-the leg's start, since the takeoff time it is measured from is then unknown. It is
-empty when there is nothing to derive (the relay carries no splits, or the slot is
-an alternate), so it keeps the uniform `Swim.splits` type:
+Swimmers who raced are in `legs` (ordered `LEG_1`–`LEG_4`); rostered swimmers who did
+not race are in `alternates` and are **excluded** from `Swimmer.swims`. The squad's
+splits are whole-relay cumulative marks on `Relay.splits` (e.g. 50/100/150/200 for a
+4×50), from both readers. Each leg's `RelaySwim.splits` is **derived** from that row:
+the marks swum during the leg, re-based to the leg start so it reads like a flat-start
+swim. A cumulative split's `time` is `None` when the relay has no mark at the leg's
+start. Alternates, and legs of relays with no splits, get an empty list:
 
 ```python
 relay.splits          # [Split(50, 31.60), Split(100, 1:10.63), Split(150, 1:40.63), Split(200, 2:16.27)]
@@ -103,13 +92,13 @@ flat-starts and matching relay legs.
 
 ## Identity and scoping
 
-Meets are independent and never merged; exporting the same meet twice yields two unrelated `Meet` objects. Swimmers are grouped within a meet by `id_short` (falling back to `id_long`). Fusing never relies on names or birthdays to avoid incorrect merges. The same athlete in multiple meets is represented by separate `Swimmer` instances; cross-meet tracking is handled in application code (see [Recipes](cookbook.md)).
+Meets are independent and never merged; exporting the same meet twice yields two unrelated `Meet` objects. Swimmers are grouped within a meet by `id_short` (falling back to `id_long`), never by name or birthday alone. The same athlete in two meets is two `Swimmer` instances; cross-meet tracking is left to the application (see [Recipes](cookbook.md)).
 
 Clubs are scoped within a meet and keyed by `(team_code, lsc)`. Unattached entries (team code ending in `UN`, or a name containing "unattached") create no `Club` instance, and the swimmer's `club` is set to `None`.
 
 ## Times and outcomes
 
-A timed swim has `status == ResultStatus.OK` and a [`Time`][tunas.time.Time]. Non-time outcomes (`NT`, `NS`, `DNF`, `DQ`, `SCR`) have `time = None`, except for course-`X` disqualifications, which preserve the swum time with `status == DQ`. Every swim is preserved to facilitate complete analysis.
+A timed swim has `status == ResultStatus.OK` and a [`Time`][tunas.time.Time]. Non-time outcomes (`NT`, `NS`, `DNF`, `DQ`, `SCR`) have `time = None`, except course-`X` (and `.hy3`) disqualifications, which keep the swum time with `status == DQ`.
 
 An entry that hasn't been swum — every row of an entries / psych-sheet file — has `status == ResultStatus.ENTERED`, `time = None`, `date = None`, and `session = None`; its `seed_time` is the entry time (see [Entries files](parsing.md#entries-files-psych-sheets)).
 
@@ -117,16 +106,15 @@ An entry that hasn't been swum — every row of an entries / psych-sheet file �
 
 ## Field reference by type
 
-The [API reference](../reference/models.md) lists every field with its type; the tables below summarize what each type carries and which SDIF record populates it. Aggregates (`Meet`, `Club`, `Swimmer`, result types) are mutable, slotted dataclasses with identity equality; value types are frozen and hashable.
+A summary of what each type carries. Aggregates (`Meet`, `Club`, `Swimmer`, result types) are mutable, slotted dataclasses with identity equality; value types are frozen and hashable.
 
 !!! note "`.hy3`-only fields"
-    The following fields are populated only by [`read_hy3`](parsing.md#read_hy3) (they remain `None` or default under `read_cl2`):
+    Populated only by [`read_hy3`](parsing.md#read_hy3) (`None` or default under `read_cl2`):
 
     * **`SourceFile`**: `hy3_file_type`, `created_time`, `licensee`
     * **`Meet`**: `venue`, `age_up_date`, `sanction_number`
     * **`Club`**: `email`
     * **`MeetResult`**: `dq_code`, `dq_reason`, `converted_seed_time`, `converted_seed_course`, `backup_times`
-    * **`Relay`**: `splits`
 
 ### `Meet` — and its metadata
 
@@ -209,6 +197,7 @@ Every row in `Meet.results` (an [`IndividualSwim`][tunas.models.IndividualSwim] 
 | Field | Type | Notes |
 |---|---|---|
 | `meet`, `club` | `Meet`, `Club \| None` | Back-references. |
+| `organization` | [`Organization`][tunas.enums.Organization] `\| None` | As on `Meet`. |
 | `event` | [`Event`][tunas.event.Event] | The `(distance, stroke, course)` event. |
 | `event_sex` | [`Sex`][tunas.enums.Sex] | `M`/`F`/`X` (mixed). |
 | `event_min_age`, `event_max_age` | `int \| None` | Event age range. |
@@ -226,7 +215,7 @@ Every row in `Meet.results` (an [`IndividualSwim`][tunas.models.IndividualSwim] 
 derives from the event and `is_relay_leg` is always `False`.
 
 [`Relay`][tunas.models.Relay] adds `relay_letter` (the `A`/`B`/… squad designator),
-`total_age`, `legs`, and `alternates`. A `Relay` is *not* a `Swim` — its swims are the legs.
+`total_age`, `legs`, `alternates`, and `splits`. A `Relay` is *not* a `Swim`; its swims are the legs.
 
 [`RelaySwim`][tunas.models.RelaySwim] is one swimmer's leg or roster slot: `swimmer`
 (`None` if unidentified), `relay` (back-reference), `order` ([`RelayLegOrder`][tunas.enums.RelayLegOrder]),
@@ -238,13 +227,12 @@ derives from the event and `is_relay_leg` is always `False`.
 
 [`Split`][tunas.models.Split] (frozen) is one segment from a `G0` record: `distance`
 (cumulative distance from the start, e.g. 50/100/150), `time` (`Time \| None`), and
-`split_type` ([`SplitType.INTERVAL`][tunas.enums.SplitType] or `CUMULATIVE`). Splits attach
-to the swim (individual or relay leg) that produced them.
+`split_type` ([`SplitType.INTERVAL`][tunas.enums.SplitType] or `CUMULATIVE`). Individual
+splits attach to their `IndividualSwim`; relay splits to the `Relay` (legs derive theirs).
 
 ## Times
 
-[`Time`][tunas.time.Time] is an immutable, hashable value type storing
-`centiseconds: int` (an unbounded integer, so there is no float drift):
+[`Time`][tunas.time.Time] is an immutable, hashable value storing `centiseconds: int`:
 
 ```python
 from tunas import Time
@@ -265,7 +253,7 @@ a smaller one raises `ValueError`, as does constructing a negative `Time`.
 
 ## Enumerations
 
-Every categorical field is an enum whose **value is the raw SDIF code**, so a byte from the
+Every categorical field is an enum whose **value is the raw file code**, so a byte from the
 file resolves directly (`Sex("F")`, `Course("3")`, `Stroke("5")`); an unknown code raises
 `ValueError`. The full members are in the [enums reference](../reference/enums.md) and
 [geography reference](../reference/geography.md); in brief:
