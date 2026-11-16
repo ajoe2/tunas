@@ -4,6 +4,8 @@ All notable changes to `tunas` are documented here in Keep a Changelog format, a
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-11-15
+
 ### Added
 - **Entries / psych-sheet files**: both readers now parse entries files — the seeded entries a psych sheet is printed from — instead of silently dropping them. An entry is returned as an `IndividualSwim` (or `Relay`) with the new **`ResultStatus.ENTERED`**, `session=None`, `time=None`, and `date=None`, carrying its `seed_time`/`seed_course`, `event_number`, event age range, swimmer, and club. `read_hy3` reads an `E1`/`F1` that no `E2`/`F2` follows as an entry (Meet Manager "Merge Meet Entries" and Team Manager "Meet Entries" exports, with relay legs from the `F3`s that follow an `F1`); `read_cl2` reads a `D0`/`E0` with no time in any session as an entry (TeamUnify `.sd3` and Team Manager `.cl2` entries files, including those inside TouchPad meet archives). Relay swimmers an SDIF entries file lists without a leg (`F0` leg orders all `0`) are kept as `alternates` with order `NOT_SWUM`. An entry's event is swum in the meet's course unless the event doesn't exist in that course (a 500 or 1650 free), in which case the seed's course is used. See the new "Entries files" section of the parsing guide and the psych-sheet cookbook recipe.
 - **`Hy3FileType` codes**: `MERGED_ENTRIES` (`01`, "Merge Meet Entries"), `MEET_ENTRIES` (`02`, "Meet Entries"), and `EXPORTED_RESULTS` (`09`, Team Manager "Exported Results"), which previously warned as unknown codes.
