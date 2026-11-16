@@ -342,6 +342,26 @@ class _BaseEngine:
         if result.club is not None:
             result.club.results.append(result)
 
+    @staticmethod
+    def _entry_course(
+        distance: int | None, stroke: Stroke | None, *candidates: Course | None
+    ) -> Course | None:
+        """Pick the course an entry (no result yet) is swum in.
+
+        ``candidates`` come in priority order: the meet course, then the course the
+        seed was swum or converted in. A candidate is taken only if the event exists
+        in that course, since some exports mislabel the meet course (1997-98 CL II
+        entries files mark yards meets ``L``), and a 500 or 1650 free is never long
+        course. Failing that, the first known candidate is returned so the caller's
+        unresolvable-event warning names it.
+        """
+        known = [c for c in candidates if c is not None]
+        if distance is not None and stroke is not None:
+            for course in known:
+                if Event.find(distance, stroke, course) is not None:
+                    return course
+        return known[0] if known else None
+
     def _resolve_event(
         self,
         rec: Record,
@@ -400,11 +420,20 @@ class _BaseEngine:
     ) -> None:
         """Append one parsed split to ``target`` and count it.
 
-        ``tag``/``val`` come from :func:`time_value`; a ``"bad"`` time is recovered
-        as a ``Split`` with ``time=None`` plus a warning, anything else stores the
-        time. Blank/placeholder slots are filtered out by the caller beforehand.
+        ``tag``/``val`` come from :func:`time_value`; a ``"bad"`` time, or an outcome
+        code where a time belongs (some exporters write ``DQ`` in the split after a
+        disqualification), is recovered as a ``Split`` with ``time=None`` plus a
+        warning; anything else stores the time. Blank/placeholder slots are filtered
+        out by the caller beforehand.
         """
-        if tag == "bad":
+        if isinstance(val, Time):
+            target.append(Split(distance=distance, time=val, split_type=split_type))
+        else:
+            reason = (
+                f"split time is an outcome code {val.value!r}, not a time"
+                if isinstance(val, ResultStatus)
+                else "malformed split time"
+            )
             self._warn(
                 rec,
                 "split_time",
@@ -412,10 +441,7 @@ class _BaseEngine:
                 None,
                 Severity.RECOVERED,
                 IssueKind.MALFORMED,
-                "malformed split time",
+                reason,
             )
             target.append(Split(distance=distance, time=None, split_type=split_type))
-        else:
-            assert isinstance(val, Time)
-            target.append(Split(distance=distance, time=val, split_type=split_type))
         self.report.splits_parsed += 1

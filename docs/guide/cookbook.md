@@ -143,13 +143,36 @@ with open("results.csv", "w", newline="") as f:
                 r.swimmer.full_name,
                 r.club.abbreviated_name if r.club else "UN",
                 r.event.name,
-                r.session.name,
+                r.session.name if r.session else "",  # None for an entry
                 r.status.value,
                 r.time.centiseconds if r.time else "",
                 str(r.time) if r.time else "",
                 age_at(r.swimmer, r.date),
                 r.rank,
             ])
+```
+
+## Rank entries into a psych sheet
+
+An entries file (a Hy-Tek `.hy3` entries export or an SDIF entries `.cl2`/`.sd3`) parses
+into swims with `status=ResultStatus.ENTERED`. Rank each event's entries by seed time,
+with no-time (`NT`) seeds last:
+
+```python
+from tunas import ResultStatus, read_hy3
+
+(archive,) = read_hy3("Meet Entries-Fall Invite-001.hy3")
+meet = archive.meets[0]
+
+events = sorted({s.event for s in meet.individual_swims})  # Event is ordered
+for event in events:
+    entries = [s for s in meet.individual_swims_for(event)
+               if s.status is ResultStatus.ENTERED]
+    entries.sort(key=lambda s: (s.seed_time is None, s.seed_time or 0, s.swimmer.last_name))
+    print(f"Event {entries[0].event_number or ''} {event.name}")
+    for rank, s in enumerate(entries, 1):
+        club = s.club.team_code if s.club else "UN"
+        print(f"  {rank:>3} {s.swimmer.full_name:<28} {club:<8} {s.seed_time or 'NT'}")
 ```
 
 ## Relay-leg analysis

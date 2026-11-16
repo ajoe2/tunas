@@ -427,6 +427,17 @@ def test_g0_unparseable_split_kept_as_none() -> None:
     assert archive.report.warnings_for(record_type="G0", field="split_time")
 
 
+def test_g0_outcome_code_in_split_kept_as_none() -> None:
+    # Some exporters write the swim's outcome (e.g. `DQ`) where the next split
+    # time belongs; it is recovered like a malformed split rather than crashing.
+    gr = g0(times=("1:21.93", "DQ"), total="2")
+    archive = parse_lines([A0, B1, C1, d0(), gr, Z0])
+    finals = next(s for s in archive.meets[0].individual_swims if s.session is Session.FINALS)
+    assert [str(sp.time) if sp.time else None for sp in finals.splits] == ["1:21.93", None]
+    (warning,) = archive.report.warnings_for(record_type="G0", field="split_time")
+    assert "outcome code 'DQ'" in warning.reason
+
+
 def test_z0_count_mismatch() -> None:
     z0_bad = rec((1, "Z0"), (3, "1"), (12, "02"), (58, "999"))
     archive = parse_lines([A0, B1, C1, d0(), z0_bad])

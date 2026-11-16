@@ -113,7 +113,9 @@ meets, report = archive.meets, archive.report
 
 ### Supported records and fields
 
-`read_hy3` parses only the confirmed fields (marked **C**) documented in the [`.hy3` reference](../formats/hy3_format.md). It processes `A1`, `B1`/`B2`, `C1`/`C3`, `D1`, `E1`/`E2`, `F1`/`F2`/`F3`, `G1`, and `H1`/`H2` records. Unconfirmed or unmapped records (like `C2` and `C8`) are skipped silently.
+`read_hy3` parses only the confirmed fields (marked **C**) documented in the [`.hy3` reference](../formats/hy3_format.md). It processes `A1`, `B1`/`B2`, `C1`/`C3`, `D1`, `E1`/`E2`, `F1`/`F2`/`F3`, `G1`, and `H1`/`H2` records. Known records with no confirmed field mapping (`C2`, the `C4`–`C7` coach/contact records, and `C8`) are skipped silently.
+
+It reads Meet Manager results (`A1` file type `07`), merged results (`04`), Team Manager "Exported Results" (`09`), and the entries exports described in [Entries files](#entries-files-psych-sheets) (`01`, `02`).
 
 The following model fields are populated exclusively by `read_hy3` (remaining `None` or at their defaults under `read_cl2`):
 
@@ -135,12 +137,32 @@ These differences reflect genuine format variation, not parser limitations:
 
 - **Zero times**: A `.hy3` time of `0.00` ("no time") is parsed as `None`.
 - **Disqualifications**: Preserves the swum `time` (SDIF sets it to `None`) and populates `dq_code` and `dq_reason`.
-- **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields.
+- **Seed times**: Populates both the original `seed_time`/`seed_course` and the converted-course fields. A `0.00` ("no time") seed reads as `seed_time=None` with `seed_course=None`, as an SDIF `NT` seed does, even though the `.hy3` record still carries a course letter.
+- **Team Manager exports**: Team Manager writes event sex `F` for women's/girls' events and round `T` for a single timed swim; these read as `Sex.FEMALE` and `Session.FINALS`.
 - **Relay splits**: Parsed into `Relay.splits` as whole-relay cumulative splits. Individual splits attach to `IndividualSwim.splits` as usual. `0.00` placeholders are ignored.
 - **Swimmer IDs**: The 14-character `.hy3` member ID is stored in `id_long`, and `id_short` is derived as its 12-character prefix — matching `read_cl2`, where the same swimmer's `id_short`/`id_long` carry the 12- and 14-char forms.
 - **Club codes**: `Club.team_code` carries the LSC prefix (e.g. `PCSCSC`) to match `read_cl2`; the bare code is kept only when the `C1` record has no LSC.
 - **Blank athlete names**: A `D1` with a blank first/last name is skipped (with a `SKIPPED` warning) rather than aborting the file in lenient mode.
 - **Checksums**: Line checksums (columns 129–130) are not validated, as they are omitted in some exports (e.g. `USAS Club Times Export`).
+
+## Entries files (psych sheets)
+
+Both readers also parse **entries files** — the seeded entries a psych sheet is printed from, before anything is swum:
+
+| Format | Header | Produced by |
+|---|---|---|
+| `.hy3` | `A1` file type `01` "Merge Meet Entries" | Meet Manager (whole-meet entries) |
+| `.hy3` | `A1` file type `02` "Meet Entries" | Team Manager (one team's entries) |
+| `.cl2` / `.sd3` | `A0` file code `20` "Meet Entries" | Team Manager (paired with the `.hy3` above) |
+| `.sd3` | `A0` file code `01` "Meet Entries" | TeamUnify (including the club entry files inside TouchPad meet archives) |
+
+An entry becomes an `IndividualSwim` (or `Relay`) with `status=ResultStatus.ENTERED`, `session=None`, `time=None`, and `date=None`; `seed_time`/`seed_course` (and, from `.hy3`, the converted seed), `event_number`, the event age range, the swimmer, and the club are populated as for a result. Rank a meet's entries by `seed_time` to rebuild its psych sheet (see the [cookbook recipe](cookbook.md#rank-entries-into-a-psych-sheet)).
+
+- **Detection is by content, not by header.** `read_hy3` treats an `E1`/`F1` that no `E2`/`F2` follows as an entry; `read_cl2` treats a `D0`/`E0` with no time in any session as an entry. The header code is informational: some SDIF files coded `01` are swimmer rosters with no events ("Meet Registrations" — no swims are produced), and SWIMS "Times Recon" files coded `01` "Meet Entries" actually hold results. A results file can therefore also contain entries (an event that hasn't been swum yet).
+- **Event course.** An entry has no result to name its course, so the event's course is the meet's course (`.hy3` `B2`, SDIF `B1`) — unless the event isn't swum in that course (a 500 or 1650 free is never long course), in which case the seed's course is used. Some exporters mislabel the meet course (1997–98 CL II entries files mark yards meets as long course); entries in events that exist in both courses then take the mislabeled meet course.
+- **No swim date.** An entry's blank swim date is expected and isn't warned about.
+- **Relay entries.** `.hy3` `F3` records that follow an `F1` directly name the entered relay's legs, which are attached as for a result. SDIF entries files usually list a relay's swimmers in `F0` records with no leg assigned (every leg-order column `0`): those swimmers are kept in `Relay.alternates` with `order=RelayLegOrder.NOT_SWUM`, so they aren't counted as relay swims.
+- **Empty exports.** Meet Manager sometimes writes an entries file with only its `A1`/`B1`/`B2` header records; it parses to a meet with no clubs, swimmers, or results.
 
 ## Per-meet scope
 
@@ -171,7 +193,7 @@ Data-quality fields skip corrupt or blank values with a `RECOVERED` warning and 
 
 ### Result outcomes (NT / NS / DNF / DQ / SCR)
 
-Outcome codes in time fields are kept as official results with `status` set to the code and `time=None`. Combined with course `"X"`, all swims are preserved for analysis.
+Outcome codes in time fields are kept as official results with `status` set to the code and `time=None`. Combined with course `"X"`, all swims are preserved for analysis. An entry with no result at all is kept as `ResultStatus.ENTERED` (see [Entries files](#entries-files-psych-sheets)).
 
 ### Other parsing behaviors
 

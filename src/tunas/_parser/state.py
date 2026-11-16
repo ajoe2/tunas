@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from tunas._parser.fields import Record
 from tunas.enums import Course, Session, Sex, Stroke
 from tunas.geography import LSC
 from tunas.models import Club, IndividualSwim, Meet, Relay, RelaySwim, Swimmer
@@ -40,11 +41,13 @@ class ParserState:
     current_swimmer: Swimmer | None = None
     current_individual_swims: list[IndividualSwim] = field(default_factory=list)
     pending_individual: PendingIndividual | None = None
-    current_relays: dict[Session, Relay] = field(default_factory=dict)
-    current_relay_legs: dict[Session, RelaySwim] = field(default_factory=dict)
+    # Keyed by session; an entered (not-yet-swum) relay has no session, so it is
+    # keyed by None.
+    current_relays: dict[Session | None, Relay] = field(default_factory=dict)
+    current_relay_legs: dict[Session | None, RelaySwim] = field(default_factory=dict)
     # Running 0-based leg index per relay session for G0 split-distance offsetting:
     # seeded from each F0 leg number, advanced once per G0 record (see cl2._h_g0).
-    relay_split_index: dict[Session, int] = field(default_factory=dict)
+    relay_split_index: dict[Session | None, int] = field(default_factory=dict)
     last_result_kind: str | None = None  # "individual" | "relay"
 
     @property
@@ -56,7 +59,8 @@ class ParserState:
 # --------------------------------------------------------------------------- #
 # Hy-Tek `.hy3` state — entry/result are split across separate records
 # (E1+E2 for individuals, F1+F2 for relays), so the entry is buffered until
-# its result arrives.
+# its result arrives. An entry no result follows (entries / psych-sheet files)
+# is emitted as an ENTERED swim when the next record shows none is coming.
 # --------------------------------------------------------------------------- #
 
 
@@ -74,6 +78,7 @@ class _Hy3EntryBase:
     seed_course: Course | None
     converted_seed_time: Time | None
     converted_seed_course: Course | None
+    record: Record  # the entry line, for diagnostics if it is emitted unswum
 
 
 @dataclass

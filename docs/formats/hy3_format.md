@@ -1,6 +1,6 @@
 # The Hy-Tek `.hy3` file format
 
-`.hy3` is Hy-Tek's proprietary results format, the counterpart to the open [`.cl2` / SDIF v3](cl2_format.md) interchange format. Lacking an official public specification, this document provides a reverse-engineered specification of the format.
+`.hy3` is Hy-Tek's proprietary results and entries format, the counterpart to the open [`.cl2` / SDIF v3](cl2_format.md) interchange format. Lacking an official public specification, this document provides a reverse-engineered specification of the format.
 
 !!! note "Reference Documentation"
     This page is the field-level reference behind [`read_hy3`](../guide/parsing.md#read_hy3), which parses the fields documented here (those marked **C** for *confirmed* in the tables below) into the same [`Meet`](../guide/models.md) object graph as `read_cl2`.
@@ -9,6 +9,7 @@
 The details in this document are derived from empirical analysis of `.hy3` files and their corresponding SDIF `.cl2` files:
 - **Pacific Swimming:** 14 seasons of public results (2013–2026, ~1,680 meets) comprising 7.9M records and 1,666 `.hy3`/`.cl2` pairs.
 - **Michigan Swimming:** 425 meets comprising ~1.70 million records.
+- **Entries exports and Team Manager files:** a 2026 survey of all 59 USA Swimming LSC websites (calendars back to their first events, plus the Wayback Machine) found real entries files at 8 LSCs — Meet Manager merged entries (2008–2026), Team Manager team entries with matching SDIF files (2002–2019), and TeamUnify `.sd3` entries, many inside TouchPad meet archives — plus Team Manager "Exported Results" files (2003–2017). Entries `.hy3` were cross-checked field by field against their SDIF counterparts (see [Entries Files](#entries-files)).
 
 ---
 
@@ -69,6 +70,8 @@ Distribution of record types across results files:
 | `C1` | Team | Club/team registration |
 | `C2` | Team Address | Club mailing address |
 | `C3` | Team Contact | Club contact details |
+| `C4`/`C5` | Coach / Contact Names | Team Manager exports; person names, layout unconfirmed |
+| `C6`/`C7` | Coach | Meet Manager entries exports; coach name, title, phone, email, layout unconfirmed |
 | `D1` | Athlete | Swimmer registration details |
 | `E1` | Individual Entry / Seed | Entry times and event metadata |
 | `E2` | Individual Result | Swum times, placing, and status |
@@ -83,9 +86,16 @@ Distribution of record types across results files:
 ### File Variants
 
 The `A1` file-type code (cols 3–4) indicates the file's primary purpose:
-- `07`: Meet results (Standard)
-- `04`: Merged meet results
+- `07`: Meet results (Standard) — `Results From MM to TM`
+- `04`: Merged meet results — `Merge Meet Results`
+- `09`: Team Manager results export — `Exported Results` (written by Win-TM; event sex `F`, round `T`, swim dates usually blank)
+- `01`: Meet Manager entries export — `Merge Meet Entries` (whole-meet entries; see [Entries Files](#entries-files))
+- `02`: Team Manager entries export — `Meet Entries` (one team's entries, paired with an SDIF `.cl2` coded `20`); a variant described `SM Meet Entries` (software field `SM 3.154.0.19`) has also been seen
 - `17`: USAS Club Times Export (Does not contain meet results; does not use the standard results checksum)
+
+A code `11` file with a blank description (Win-TM 2.1, meet name "Best Times for Proof", with an undocumented `E3` record after each `E1`) has also been observed once; it is not modeled.
+
+The code is informational: the reader decides whether an `E1`/`F1` is a result or an entry by whether a result record follows it.
 
 ---
 
@@ -148,6 +158,14 @@ B2                              Meet host (1 per file, optional)
 - **Disqualifications:** `H1`/`H2` DQ records follow the disqualified result record. The 2-character DQ code matches the code in `E2`/`F2` cols 14–15.
 - **Termination:** The file has no terminator record and ends immediately after the last result-related record.
 
+### Entries Files
+
+Entries exports (`A1` type `01` or `02`) use the same hierarchy with the results removed: each athlete's `E1` records follow one another with no `E2`, `G1`, or `H1`, and each relay's `F1` is followed directly by its `F3` athlete records (legs already assigned, round letter `F`) or by the next `F1`. Seeds of `0.00` mark no-time (NT) entries. Meet Manager entries exports also carry `C6`/`C7` coach records after the team's `C3`, and use event sex `X` for mixed events; Team Manager entries exports use `F` for women's events.
+
+`read_hy3` buffers each `E1`/`F1` and, when the next record is anything other than its result (`E2`, or `F2`/`F3` for a relay), emits it as an entry (`ResultStatus.ENTERED`). With no `E2` to give the event's course, the meet course (`B2` col 99) is used — unless the event isn't swum in that course, in which case the course of the converted seed (col 51), then the as-entered seed (col 60), is used.
+
+Meet Manager sometimes writes an entries export with only its `A1`, `B1`, and `B2` records (no teams or entries at all), apparently as a meet template.
+
 ---
 
 ## 5. Individual / Common Records
@@ -162,7 +180,7 @@ A107Results From MM to TM    Hy-Tek, Ltd    MM5 6.0De     12202016  6:52 AMFAST 
 | Cols | Field | Conf | Description / Notes |
 |---|---|---|---|
 | 1–2 | Record Code | C | Constant `A1` |
-| 3–4 | File/Result Type | C | `07` = Meet results, `04` = Merged meet results, `17` = Club times export |
+| 3–4 | File/Result Type | C | `07` = Meet results, `04` = Merged meet results, `09` = Team Manager results export, `01` = Meet Manager entries export, `02` = Team Manager entries export, `17` = Club times export |
 | 5–29 | Description | C | Matches the type: `Results From MM to TM`, `Merge Meet Results`, etc. |
 | 30–44 | Software Vendor | C | Constant `Hy-Tek, Ltd` |
 | 45–58 | Software Name/Version | C | E.g., `MM5 8.0Fg` (Meet Manager 5, version and build) |
@@ -326,6 +344,7 @@ E1F 3420AllisFW   200A  0109  0S 11.00 17   114.87Y  114.87Y    0.00    0.00   N
 The event sex character (col 15) represents competition categorization conventions:
 - `G` (Girls) / `B` (Boys): Typically used in age-group divisions.
 - `W` (Women) / `M` (Men): Typically used in senior or open divisions.
+- `F` (Female): Written by Team Manager (`A1` types `02` and `09`) for women's and girls' events.
 - `X` (Mixed): Used for co-ed events.
 
 #### Event Age Range
@@ -335,7 +354,7 @@ The event's age group is two right-justified integers: minimum age (cols 23–25
 For diving events, the stroke code is `F` (1-meter springboard) or `G` (3-meter springboard). The event distance field contains the required number of dives (typically `6` or `11`).
 
 #### Time Representation
-All times are represented in total seconds as a decimal without colons (e.g., `114.87` represents 1 minute and 54.87 seconds). Values can be converted to centiseconds via `round(seconds * 100)`. Swimmers entered with "No Time" (NT) are represented by a time value of `0.00`.
+All times are represented in total seconds as a decimal without colons (e.g., `114.87` represents 1 minute and 54.87 seconds). Values can be converted to centiseconds via `round(seconds * 100)`. Swimmers entered with "No Time" (NT) are represented by a time value of `0.00`; the seed's course letter is still written, so `read_hy3` drops it (no seed time means no seed course), matching an SDIF `NT` seed.
 
 #### Seed Times and Course Mappings
 `E1` records contain two seed time fields: the target meet course conversion (cols 44–50) and the original as-entered time (cols 53–59). In single-course meets, these values are identical. 
@@ -354,7 +373,7 @@ E2F   62.29YQ7A    0  2  4  0   0  0   62.39   62.32    0.00        62.29     0.
 | Cols | Field | Conf | Description / Notes |
 |---|---|---|---|
 | 1–2 | Record Code | C | Constant `E2` |
-| 3 | Competition Round | C | `P` (Prelims), `F` (Finals/Timed-Finals), `S` (Swim-offs) |
+| 3 | Competition Round | C | `P` (Prelims), `F` (Finals/Timed-Finals), `S` (Swim-offs), `T` (single timed swim; Team Manager exports) |
 | 5–11 | Result Time | C | Swum time in seconds (e.g., `117.91`). `0.00` if DNF, NS, or DQ |
 | 12 | Authoritative Course | C | Authoritative event course code: `Y` (SCY), `L` (LCM), `S` (SCM) |
 | 13 | Result Status Flag | C | Code indicating result status (see Status Flags under Section 8) |
@@ -496,12 +515,13 @@ Each 11-character split block is structured as follows:
 
 ### Sex and Competition Category
 - **Swimmer Sex:** `M` (Male), `F` (Female), `X` (Mixed/Co-ed)
-- **Event Sex:** `W` (Women), `M` (Men), `G` (Girls), `B` (Boys), `X` (Mixed)
+- **Event Sex:** `W` (Women), `M` (Men), `G` (Girls), `B` (Boys), `F` (Female; Team Manager), `X` (Mixed)
 
 ### Round Codes
 - `P`: Prelims
 - `F`: Finals / Timed-Finals
 - `S`: Swim-off
+- `T`: A single timed swim, written by Team Manager "Exported Results" (`A1` type `09`). Its SDIF export drops these times entirely; `read_hy3` reads them as finals.
 
 ### Result Status Flags (`E2`/`F2` column 13)
 
@@ -539,6 +559,8 @@ The following fields in the `.hy3` format are not represented in the SDIF format
 - **Team Registry Counts (`C1` cols 118, 119, 122):** Small integers tracking unverified team metrics.
 - **Entry Surcharges (`E1` cols 34–38, 64–76):** Financial or administrative charge structures.
 - **Record Structure `C8`:** A rare, near-empty team-block record type whose internal columns are undocumented.
+- **Coach Records `C4`–`C7`:** Person-name records (coach/contact) written by Team Manager (`C4`, `C5`) and Meet Manager entries exports (`C6` name/title/phone/email, `C7` name parts). Recognized and skipped; column layouts unconfirmed.
+- **File Type `11` and Record `E3`:** Seen once (Team Manager "Best Times for Proof"); undocumented.
 
 ---
 

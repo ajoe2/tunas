@@ -111,7 +111,9 @@ Clubs are scoped within a meet and keyed by `(team_code, lsc)`. Unattached entri
 
 A timed swim has `status == ResultStatus.OK` and a [`Time`][tunas.time.Time]. Non-time outcomes (`NT`, `NS`, `DNF`, `DQ`, `SCR`) have `time = None`, except for course-`X` disqualifications, which preserve the swum time with `status == DQ`. Every swim is preserved to facilitate complete analysis.
 
-`ResultStatus` values: `OK` (official time), `NT` (no time), `NS` (no show), `DNF` (did not finish), `DQ` (disqualified), `SCR` (scratch).
+An entry that hasn't been swum — every row of an entries / psych-sheet file — has `status == ResultStatus.ENTERED`, `time = None`, `date = None`, and `session = None`; its `seed_time` is the entry time (see [Entries files](parsing.md#entries-files-psych-sheets)).
+
+`ResultStatus` values: `OK` (official time), `NT` (no time), `NS` (no show), `DNF` (did not finish), `DQ` (disqualified), `SCR` (scratch), `EXHIBITION` (Hy-Tek exhibition swim), `ENTERED` (entered, not yet swum).
 
 ## Field reference by type
 
@@ -210,7 +212,7 @@ Every row in `Meet.results` (an [`IndividualSwim`][tunas.models.IndividualSwim] 
 | `event` | [`Event`][tunas.event.Event] | The `(distance, stroke, course)` event. |
 | `event_sex` | [`Sex`][tunas.enums.Sex] | `M`/`F`/`X` (mixed). |
 | `event_min_age`, `event_max_age` | `int \| None` | Event age range. |
-| `session` | [`Session`][tunas.enums.Session] | `PRELIMS`/`FINALS`/`SWIM_OFFS`. |
+| `session` | [`Session`][tunas.enums.Session] `\| None` | `PRELIMS`/`FINALS`/`SWIM_OFFS`; `None` for an entry (`ENTERED`). |
 | `status` | [`ResultStatus`][tunas.enums.ResultStatus] | Outcome. |
 | `time`, `date` | `Time \| None`, `date \| None` | |
 | `seed_time`, `seed_course` | `Time \| None`, `Course \| None` | |
@@ -274,7 +276,7 @@ file resolves directly (`Sex("F")`, `Course("3")`, `Stroke("5")`); an unknown co
 | [`Stroke`][tunas.enums.Stroke] | stroke | `.display()` gives `"Free"`, `"IM"`, `"Medley Relay"`, … |
 | [`Course`][tunas.enums.Course] | pool course | `SCM`/`SCY`/`LCM`; parser also accepts the alpha forms `S`/`Y`/`L`. |
 | [`Session`][tunas.enums.Session] | session | `PRELIMS`, `FINALS`, `SWIM_OFFS`. |
-| [`ResultStatus`][tunas.enums.ResultStatus] | swim outcome | `OK`, `NT`, `NS`, `DNF`, `DQ`, `SCR`. |
+| [`ResultStatus`][tunas.enums.ResultStatus] | swim outcome | `OK`, `NT`, `NS`, `DNF`, `DQ`, `SCR`, `EXHIBITION`, `ENTERED`. |
 | [`AttachStatus`][tunas.enums.AttachStatus] | club attachment | `ATTACHED`, `UNATTACHED`. |
 | [`RelayLegOrder`][tunas.enums.RelayLegOrder] | relay leg position | `LEG_1`–`LEG_4`, `ALTERNATE`, `NOT_SWUM`. |
 | [`SplitType`][tunas.enums.SplitType] | split kind | `INTERVAL`, `CUMULATIVE`. |
@@ -299,5 +301,6 @@ for meet in meets:
         club = swimmer.club.abbreviated_name if swimmer.club else "UN"
         for swim in swimmer.swims_in(Event.FREE_100_SCY):
             outcome = swim.time if swim.time is not None else swim.status.value
-            print(f"  {swimmer.full_name:<25} {club:>5} {swim.session.value} {outcome}")
+            session = swim.session.value if swim.session else "-"  # None for an entry
+            print(f"  {swimmer.full_name:<25} {club:>5} {session} {outcome}")
 ```

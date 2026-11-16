@@ -34,6 +34,7 @@ from tunas import (
     IssueKind,
     ParseError,
     ResultStatus,
+    Session,
     Severity,
     Sex,
     SplitType,
@@ -67,16 +68,22 @@ def test_a1_source_file() -> None:
     assert sf.file_type is None and sf.submitted_by_lsc is None
 
 
-def test_a1_file_type_variants() -> None:
-    merged = hy3_rec((1, "A1"), (3, "04"), (45, "MM5 7.0Gb"))
-    export = hy3_rec((1, "A1"), (3, "17"), (45, "MM5 7.0Gb"))
-    for line, expected in (
-        (merged, Hy3FileType.MERGED_RESULTS),
-        (export, Hy3FileType.CLUB_TIMES_EXPORT),
-    ):
-        archive = parse_hy3_lines([line, B1_HY3, C1_HY3, d1(), e1(), e2()])
-        assert archive.meets[0].source_file is not None
-        assert archive.meets[0].source_file.hy3_file_type is expected
+@pytest.mark.parametrize(
+    "code,expected",
+    [
+        ("01", Hy3FileType.MERGED_ENTRIES),
+        ("02", Hy3FileType.MEET_ENTRIES),
+        ("04", Hy3FileType.MERGED_RESULTS),
+        ("09", Hy3FileType.EXPORTED_RESULTS),
+        ("17", Hy3FileType.CLUB_TIMES_EXPORT),
+    ],
+)
+def test_a1_file_type_variants(code: str, expected: Hy3FileType) -> None:
+    line = hy3_rec((1, "A1"), (3, code), (45, "MM5 7.0Gb"))
+    archive = parse_hy3_lines([line, B1_HY3, C1_HY3, d1(), e1(), e2()])
+    assert archive.meets[0].source_file is not None
+    assert archive.meets[0].source_file.hy3_file_type is expected
+    assert not archive.report.warnings_for(field="hy3_file_type")
 
 
 def test_a1_malformed_time_recovers() -> None:
@@ -188,6 +195,16 @@ def test_c8_ignored_without_warning() -> None:
     c8 = hy3_rec((1, "C8"))
     archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, c8, d1(), e1(), e2()])
     assert not archive.report.warnings_for(record_type="C8")
+
+
+@pytest.mark.parametrize("code", ["C4", "C5", "C6", "C7"])
+def test_coach_contact_records_ignored_without_warning(code: str) -> None:
+    # Team Manager (C4/C5) and Meet Manager entries exports (C6/C7) carry coach
+    # and contact names; the records are known, so they don't warn.
+    line = hy3_rec((1, code), (3, "Pat Coach"))
+    archive = parse_hy3_lines([A1, B1_HY3, B2_HY3, C1_HY3, line, d1(), e1(), e2()])
+    assert len(archive.meets[0].individual_swims) == 1
+    assert not archive.report.warnings_for(record_type=code)
 
 
 def test_c1_repeated_team_reused() -> None:
@@ -379,11 +396,28 @@ def test_e1_stroke_letters(letter: str, stroke: Stroke, sex: object) -> None:
 
 @pytest.mark.parametrize(
     "code,sex",
-    [("W", Sex.FEMALE), ("G", Sex.FEMALE), ("M", Sex.MALE), ("B", Sex.MALE), ("X", Sex.MIXED)],
+    [
+        ("W", Sex.FEMALE),
+        ("G", Sex.FEMALE),
+        ("F", Sex.FEMALE),  # Team Manager exports
+        ("M", Sex.MALE),
+        ("B", Sex.MALE),
+        ("X", Sex.MIXED),
+    ],
 )
 def test_e1_event_sex_mapping(code: str, sex: Sex) -> None:
     archive = parse_hy3_lines([*_HEAD, d1(), e1(event_sex=code), e2()])
     assert archive.meets[0].individual_swims[0].event_sex is sex
+    assert not archive.report.warnings_for(field="event_sex")
+
+
+def test_e1_nt_seed_has_no_course() -> None:
+    # A `0.00` (no time) seed still carries a course letter in `.hy3`; it reads as
+    # no seed at all, matching how `read_cl2` reports an NT seed.
+    lines = [*_HEAD, d1(), e1(seed="0.00", seed_course="Y", conv_seed="0.00"), e2()]
+    swim = parse_hy3_lines(lines).meets[0].individual_swims[0]
+    assert swim.seed_time is None and swim.seed_course is None
+    assert swim.converted_seed_time is None and swim.converted_seed_course is None
 
 
 def test_e1_unknown_event_sex_skips_swim() -> None:
@@ -466,6 +500,20 @@ def test_e2_unknown_status_recovers_to_ok() -> None:
     archive = parse_hy3_lines([*_HEAD, d1(), e1(), e2(status="Z")])
     assert archive.meets[0].individual_swims[0].status is ResultStatus.OK
     assert archive.report.warnings_for(field="status", kind=IssueKind.UNKNOWN_CODE)
+
+
+def test_e2_round_t_is_a_timed_final() -> None:
+    # Team Manager "Exported Results" files mark a single timed swim with round `T`.
+    archive = parse_hy3_lines(_one_swim(rnd="T"))
+    swim = archive.meets[0].individual_swims[0]
+    assert swim.session is Session.FINALS and swim.status is ResultStatus.OK
+    assert not archive.report.warnings_for(field="round")
+
+
+def test_e2_unknown_round_warns_and_defaults_to_finals() -> None:
+    archive = parse_hy3_lines(_one_swim(rnd="Z"))
+    assert archive.meets[0].individual_swims[0].session is Session.FINALS
+    assert archive.report.warnings_for(field="round", kind=IssueKind.UNKNOWN_CODE)
 
 
 def test_e2_zero_time_is_none() -> None:

@@ -4,13 +4,15 @@ Only fields confirmed by the reverse-engineered `.hy3` specification are parsed
 (see ``docs/formats/hy3_format.md``). Unlike SDIF — which packs an athlete, their
 entry, and their result into one `D0` — `.hy3` splits these across `D1` / `E1` /
 `E2` records, so each entry (`E1`/`F1`) is buffered until its result (`E2`/`F2`).
+An entry that no result follows — every entry in an entries / psych-sheet file —
+is emitted as a ``ResultStatus.ENTERED`` swim.
 """
 
 from __future__ import annotations
 
 import datetime
 from collections.abc import Callable
-from typing import ClassVar
+from typing import ClassVar, TypedDict
 
 from tunas._parser.checksum import RECORD_WIDTH as HY3_RECORD_WIDTH
 from tunas._parser.diagnostics import IssueKind, Severity
@@ -58,10 +60,16 @@ _RELAY_STROKE: dict[str, Stroke] = {"A": Stroke.FREESTYLE_RELAY, "E": Stroke.MED
 _EVENT_SEX: dict[str, Sex] = {
     "W": Sex.FEMALE,  # Women
     "G": Sex.FEMALE,  # Girls
+    "F": Sex.FEMALE,  # Female — Team Manager exports (A1 `02` / `09`)
     "M": Sex.MALE,  # Men
     "B": Sex.MALE,  # Boys
     "X": Sex.MIXED,
 }
+
+# E2/F2 round letters (col 3) outside the SDIF session codes P/F/S. Team Manager
+# "Exported Results" files (A1 `09`) write `T` for a single timed swim; SDIF has
+# no session for it, so it is read as a (timed) final.
+_ROUND_ALIASES: dict[str, Session] = {"T": Session.FINALS}
 
 # E2/F2 result-status flag (col 13) -> (status, time_is_valid). A blank flag is a
 # normal finish. DNF/NS/scratch carry no time; DQ and exhibition retain theirs.
@@ -83,8 +91,15 @@ _LEG_ORDER: dict[str, RelayLegOrder] = {
 }
 
 # Known record types carrying no confirmed field that maps to the model: the
-# team mailing address (all inferred) and the rare undocumented team block.
-_IGNORED = {"C2", "C8"}
+# team mailing address (all inferred), the coach/contact name records written by
+# Team Manager (C4/C5) and Meet Manager entries exports (C6/C7), and the rare
+# undocumented team block.
+_IGNORED = {"C2", "C4", "C5", "C6", "C7", "C8"}
+
+# Records that may follow a buffered entry as part of the same swim: its result
+# (E2/F2) or, for an entered relay with no result, its athletes (F3).
+_ENTRY_RESULT = "E2"
+_RELAY_ENTRY_FOLLOWERS = {"F2", "F3"}
 
 # Backup/watch-time start columns on E2/F2 (each 7 wide).
 _BACKUP_COLS = (38, 46, 54)
@@ -129,6 +144,15 @@ _SLOT_WIDTH = 13
 _FIRST_SLOT_COL = 3
 
 
+class _Seeds(TypedDict):
+    """An entry's seed fields, as parsed from an `E1`/`F1` record."""
+
+    seed_time: Time | None
+    seed_course: Course | None
+    converted_seed_time: Time | None
+    converted_seed_course: Course | None
+
+
 class _Hy3Engine(_BaseEngine):
     """Stateful Hy-Tek parser. ``parse_source`` resets per-file state, so one instance
     can parse many files in turn (each call yields only that source's results)."""
@@ -154,6 +178,13 @@ class _Hy3Engine(_BaseEngine):
             return
         self.file_counts[rec.type] += 1
 
+        # A buffered entry whose result doesn't come next is an unswum entry: emit
+        # it before this record changes the current athlete/team context.
+        if rec.type != _ENTRY_RESULT:
+            self._flush_entry()
+        if rec.type not in _RELAY_ENTRY_FOLLOWERS:
+            self._flush_relay_entry()
+
         # Columns 129-130 hold a checksum that we don't validate: it isn't a data
         # field, and `USAS Club Times Export` files omit it entirely. Field slicing
         # only ever touches columns 1-128, so the trailing checksum is simply ignored.
@@ -171,6 +202,10 @@ class _Hy3Engine(_BaseEngine):
                 )
             return
         handler(self, rec)
+
+    def _finish_file(self) -> None:
+        self._flush_entry()
+        self._flush_relay_entry()
 
     # -- hy3-specific field helpers ---------------------------------------- #
 
@@ -222,6 +257,28 @@ class _Hy3Engine(_BaseEngine):
     @staticmethod
     def _stroke(rec: Record, col: int, table: dict[str, Stroke]) -> Stroke | None:
         return table.get(rec.raw(col, 1).strip().upper())
+
+    def _seeds(self, rec: Record) -> _Seeds:
+        """The E1/F1 as-entered (cols 53-60) and converted (cols 44-51) seeds.
+
+        A "no time" (`0.00`) seed still carries a course letter in `.hy3`; drop it,
+        as SDIF does, so an NT seed reads ``(None, None)`` from either reader.
+        """
+        seed = self._hy3_time(rec, 53, 7)
+        converted = self._hy3_time(rec, 44, 7)
+        return {
+            "seed_time": seed,
+            "seed_course": self._opt_course(rec, 60) if seed is not None else None,
+            "converted_seed_time": converted,
+            "converted_seed_course": self._opt_course(rec, 51) if converted is not None else None,
+        }
+
+    def _round(self, rec: Record) -> Session:
+        """Map the E2/F2 round letter (col 3) to a session, defaulting to finals."""
+        alias = _ROUND_ALIASES.get(rec.raw(3, 1).strip().upper())
+        if alias is not None:
+            return alias
+        return self._code(rec, 3, 1, Session, "round", "3/1", "M2") or Session.FINALS
 
     def _rank(self, rec: Record, start: int, length: int) -> int | None:
         val = self._opt_int(rec, start, length)
@@ -431,10 +488,8 @@ class _Hy3Engine(_BaseEngine):
             event_min_age=self._event_age(rec, 23, _AGE_OPEN_LOW),
             event_max_age=self._event_age(rec, 26, _AGE_OPEN_HIGH),
             event_number=rec.text(39, 4),
-            seed_time=self._hy3_time(rec, 53, 7),
-            seed_course=self._opt_course(rec, 60),
-            converted_seed_time=self._hy3_time(rec, 44, 7),
-            converted_seed_course=self._opt_course(rec, 51),
+            **self._seeds(rec),
+            record=rec,
         )
 
     def _h_e2(self, rec: Record) -> None:
@@ -481,7 +536,7 @@ class _Hy3Engine(_BaseEngine):
             event_max_age=entry.event_max_age,
             event_sex=entry.event_sex,
             event_number=entry.event_number,
-            session=self._code(rec, 3, 1, Session, "round", "3/1", "M2") or Session.FINALS,
+            session=self._round(rec),
             status=status,
             time=self._hy3_time(rec, 5, 7) if valid else None,
             date=self._date(rec, 88, 8, "date", "88/8", "M2"),
@@ -519,10 +574,8 @@ class _Hy3Engine(_BaseEngine):
             event_min_age=self._event_age(rec, 23, _AGE_OPEN_LOW),
             event_max_age=self._event_age(rec, 26, _AGE_OPEN_HIGH),
             event_number=rec.text(39, 4),
-            seed_time=self._hy3_time(rec, 53, 7),
-            seed_course=self._opt_course(rec, 60),
-            converted_seed_time=self._hy3_time(rec, 44, 7),
-            converted_seed_course=self._opt_course(rec, 51),
+            **self._seeds(rec),
+            record=rec,
         )
 
     def _h_f2(self, rec: Record) -> None:
@@ -566,7 +619,7 @@ class _Hy3Engine(_BaseEngine):
             event_max_age=entry.event_max_age,
             event_sex=entry.event_sex,
             event_number=entry.event_number,
-            session=self._code(rec, 3, 1, Session, "round", "3/1", "M2") or Session.FINALS,
+            session=self._round(rec),
             status=status,
             time=self._hy3_time(rec, 6, 6) if valid else None,
             date=self._date(rec, 103, 8, "date", "103/8", "M2"),
@@ -589,6 +642,9 @@ class _Hy3Engine(_BaseEngine):
 
     def _h_f3(self, rec: Record) -> None:
         st = self.state
+        if st is not None and st.pending_relay_entry is not None:
+            # Athletes straight after an F1 belong to an entered (unswum) relay.
+            self._flush_relay_entry()
         if st is None or st.current_relay is None:
             self._skip_orphan(rec, "F3 relay athletes with no preceding F2 relay")
             return
@@ -607,6 +663,121 @@ class _Hy3Engine(_BaseEngine):
                 relay.legs.append(leg)
                 if swimmer is not None:
                     swimmer.swims.append(leg)
+
+    # -- unswum entries (entries / psych-sheet files) ----------------------- #
+
+    def _entry_event(self, entry: Hy3Entry | Hy3RelayEntry, noun: str) -> Event | None:
+        """Resolve an entry's event without a result record to name its course.
+
+        Candidates, in order: the meet course (`B2` col 99), the course the seed
+        was converted to (`E1`/`F1` col 51), then the as-entered seed course (col
+        60). The seed course letters are read even for a no-time seed — they're
+        dropped from the model, but still say which pool the meet uses.
+        """
+        st = self.state
+        assert st is not None
+        rec = entry.record
+        return self._resolve_event(
+            rec,
+            distance=entry.distance,
+            stroke=entry.stroke,
+            sex=entry.event_sex,
+            course=self._entry_course(
+                entry.distance,
+                entry.stroke,
+                st.meet.course,
+                self._opt_course(rec, 51),
+                self._opt_course(rec, 60),
+            ),
+            field="event",
+            column="16/6" if isinstance(entry, Hy3Entry) else "19/3",
+            mandatory="M1#" if isinstance(entry, Hy3Entry) else "M1",
+            noun=noun,
+            distance_display=str(entry.distance),
+            stroke_display=str(entry.stroke),
+        )
+
+    def _flush_entry(self) -> None:
+        """Emit a buffered `E1` that no `E2` followed as an ENTERED swim."""
+        st = self.state
+        if st is None or st.pending_entry is None:
+            return
+        entry = st.pending_entry
+        st.pending_entry = None
+        st.current_individual_swim = None
+        st.last_result_kind = None
+        if entry.swimmer is None:
+            self._skip_orphan(entry.record, "E1 entry with no resolvable athlete")
+            return
+        event = self._entry_event(entry, "event")
+        if event is None:
+            return
+        assert entry.event_sex is not None  # guaranteed by the event guard above
+        swim = IndividualSwim(
+            meet=st.meet,
+            club=st.attached_club,
+            organization=None,  # `.hy3` carries no org code
+            event=event,
+            event_min_age=entry.event_min_age,
+            event_max_age=entry.event_max_age,
+            event_sex=entry.event_sex,
+            event_number=entry.event_number,
+            session=None,
+            status=ResultStatus.ENTERED,
+            time=None,
+            date=None,
+            seed_time=entry.seed_time,
+            seed_course=entry.seed_course,
+            converted_seed_time=entry.converted_seed_time,
+            converted_seed_course=entry.converted_seed_course,
+            swimmer=entry.swimmer,
+            swimmer_age_class=st.current_age_class,
+            attach_status=AttachStatus.UNATTACHED if st.unattached else AttachStatus.ATTACHED,
+        )
+        entry.swimmer.swims.append(swim)
+        self._attach_result(st.meet, swim)
+        self.report.individual_swims_parsed += 1
+
+    def _flush_relay_entry(self) -> None:
+        """Emit a buffered `F1` that no `F2` followed as an ENTERED relay.
+
+        The relay becomes the current relay so `F3` athlete records that follow
+        attach to it; it is not a split/DQ target, since it has no result.
+        """
+        st = self.state
+        if st is None or st.pending_relay_entry is None:
+            return
+        entry = st.pending_relay_entry
+        st.pending_relay_entry = None
+        st.current_relay = None
+        st.current_individual_swim = None
+        st.last_result_kind = None
+        event = self._entry_event(entry, "relay event")
+        if event is None:
+            return
+        assert entry.event_sex is not None  # guaranteed by the event guard above
+        relay = Relay(
+            meet=st.meet,
+            club=st.attached_club,
+            organization=None,  # `.hy3` carries no org code
+            event=event,
+            event_min_age=entry.event_min_age,
+            event_max_age=entry.event_max_age,
+            event_sex=entry.event_sex,
+            event_number=entry.event_number,
+            session=None,
+            status=ResultStatus.ENTERED,
+            time=None,
+            date=None,
+            seed_time=entry.seed_time,
+            seed_course=entry.seed_course,
+            converted_seed_time=entry.converted_seed_time,
+            converted_seed_course=entry.converted_seed_course,
+            relay_letter=entry.relay_letter,
+        )
+        self._attach_result(st.meet, relay)
+        self.report.relays_parsed += 1
+        st.current_relay = relay
 
     def _h_g1(self, rec: Record) -> None:
         st = self.state

@@ -204,7 +204,9 @@ class ResultStatus(StrEnum):
 
     ``OK`` denotes an official, recorded time. The others are non-time outcomes
     whose ``time`` is ``None`` (except course-``X`` disqualifications, which
-    retain a recorded time).
+    retain a recorded time). ``ENTERED`` marks an entry that has not been swum
+    (entries / psych-sheet files): it has no ``time`` and no ``session``, and its
+    ``seed_time`` is the entry time.
     """
 
     OK = "OK"
@@ -214,6 +216,7 @@ class ResultStatus(StrEnum):
     DQ = "DQ"  # Disqualified
     SCR = "SCR"  # Scratch
     EXHIBITION = "EX"  # Hy-Tek exhibition swim — a valid, recorded time that does not score
+    ENTERED = "ENT"  # Entered but not yet swum — an entry with a seed and no result
 
 
 class RelayLegOrder(StrEnum):
@@ -272,10 +275,17 @@ class Affiliation(Enum):
 class Hy3FileType(StrEnum):
     """Hy-Tek `.hy3` file-type code (``A1`` cols 3-4).
 
-    A distinct code space from the SDIF :class:`FileType`; only `MEET_RESULTS`
-    files carry meet results (and are what :func:`~tunas.read_hy3` parses).
+    A distinct code space from the SDIF :class:`FileType`. Results files
+    (`MEET_RESULTS`, `MERGED_RESULTS`, `EXPORTED_RESULTS`) carry swum results;
+    entries files (`MERGED_ENTRIES`, `MEET_ENTRIES`) carry seeded entries only,
+    which :func:`~tunas.read_hy3` returns as ``ResultStatus.ENTERED`` swims. The
+    code is informational — the reader classifies each entry by whether a result
+    record follows it, not by this header.
     """
 
-    MEET_RESULTS = "07"
+    MERGED_ENTRIES = "01"  # "Merge Meet Entries" — Meet Manager whole-meet entries export
+    MEET_ENTRIES = "02"  # "Meet Entries" — Team Manager team entries export
     MERGED_RESULTS = "04"
+    MEET_RESULTS = "07"
+    EXPORTED_RESULTS = "09"  # "Exported Results" — Team Manager results export
     CLUB_TIMES_EXPORT = "17"

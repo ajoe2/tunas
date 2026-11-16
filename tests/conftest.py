@@ -130,6 +130,8 @@ def e0(
     eage: str = "1314",
     total_age: str = "56",
     date: str = "01032025",
+    seed: str = "",
+    seed_course: str = "",
     finals: str = "1:45.00",
     finals_course: str = "Y",
 ) -> str:
@@ -144,6 +146,8 @@ def e0(
         (31, eage),
         (35, total_age),
         (38, date),
+        (46, seed),
+        (54, seed_course),
         (73, finals),
         (81, finals_course),
     )
@@ -307,6 +311,7 @@ def e1(
     conv_course: str = "Y",
     seed: str = "62.50",
     seed_course: str = "Y",
+    event_number: str = "",
 ) -> str:
     return hy3_rec(
         (1, "E1"),
@@ -314,6 +319,7 @@ def e1(
         (15, event_sex),
         (16, dist.rjust(6)),
         (22, stroke),
+        (39, event_number.rjust(4)),
         (44, conv_seed.rjust(7)),
         (51, conv_course),
         (53, seed.rjust(7)),

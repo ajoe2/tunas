@@ -570,7 +570,10 @@ class _Cl2Engine(_BaseEngine):
         birthday = self._date(rec, 56, 8, "birthday", "56/8", "M2")
         sex = self._require_code(rec, 66, 1, Sex, "sex", "66/1")
         age_class = rec.text(64, 2)
-        date_of_swim = self._date(rec, 81, 8, "date", "81/8", "M2")
+        # A D0 with no time in any session is an entry (entries / psych-sheet
+        # files): it has no swim date, so a blank date is only flagged on results.
+        has_result = any(rec.raw(cols.time, 8).strip() for cols in _INDIVIDUAL_SESSIONS)
+        date_of_swim = self._date(rec, 81, 8, "date", "81/8", "M2" if has_result else None)
 
         esex_tag, esex = code_value(rec.raw(67, 1), Sex)
         dist_tag, dist = int_value(rec.raw(68, 4))
@@ -609,7 +612,15 @@ class _Cl2Engine(_BaseEngine):
             # swim — skip the whole record (lenient) / raise (strict). This is NOT a
             # fatal M1: one bad/odd record (e.g. a diving event with stroke "H") must
             # not abort an otherwise-valid file.
-            course = self._event_course(rec, _D0_COURSE_COLS, st.meet.course)
+            # An entry is swum in the meet's course; its seed course only says where
+            # the seed was swum (a yards seed for a long-course meet, say).
+            course = (
+                self._event_course(rec, _D0_COURSE_COLS, st.meet.course)
+                if has_result
+                else self._entry_course(
+                    dist, stroke, st.meet.course, self._event_course(rec, _D0_COURSE_COLS, None)
+                )
+            )
             event = self._resolve_event(
                 rec,
                 distance=dist,
@@ -660,6 +671,18 @@ class _Cl2Engine(_BaseEngine):
                         lane=sr.lane,
                         rank=sr.rank,
                         points=sr.points,
+                        swimmer=swimmer,
+                        swimmer_age_class=age_class,
+                        attach_status=attach_status,
+                        **common,
+                    )
+                )
+            if not has_result:
+                results.append(
+                    IndividualSwim(
+                        session=None,
+                        status=ResultStatus.ENTERED,
+                        time=None,
                         swimmer=swimmer,
                         swimmer_age_class=age_class,
                         attach_status=attach_status,
@@ -852,9 +875,17 @@ class _Cl2Engine(_BaseEngine):
         dist = int_value(rec.raw(22, 4))[1]
         stroke = code_value(rec.raw(26, 1), Stroke)[1]
         eage_tag, emin, emax = event_age_value(rec.raw(31, 4))
-        date_of_swim = self._date(rec, 38, 8, "date", "38/8", "M2")
+        # As for D0: an E0 with no time in any session is an entered relay.
+        has_result = any(rec.raw(cols.time, 8).strip() for cols in _RELAY_SESSIONS)
+        date_of_swim = self._date(rec, 38, 8, "date", "38/8", "M2" if has_result else None)
         # Unresolvable relay event -> skip record (lenient) / raise (strict), not fatal.
-        course = self._event_course(rec, _E0_COURSE_COLS, st.meet.course)
+        course = (
+            self._event_course(rec, _E0_COURSE_COLS, st.meet.course)
+            if has_result
+            else self._entry_course(
+                dist, stroke, st.meet.course, self._event_course(rec, _E0_COURSE_COLS, None)
+            )
+        )
         event = self._resolve_event(
             rec,
             distance=dist,
@@ -915,6 +946,18 @@ class _Cl2Engine(_BaseEngine):
             self._attach_result(st.meet, relay)
             self.report.relays_parsed += 1
             st.current_relays[sr.session] = relay
+        if not has_result:
+            relay = Relay(
+                session=None,
+                status=ResultStatus.ENTERED,
+                time=None,
+                relay_letter=relay_letter,
+                total_age=total_age,
+                **common,
+            )
+            self._attach_result(st.meet, relay)
+            self.report.relays_parsed += 1
+            st.current_relays[None] = relay
         st.current_relay_legs = {}
         st.relay_split_index = {}
         st.last_result_kind = "relay"
@@ -961,11 +1004,13 @@ class _Cl2Engine(_BaseEngine):
         tk_tag, tk = decimal_value(rec.raw(89, 4))
         takeoff = round(tk * 100) if tk is not None else None
 
-        created: dict[Session, RelaySwim] = {}
+        created: dict[Session | None, RelaySwim] = {}
+        orders: dict[Session, RelayLegOrder] = {}
         for session, order_pos in _RELAY_LEG_SESSIONS:
             order = self._code(rec, order_pos, 1, RelayLegOrder, "order", f"{order_pos}/1", None)
             if order is None or order is RelayLegOrder.NOT_SWUM:
                 continue
+            orders[session] = order
             relay = st.current_relays.get(session)
             if relay is None:
                 continue
@@ -990,6 +1035,31 @@ class _Cl2Engine(_BaseEngine):
             leg_number = _LEG_NUMBERS.get(order)
             if leg_number is not None:
                 st.relay_split_index[session] = leg_number - 1
+
+        entered = st.current_relays.get(None)
+        if entered is not None:
+            # An entered relay has no session: honour whichever leg order is set
+            # (finals first). Entries files usually set none — the athlete is on
+            # the relay's roster with no leg yet — so list them as an unassigned
+            # roster slot (an alternate with order NOT_SWUM).
+            order = orders.get(Session.FINALS) or next(
+                iter(orders.values()), RelayLegOrder.NOT_SWUM
+            )
+            leg = RelaySwim(
+                swimmer=swimmer,
+                relay=entered,
+                order=order,
+                status=entered.status,
+                swimmer_age_class=age_class,
+                citizenship=citizenship,
+            )
+            if order in (RelayLegOrder.NOT_SWUM, RelayLegOrder.ALTERNATE):
+                entered.alternates.append(leg)
+            else:
+                entered.legs.append(leg)
+                if swimmer is not None:
+                    swimmer.swims.append(leg)
+            created[None] = leg
 
         # The F0 carries one leg time/course/takeoff — file it on the finals leg.
         if created:

@@ -51,7 +51,7 @@ All parsed data is contained in independent `Meet` objects:
 - **`Meet`**: Owns `swimmers`, `clubs`, and `results` (accessible via `meet.individual_swims` and `meet.relays`, or filtered via `meet.individual_swims_for(event)` and `meet.relays_for(event)`). Carries metadata including name, dates, location, `course`, `meet_type`, `host` (`MeetHost`), and `source_file` (`SourceFile` for file-level provenance).
 - **`Swimmer`**: Scoped to one meet. Exposes `full_name`, `swims`, `individual_swims`, `relay_swims`, and `swims_in(event)`. Includes identity (`id_short`/`id_long`), `birthday`, `sex`, `citizenship`, and optional contact/registration PII.
 - **`Club`**: Scoped to one meet and keyed by `(team_code, lsc)`. Carries `coach`, `entry_counts`, address, and associated results and swimmers.
-- **`Swim`**: The uniform interface for individual swims (`IndividualSwim`) and relay legs (`RelaySwim`), exposing `swimmer`, `time` (`Time` or `None`), `status` (`ResultStatus`), `session`, `event`, `date`, `meet`, `course`, and `splits`. Scratches and disqualifications are preserved.
+- **`Swim`**: The uniform interface for individual swims (`IndividualSwim`) and relay legs (`RelaySwim`), exposing `swimmer`, `time` (`Time` or `None`), `status` (`ResultStatus`), `session`, `event`, `date`, `meet`, `course`, and `splits`. Scratches and disqualifications are preserved, and entries that haven't been swum (psych-sheet files) have `status=ResultStatus.ENTERED` and `session=None`.
 - **`Event`**: A 90+ member enum of `(distance, stroke, course)`, comparable in declaration order, with helpers (`is_relay`, `leg_event`, `leg_strokes`, `Event.find`). Filter with `swimmer.swims_in(event)` or `meet.individual_swims_for(event)`.
 - **Relays**: `Relay` squads contain `RelaySwim` legs (`legs`) and `alternates`. Each leg reports its individual event, so it sorts alongside flat-start swims.
 - **`Time`**: Immutable centisecond value type — `Time.parse("1:04.87")`, ordering, addition/subtraction, and `minute`/`second`/`hundredth`/`total_seconds` accessors.
@@ -64,7 +64,7 @@ from tunas import read_cl2, Event
 meets = [m for arc in read_cl2("season/") for m in arc.meets]
 for meet in meets:
     for swim in meet.swimmers[0].swims_in(Event.FREE_100_SCY):
-        print(meet.name, swim.session.value, swim.time)
+        print(meet.name, swim.session, swim.time)  # session is None for an entry
 ```
 
 ## Offline Time Standards
@@ -107,8 +107,9 @@ Use `strict=True` to fail fast and raise `ParseError` on the first warning (surf
 
 - **Complete SDIF v3 coverage**: Parses every meet-results record type (`A0`–`G0`, `Z0`), including relays, relay alternates, and per-leg splits. Registration (`D1`/`D2`) and demographic (`D3`) records populate optional PII fields; qualifying-time records (`J0`–`J2`) surface as warnings.
 - **Hy-Tek `.hy3` support**: `read_hy3` parses the reverse-engineered `.hy3` results format (confirmed fields only) into the same `Meet` object graph, capturing data SDIF omits — disqualification codes/reasons, converted seed times, and meet sanction numbers.
+- **Entries / psych sheets**: Both readers parse entries files — Hy-Tek Meet Manager and Team Manager `.hy3` entries exports, and SDIF `.cl2`/`.sd3` entries files — returning each entry as a swim with `status=ResultStatus.ENTERED` and its seed time, ready to rank into a psych sheet.
 - **Clean object model**: Slotted dataclasses with pre-wired object references (including back-references) and zero global state. Value types (`Time`, `Split`, `MeetHost`, …) are frozen and hashable.
-- **Zero data loss**: All entered swims are kept — including non-time outcomes (scratches, DQs, no-shows via `ResultStatus`). Missing optional fields become `None`; raw line contents are preserved on validation failures.
+- **Zero data loss**: All entered swims are kept — including non-time outcomes (scratches, DQs, no-shows via `ResultStatus`) and entries that haven't been swum yet (`ResultStatus.ENTERED`). Missing optional fields become `None`; raw line contents are preserved on validation failures.
 - **Lenient by default, strict on demand**: Recovers from common exporter bugs and reports each issue as a structured `ParseWarning` (with `severity`, `kind`, column, and raw line); `strict=True` fails fast on the first problem.
 - **Offline standards**: Local O(1) lookup of USA Swimming B through AAAA motivational cuts, bundled as JSON — no setup or network.
 - **Robust decoding**: Defaults to CP-1252 (to preserve column alignment and accented names), tolerates BOMs, short/long lines, and mixed line endings.

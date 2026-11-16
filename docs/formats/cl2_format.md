@@ -777,6 +777,30 @@ all follow the spec. (Note: `100`-yard / 4×25 relays and other unusual distance
 **spec-valid** SDIF, even though `tunas` currently skips events it can't map — that is a
 parser limitation, not a file deviation.)
 
+### Entries files
+
+The spec has no separate entries transmission: an entry is a `D0` (or `E0`) with a seed and
+no prelim, swim-off, or finals time. A 2026 survey of all 59 USA Swimming LSC websites found
+real entries files from three producers, each deviating from the spec's file codes:
+
+| Producer | `A0` file code / description | Notes |
+|---|---|---|
+| Team Manager (Win-TM 2.1–8.0) | `20` "Meet Entries" (vendor-defined), sometimes a blank description | Paired with a `.hy3` (`A1` type `02`) holding the same entries; `B1` carries the meet course. |
+| TeamUnify (`.sd3`, "TeamUnify, LLC 2.0") | `01` "Meet Entries" | The spec's name for `01` is "Meet Registrations". `B1` dates, city, and course are blank; `D0`s carry the seed course. Each `D3` has a NUL byte at col 152. Also found inside TouchPad meet archives (`SD3Archive/`, `SD3ZipImport/`). |
+| Hy-Tek CL II 5.3 (1997–98) | `A0TM Entrie20…` — cols 3–11 hold text instead of the org code and version | The `B1` course (col 150) reads `L` even for yards meets (the same meet's results file reads `Y`). |
+
+Relay entries list the squad's swimmers in `F0` records with every leg-order column `0`
+(no leg assigned yet); some entries files have relay `E0`s with no `F0`s at all.
+
+The file code alone does not identify an entries file: Meet Manager writes `01` "Meet
+Registrations" for swimmer rosters whose `D0`s have no event fields, and SWIMS "Times Recon"
+`.cl2` files are coded `01` "Meet Entries" but carry full results.
+
+`read_cl2` reads any `D0`/`E0` with no time in any session as an entry
+(`ResultStatus.ENTERED`, `session=None`). Its event course is the meet course (`B1`) when the
+event exists in that course, otherwise the seed's course. A blank swim date is not flagged on
+an entry.
+
 ---
 
 ## 8. Coding examples
@@ -886,11 +910,11 @@ as printed.
 | `B2` | Builds `Meet.host` (when present — not in these files). |
 | `C1` | Creates a `Club`, or marks the swimmer context unattached. |
 | `C2` | Adds coach/phone/entry counts (when present — not in these files). |
-| `D0` | Creates an `IndividualSwim` per session; resolves/creates the `Swimmer`. |
+| `D0` | Creates an `IndividualSwim` per session swum, or one `ENTERED` swim when no session has a time; resolves/creates the `Swimmer`. |
 | `D1`/`D2` | Populate `Swimmer.contact`/`registration` (PII; absent in results files). |
 | `D3` | Sets `id_long`, `preferred_first_name`, demographics. |
-| `E0` | Creates a `Relay` per session. |
-| `F0` | Appends a `RelaySwim` (counting leg or alternate). |
+| `E0` | Creates a `Relay` per session swum, or one `ENTERED` relay when no session has a time. |
+| `F0` | Appends a `RelaySwim` (counting leg or alternate); on an entered relay, a swimmer with no leg assigned is kept as an alternate with order `NOT_SWUM`. |
 | `G0` | Appends `Split`s — to the individual swim, or to the relay row for relays. |
 | `J0`–`J2` | Surface as `ParseWarning` (qualifying-time records). |
 | `Z0` | Resets parser context; keeps any note on `SourceFile.notes`. |

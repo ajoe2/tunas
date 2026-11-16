@@ -28,7 +28,8 @@ for archive in read_cl2("results/"):
             continue
         for swim in swimmer.swims_in(Event.FLY_200_LCM):
             outcome = swim.time if swim.time is not None else swim.status.value
-            print(f"{meet.name}: {swimmer.full_name} {swim.session.value} {outcome}")
+            session = swim.session.value if swim.session else "-"  # None for an entry
+            print(f"{meet.name}: {swimmer.full_name} {session} {outcome}")
 ```
 
 Every `tunas` program parses input into self-contained [`Meet`](models.md) objects and traverses the resulting data graph.

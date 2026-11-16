@@ -295,12 +295,14 @@ class MeetResult:
         meet: Meet this result belongs to.
         club: Club the swimmer or squad represents.
         organization: Governing body code (e.g. USA Swimming).
-        session: Meet session (prelims, finals, swim-offs).
-        event: The swum event.
+        session: Meet session (prelims, finals, swim-offs), or None for an entry
+            that has not been swum (``ResultStatus.ENTERED``).
+        event: The swum (or, for an entry, the entered) event.
         event_min_age: Minimum age restriction for the event.
         event_max_age: Maximum age restriction for the event.
         event_sex: Sex category for the event.
-        status: The result status (OK, DQ, scratch, etc.).
+        status: The result status (OK, DQ, scratch, etc.; ENTERED for an entry
+            from an entries / psych-sheet file).
         time: The final swim time, or None if no time was recorded/OK.
         date: Date the event was swum.
         event_number: Coded event number.
@@ -322,7 +324,7 @@ class MeetResult:
     meet: Meet
     club: Club | None
     organization: Organization | None
-    session: Session
+    session: Session | None
     event: Event
     event_min_age: int | None
     event_max_age: int | None
@@ -532,8 +534,8 @@ class RelaySwim(Swim):
         return self.relay.meet
 
     @property
-    def session(self) -> Session:
-        """Session of the swim."""
+    def session(self) -> Session | None:
+        """Session of the swim (None for a leg of an entered, not-yet-swum relay)."""
         return self.relay.session
 
 
